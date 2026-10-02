@@ -106,7 +106,7 @@
     <div class="card">
       <h2>Enregistre ton score</h2>
       <form id="saveForm">
-        <input id="pseudo" maxlength="16" placeholder="Ton pseudo" required autocomplete="nickname">
+        <input id="pseudo" maxlength="16" placeholder="Ton pseudo" required pattern=".*\S.*" title="Écris au moins une lettre" autocomplete="nickname">
         <button class="btn">Enregistrer</button>
       </form>
       <p id="saveMsg"></p>
