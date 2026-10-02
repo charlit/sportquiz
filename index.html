@@ -53,7 +53,8 @@
   .answers button.ok { background:var(--ok); border-color:var(--ok); color:#06210f; font-weight:700; }
   .answers button.ko { background:var(--ko); border-color:var(--ko); }
   .answers button:disabled { cursor:default; }
-  #feedback { text-align:center; min-height:1.6em; margin-top:14px; font-weight:700; font-size:1.1rem; }
+  .fbbox { display:grid; text-align:center; min-height:1.6em; margin-top:14px; font-weight:700; font-size:1.1rem; }
+  .fbbox > div { grid-area:1/1; } /* résultat et points en jeu au même endroit */
   /* fin */
   .big { text-align:center; font-size:3.5rem; font-weight:800; color:var(--acc); margin:6px 0 0; }
   .center { text-align:center; }
@@ -96,7 +97,7 @@
     <div id="question"></div>
     <div class="bar" id="timer"><i></i></div>
     <div class="answers" id="answers" style="margin-top:16px"></div>
-    <div id="feedback"></div>
+    <div class="fbbox"><div id="stake" aria-hidden="true"></div><div id="feedback" role="status" aria-live="polite"></div></div>
   </section>
 
   <section id="end" class="hidden">
@@ -188,7 +189,7 @@ function ask() {
   $('level').style.background = LEVEL_COLORS[lvl]; $('level').style.color = '#111';
   $('sport').textContent = SPORTS[sport];
   $('question').textContent = q;
-  $('feedback').textContent = '';
+  $('feedback').textContent = ''; $('stake').textContent = '';
   $('answers').innerHTML = '';
   shuffle(choices).forEach(c => {
     const b = document.createElement('button');
@@ -201,13 +202,14 @@ function ask() {
   timer = setInterval(() => {
     const left = TIME - (performance.now() - t0) / 1000;
     $('timer').firstElementChild.style.width = Math.max(0, left / TIME * 100) + '%';
-    if (mode in HARD && left > 0) $('feedback').textContent = `⚡ ${points(lvl, left)} pts en jeu`;
+    if (mode in HARD && left > 0) $('stake').textContent = `⚡ ${points(lvl, left)} pts en jeu`; // hors zone annoncée : change 20×/s
     if (left <= 0) answer(null, false, lvl);
   }, 50);
 }
 
 function answer(btn, ok, lvl) {
   clearInterval(timer);
+  $('stake').textContent = '';
   const left = Math.max(0, TIME - (performance.now() - t0) / 1000);
   const correct = deck[idx][1][2];
   [...$('answers').children].forEach(b => { b.disabled = true; if (b.textContent === correct) b.classList.add('ok'); });
