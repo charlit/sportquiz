@@ -37,10 +37,3 @@ print('ok')
 assert call('/api/scores', {'name': 'Max', 'mode': 'hard', 'score': 9999, 'good': 20})[0] == 200  # hard : pas plafonné à 4500
 assert call('/api/scores', {'name': 'Max', 'mode': 'hard', 'score': 999999, 'good': 20})[0] == 400
 print('ok hard')
-assert call('/api/played') == (200, {})
-assert call('/api/played?mode=foot', {'x': 1})[1] == {'foot': 1}
-assert call('/api/played?mode=foot', {'x': 1})[1] == {'foot': 2}
-assert call('/api/played?mode=golf', {'x': 1})[0] == 400
-assert call('/api/played') == (200, {'foot': 2})
-assert call('/api/scores?mode=foot')[0] == 200                       # le compteur ne casse pas les classements
-print('ok played')

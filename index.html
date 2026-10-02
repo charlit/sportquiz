@@ -14,8 +14,6 @@
   h1 span { color:var(--acc); }
   .sub { text-align:center; color:var(--dim); margin:0 0 24px; }
   .hidden { display:none !important; }
-  .played { text-align:center; margin:-12px 0 20px; color:var(--dim); }
-  .played b { color:var(--acc); font-size:1.4rem; }
   .modes { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
   .mode { background:var(--card); border:2px solid var(--line); border-radius:16px; padding:20px 12px; color:var(--txt);
           font:inherit; cursor:pointer; text-align:center; transition:transform .1s, border-color .1s; }
@@ -70,7 +68,6 @@
   <section id="home">
     <h1>SPORT <span>QUIZ</span></h1>
     <p class="sub">15 questions, de plus en plus dures. Réponds vite pour gagner plus !</p>
-    <p class="played" id="played"></p>
     <div class="modes">
       <button class="mode" data-mode="foot"><b>⚽</b><strong>Spécial Foot</strong><small>Ligue 1, Coupe du monde, Ballon d'or…</small></button>
       <button class="mode" data-mode="multi"><b>🏆</b><strong>Multisport</strong><small>Foot, tennis, rugby, F1, cyclisme</small></button>
@@ -241,7 +238,6 @@ function finish() {
   try { $('pseudo').value = localStorage.getItem('quiz-pseudo') || ''; } catch {}
   show('end');
   loadBoard(mode, $('endBoard'));
-  fetch('api/played?mode=' + mode, { method: 'POST' }).then(r => r.json()).then(showPlayed).catch(() => {});
 }
 
 function renderBoard(rows, table, me, m) {
@@ -284,13 +280,6 @@ document.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => {
 });
 $('again').onclick = () => start(mode);
 $('toHome').onclick = () => { show('home'); document.querySelector('[data-tab="' + mode + '"]').click(); };
-function showPlayed(p) {
-  const n = k => (p[k] || 0).toLocaleString('fr-FR');
-  const total = (p.foot || 0) + (p.multi || 0) + (p.hard || 0);
-  $('played').innerHTML = `🎮 <b>${total.toLocaleString('fr-FR')}</b> partie${total > 1 ? 's' : ''} jouée${total > 1 ? 's' : ''}<br>` +
-    `<small>⚽ ${n('foot')} · 🏆 ${n('multi')} · 💀 ${n('hard')}</small>`;
-}
-fetch('api/played').then(r => r.json()).then(showPlayed).catch(() => {});
 loadBoard('foot', $('board'));
 </script>
 </body>
