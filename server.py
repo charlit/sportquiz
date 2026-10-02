@@ -54,6 +54,8 @@ class Handler(BaseHTTPRequestHandler):
             name, ctype = FILES[path]
             with open(os.path.join(ROOT, name), 'rb') as f:
                 return self.send(200, f.read(), ctype)
+        if path == '/api/played':
+            return self.send(200, load().get('_played', {}))
         if path == '/api/scores':
             mode = query.removeprefix('mode=')
             if mode not in MAX_SCORE:
@@ -62,6 +64,16 @@ class Handler(BaseHTTPRequestHandler):
         self.send(404, {'error': 'introuvable'})
 
     def do_POST(self):
+        if self.path.startswith('/api/played?mode='):  # +1 partie terminée pour ce mode
+            mode = self.path.removeprefix('/api/played?mode=')
+            if mode not in MAX_SCORE:
+                return self.send(400, {'error': 'mode inconnu'})
+            with lock:
+                db = load()
+                played = db.setdefault('_played', {})
+                played[mode] = played.get(mode, 0) + 1
+                save(db)
+            return self.send(200, played)
         if self.path != '/api/scores':
             return self.send(404, {'error': 'introuvable'})
         try:
