@@ -39,6 +39,7 @@
   /* quiz */
   .top { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; color:var(--dim); }
   .top b { color:var(--acc); font-size:1.3rem; }
+  .quit { margin-left:12px; padding:2px 10px; border-radius:8px; border:1px solid var(--line); background:transparent; color:var(--dim); font:inherit; cursor:pointer; }
   .bar { height:8px; background:#0006; border-radius:4px; overflow:hidden; }
   .bar i { display:block; height:100%; background:var(--acc); transition:width .3s; }
   #timer i { background:var(--ok); transition:none; }
@@ -89,7 +90,7 @@
   </section>
 
   <section id="quiz" class="hidden">
-    <div class="top"><span id="count"></span><b id="score">0</b></div>
+    <div class="top"><span id="count"></span><span><b id="score">0</b><button class="quit" id="quit" aria-label="Quitter la partie">✕</button></span></div>
     <div class="bar"><i id="progress"></i></div>
     <div class="badges"><span class="badge" id="level"></span><span class="badge" id="sport"></span></div>
     <div id="question"></div>
@@ -128,7 +129,7 @@ const shuffle = a => { a = [...a]; for (let i = a.length - 1; i > 0; i--) { cons
 const show = id => ['home', 'quiz', 'end'].forEach(s => $(s).classList.toggle('hidden', s !== id));
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
 
-let mode, deck, idx, score, good, lives, timer, t0, saved;
+let mode, deck, idx, score, good, lives, timer, next, t0, saved;
 
 // Questions déjà posées sur ce navigateur : on ne les repose qu'une fois toutes les autres du même lot épuisées.
 let seen;
@@ -230,7 +231,7 @@ function answer(btn, ok, lvl) {
     $('feedback').style.color = 'var(--ko)';
   }
   const over = lives === 0;
-  setTimeout(() => !over && ++idx < deck.length ? ask() : finish(), ok ? 1200 : 2200);
+  next = setTimeout(() => !over && ++idx < deck.length ? ask() : finish(), ok ? 1200 : 2200);
 }
 
 function finish() {
@@ -289,6 +290,10 @@ document.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => {
   loadBoard(b.dataset.tab, $('board'));
 });
 $('again').onclick = () => start(mode);
+$('quit').onclick = () => { // abandon : on coupe le chrono et la question suivante déjà programmée
+  if (!confirm('Abandonner la partie ? Le score ne sera pas enregistré.')) return;
+  clearInterval(timer); clearTimeout(next); show('home');
+};
 $('toHome').onclick = () => { show('home'); document.querySelector('[data-tab="' + mode + '"]').click(); };
 loadBoard('foot', $('board'));
 </script>
