@@ -119,16 +119,29 @@ const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;',
 
 let mode, deck, idx, score, good, timer, t0, saved;
 
+// Questions déjà posées sur ce navigateur : on ne les repose qu'une fois toutes les autres du même lot épuisées.
+let seen;
+try { seen = new Set(JSON.parse(localStorage.getItem('quiz-seen')) || []); } catch { seen = new Set(); }
+
+function pick(pool, n) {
+  let fresh = pool.filter(q => !seen.has(q[1]));
+  if (fresh.length < n) { pool.forEach(q => seen.delete(q[1])); fresh = pool; } // lot épuisé : on recommence
+  const out = shuffle(fresh).slice(0, n);
+  out.forEach(q => seen.add(q[1]));
+  return out;
+}
+
 function buildDeck(m) {
   const out = [];
   for (let lvl = 1; lvl <= 5; lvl++) {
     if (m === 'foot') {
-      shuffle(QUESTIONS.foot.filter(q => q[0] === lvl)).slice(0, PER_LEVEL).forEach(q => out.push(['foot', q]));
+      pick(QUESTIONS.foot.filter(q => q[0] === lvl), PER_LEVEL).forEach(q => out.push(['foot', q]));
     } else { // 3 sports différents par niveau
       shuffle(Object.keys(QUESTIONS)).slice(0, PER_LEVEL).forEach(s =>
-        out.push([s, shuffle(QUESTIONS[s].filter(q => q[0] === lvl))[0]]));
+        out.push([s, pick(QUESTIONS[s].filter(q => q[0] === lvl), 1)[0]]));
     }
   }
+  try { localStorage.setItem('quiz-seen', JSON.stringify([...seen])); } catch {}
   return out;
 }
 
