@@ -21,6 +21,8 @@
   .mode b { display:block; font-size:2.6rem; }
   .mode strong { display:block; font-size:1.2rem; margin:6px 0 2px; }
   .mode small { color:var(--dim); }
+  .mode.hard { grid-column:1/-1; background:#2a1216; border-color:#5a2028; }
+  .mode.hard:hover { border-color:var(--ko); }
   .card { background:var(--card); border:1px solid var(--line); border-radius:16px; padding:16px; margin-top:20px; }
   .card h2 { margin:0 0 10px; font-size:1.2rem; }
   .tabs { display:flex; gap:8px; margin-bottom:10px; }
@@ -69,14 +71,16 @@
     <div class="modes">
       <button class="mode" data-mode="foot"><b>⚽</b><strong>Spécial Foot</strong><small>Ligue 1, Coupe du monde, Ballon d'or…</small></button>
       <button class="mode" data-mode="multi"><b>🏆</b><strong>Multisport</strong><small>Foot, tennis, rugby, F1, cyclisme</small></button>
+      <button class="mode hard" data-mode="hard"><b>💀</b><strong>Mode Hard</strong><small>1 seule vie · que des questions Expert et Légende · tous les sports</small></button>
     </div>
     <div class="card">
       <h2>🏅 Classement</h2>
-      <div class="tabs"><button data-tab="foot" class="on">⚽ Foot</button><button data-tab="multi">🏆 Multisport</button></div>
+      <div class="tabs"><button data-tab="foot" class="on">⚽ Foot</button><button data-tab="multi">🏆 Multi</button><button data-tab="hard">💀 Hard</button></div>
       <table id="board"></table>
     </div>
     <p class="rules">5 niveaux (Facile → Légende), 3 questions par niveau. Une bonne réponse rapporte jusqu'à 100 points × le niveau
-      (moitié des points si tu réponds au dernier moment). 20 secondes par question.</p>
+      (moitié des points si tu réponds au dernier moment). 20 secondes par question.<br>
+      Mode Hard : questions sans fin, la première erreur arrête tout.</p>
   </section>
 
   <section id="quiz" class="hidden">
@@ -133,6 +137,12 @@ function pick(pool, n) {
 
 function buildDeck(m) {
   const out = [];
+  if (m === 'hard') { // toutes les questions niveau 4-5, jamais vues d'abord ; marquées vues quand posées
+    const pool = Object.entries(QUESTIONS).flatMap(([s, qs]) => qs.filter(q => q[0] >= 4).map(q => [s, q]));
+    let fresh = pool.filter(x => !seen.has(x[1][1]));
+    if (fresh.length < 20) { pool.forEach(x => seen.delete(x[1][1])); fresh = pool; }
+    return shuffle(fresh).concat(shuffle(pool.filter(x => !fresh.includes(x))));
+  }
   for (let lvl = 1; lvl <= 5; lvl++) {
     if (m === 'foot') {
       pick(QUESTIONS.foot.filter(q => q[0] === lvl), PER_LEVEL).forEach(q => out.push(['foot', q]));
@@ -154,8 +164,15 @@ function start(m) {
 
 function ask() {
   const [sport, [lvl, q, ...choices]] = deck[idx];
-  $('count').textContent = `Question ${idx + 1} / ${deck.length}`;
-  $('progress').style.width = (idx / deck.length * 100) + '%';
+  if (mode === 'hard') {
+    seen.add(q);
+    try { localStorage.setItem('quiz-seen', JSON.stringify([...seen])); } catch {}
+    $('count').textContent = `💀 Question ${idx + 1} · ❤️ 1 vie`;
+    $('progress').style.width = '0';
+  } else {
+    $('count').textContent = `Question ${idx + 1} / ${deck.length}`;
+    $('progress').style.width = (idx / deck.length * 100) + '%';
+  }
   $('level').textContent = `Niveau ${lvl} · ${LEVELS[lvl]}`;
   $('level').style.background = LEVEL_COLORS[lvl]; $('level').style.color = '#111';
   $('sport').textContent = SPORTS[sport];
@@ -193,14 +210,21 @@ function answer(btn, ok, lvl) {
     $('feedback').textContent = btn ? '❌ Raté !' : '⏱️ Temps écoulé !';
     $('feedback').style.color = 'var(--ko)';
   }
-  setTimeout(() => ++idx < deck.length ? ask() : finish(), ok ? 1200 : 2200);
+  const over = !ok && mode === 'hard'; // 1 vie : première erreur = fin
+  if (over) $('feedback').textContent += ' 💀 Game over';
+  setTimeout(() => !over && ++idx < deck.length ? ask() : finish(), ok ? 1200 : 2200);
 }
 
 function finish() {
   $('progress').style.width = '100%';
   $('final').textContent = score + ' pts';
-  const msg = good >= 13 ? 'Une légende du sport ! 🐐' : good >= 10 ? 'Excellent ! 🔥' : good >= 6 ? 'Pas mal du tout ! 👍' : 'Il faut réviser ! 📚';
-  $('summary').textContent = `${good} / ${deck.length} bonnes réponses — ${msg} (${mode === 'foot' ? 'Spécial Foot' : 'Multisport'})`;
+  if (mode === 'hard') {
+    const msg = good >= 25 ? 'Inhumain ! 🐐' : good >= 12 ? 'Énorme ! 🔥' : good >= 5 ? 'Solide ! 💪' : 'Le mode Hard porte bien son nom… 💀';
+    $('summary').textContent = `${good} bonne${good > 1 ? 's' : ''} réponse${good > 1 ? 's' : ''} d'affilée — ${msg} (Mode Hard)`;
+  } else {
+    const msg = good >= 13 ? 'Une légende du sport ! 🐐' : good >= 10 ? 'Excellent ! 🔥' : good >= 6 ? 'Pas mal du tout ! 👍' : 'Il faut réviser ! 📚';
+    $('summary').textContent = `${good} / ${deck.length} bonnes réponses — ${msg} (${mode === 'foot' ? 'Spécial Foot' : 'Multisport'})`;
+  }
   $('saveMsg').textContent = '';
   $('saveForm').classList.remove('hidden');
   try { $('pseudo').value = localStorage.getItem('quiz-pseudo') || ''; } catch {}
@@ -208,10 +232,10 @@ function finish() {
   loadBoard(mode, $('endBoard'));
 }
 
-function renderBoard(rows, table, me) {
+function renderBoard(rows, table, me, m) {
   table.innerHTML = rows.length ? rows.map((r, i) =>
     `<tr class="${me && r.name.toLowerCase() === me.toLowerCase() ? 'me' : ''}"><td>${['🥇', '🥈', '🥉'][i] || i + 1}</td>` +
-    `<td>${esc(r.name)} <small style="color:var(--dim)">${r.good}/15</small></td><td>${r.score}</td></tr>`).join('')
+    `<td>${esc(r.name)} <small style="color:var(--dim)">${m === 'hard' ? r.good + ' ✔' : r.good + '/15'}</small></td><td>${r.score}</td></tr>`).join('')
     : '<tr><td colspan="3" class="empty">Personne pour l\'instant… à toi de jouer !</td></tr>';
 }
 
@@ -219,7 +243,7 @@ async function loadBoard(m, table, me) {
   try {
     const r = await fetch('api/scores?mode=' + m);
     if (!r.ok) throw 0;
-    renderBoard(await r.json(), table, me);
+    renderBoard(await r.json(), table, me, m);
   } catch { table.innerHTML = '<tr><td class="empty">Classement indisponible (serveur hors ligne)</td></tr>'; }
 }
 
@@ -237,7 +261,7 @@ $('saveForm').onsubmit = async e => {
     const rank = rows.findIndex(x => x.name.toLowerCase() === name.toLowerCase()) + 1;
     $('saveMsg').textContent = rank ? `Enregistré ! Tu es ${rank === 1 ? '1er 🏆' : rank + 'e'} au classement.` : 'Enregistré ! (ton meilleur score est gardé)';
     $('saveForm').classList.add('hidden');
-    renderBoard(rows, $('endBoard'), name);
+    renderBoard(rows, $('endBoard'), name, mode);
   } catch { $('saveMsg').textContent = "Impossible d'enregistrer, réessaie."; }
 };
 

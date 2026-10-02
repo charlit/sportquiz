@@ -34,3 +34,6 @@ code, rows = call('/api/scores', {'name': 'Léa', 'mode': 'foot', 'score': 3000,
 assert [r['name'] for r in rows] == ['Léa', 'Max']
 assert call('/api/scores?mode=multi') == (200, [])                    # classements séparés
 print('ok')
+assert call('/api/scores', {'name': 'Max', 'mode': 'hard', 'score': 9999, 'good': 20})[0] == 200  # hard : pas plafonné à 4500
+assert call('/api/scores', {'name': 'Max', 'mode': 'hard', 'score': 999999, 'good': 20})[0] == 400
+print('ok hard')

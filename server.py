@@ -10,8 +10,8 @@ DB = os.environ.get('QUIZ_DB', os.path.join(ROOT, 'data', 'scores.json'))
 FILES = {'/': ('index.html', 'text/html; charset=utf-8'),
          '/index.html': ('index.html', 'text/html; charset=utf-8'),
          '/questions.js': ('questions.js', 'text/javascript; charset=utf-8')}
-MODES = ('foot', 'multi')
-MAX_SCORE = 4500  # 15 questions, 3 par niveau, max niveau*100 points
+MAX_SCORE = {'foot': 4500, 'multi': 4500, 'hard': 200_000}  # 15 questions max niveau*100 pts ; hard = sans fin
+MAX_GOOD = {'foot': 15, 'multi': 15, 'hard': 400}
 # ponytail: global lock + whole-file JSON rewrite and client-trusted scores, fine for friends; SQLite + server-side scoring if it goes public
 lock = threading.Lock()
 
@@ -56,7 +56,7 @@ class Handler(BaseHTTPRequestHandler):
                 return self.send(200, f.read(), ctype)
         if path == '/api/scores':
             mode = query.removeprefix('mode=')
-            if mode not in MODES:
+            if mode not in MAX_SCORE:
                 return self.send(400, {'error': 'mode inconnu'})
             return self.send(200, top(load(), mode))
         self.send(404, {'error': 'introuvable'})
@@ -73,7 +73,7 @@ class Handler(BaseHTTPRequestHandler):
             score = int(d.get('score', -1))
             good = int(d.get('good', 0))
             mode = d.get('mode')
-            if not name or mode not in MODES or not 0 <= score <= MAX_SCORE or not 0 <= good <= 15:
+            if not name or mode not in MAX_SCORE or not 0 <= score <= MAX_SCORE[mode] or not 0 <= good <= MAX_GOOD[mode]:
                 raise ValueError
         except (ValueError, TypeError, AttributeError):
             return self.send(400, {'error': 'requête invalide'})
