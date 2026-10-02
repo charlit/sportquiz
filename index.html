@@ -23,10 +23,11 @@
   .mode small { color:var(--dim); }
   .mode.hard { grid-column:1/-1; background:#2a1216; border-color:#5a2028; }
   .mode.hard:hover { border-color:var(--ko); }
+  .mode.hc { grid-column:auto; }
   .card { background:var(--card); border:1px solid var(--line); border-radius:16px; padding:16px; margin-top:20px; }
   .card h2 { margin:0 0 10px; font-size:1.2rem; }
-  .tabs { display:flex; gap:8px; margin-bottom:10px; }
-  .tabs button { flex:1; padding:8px; border-radius:10px; border:1px solid var(--line); background:transparent; color:var(--dim); font:inherit; cursor:pointer; }
+  .tabs { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:10px; }
+  .tabs button { flex:1 1 30%; white-space:nowrap; padding:8px; border-radius:10px; border:1px solid var(--line); background:transparent; color:var(--dim); font:inherit; cursor:pointer; }
   .tabs button.on { background:var(--acc); color:#222; border-color:var(--acc); font-weight:700; }
   table { width:100%; border-collapse:collapse; }
   td { padding:7px 6px; border-top:1px solid var(--line); }
@@ -72,16 +73,18 @@
       <button class="mode" data-mode="foot"><b>⚽</b><strong>Spécial Foot</strong><small>Ligue 1, Coupe du monde, Ballon d'or…</small></button>
       <button class="mode" data-mode="multi"><b>🏆</b><strong>Multisport</strong><small>Foot, tennis, rugby, F1, cyclisme</small></button>
       <button class="mode hard" data-mode="hard"><b>💀</b><strong>Mode Hard</strong><small>1 seule vie · que des questions Expert et Légende · tous les sports</small></button>
+      <button class="mode hard hc" data-mode="hardfoot"><b>💀⚽</b><strong>Hardcore Foot</strong><small>1 vie · que du foot Expert et Légende</small></button>
+      <button class="mode hard hc" data-mode="hardrugby"><b>💀🏉</b><strong>Hardcore Rugby</strong><small>1 vie · que du rugby Expert et Légende</small></button>
     </div>
     <div class="card">
       <h2>🏅 Classement</h2>
-      <div class="tabs"><button data-tab="foot" class="on">⚽ Foot</button><button data-tab="multi">🏆 Multi</button><button data-tab="hard">💀 Hard</button></div>
+      <div class="tabs"><button data-tab="foot" class="on">⚽ Foot</button><button data-tab="multi">🏆 Multi</button><button data-tab="hard">💀 Hard</button><button data-tab="hardfoot">💀⚽ HC Foot</button><button data-tab="hardrugby">💀🏉 HC Rugby</button></div>
       <table id="board"></table>
     </div>
     <p class="rules">5 niveaux (Facile → Légende), 3 questions par niveau. Une bonne réponse rapporte jusqu'à 100 points × le niveau
       (moitié des points si tu réponds au dernier moment). 20 secondes par question.<br>
       2 vies : une erreur coûte une vie et 50 points × le niveau, la deuxième erreur arrête la partie.<br>
-      Mode Hard : questions sans fin, la première erreur arrête tout.</p>
+      Modes Hard et Hardcore : questions sans fin, la première erreur arrête tout.</p>
   </section>
 
   <section id="quiz" class="hidden">
@@ -117,6 +120,8 @@ const LEVELS = ['', 'Facile', 'Moyen', 'Difficile', 'Expert', 'Légende'];
 const LEVEL_COLORS = ['', '#2ecc71', '#3fa7ff', '#ffb02e', '#ff6b3f', '#c56cff'];
 const SPORTS = { foot: '⚽ Foot', tennis: '🎾 Tennis', rugby: '🏉 Rugby', f1: '🏎️ F1', velo: '🚴 Cyclisme' };
 const PER_LEVEL = 3, TIME = 20;
+const HARD = { hard: null, hardfoot: 'foot', hardrugby: 'rugby' }; // modes 1 vie, niveaux 4-5, sans fin (null = tous les sports)
+const NAMES = { foot: 'Spécial Foot', multi: 'Multisport', hard: 'Mode Hard', hardfoot: 'Hardcore Foot', hardrugby: 'Hardcore Rugby' };
 const $ = id => document.getElementById(id);
 const shuffle = a => { a = [...a]; for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const show = id => ['home', 'quiz', 'end'].forEach(s => $(s).classList.toggle('hidden', s !== id));
@@ -138,8 +143,8 @@ function pick(pool, n) {
 
 function buildDeck(m) {
   const out = [];
-  if (m === 'hard') { // toutes les questions niveau 4-5, jamais vues d'abord ; marquées vues quand posées
-    const pool = Object.entries(QUESTIONS).flatMap(([s, qs]) => qs.filter(q => q[0] >= 4).map(q => [s, q]));
+  if (m in HARD) { // questions niveau 4-5, jamais vues d'abord ; marquées vues quand posées
+    const pool = Object.entries(QUESTIONS).filter(([s]) => !HARD[m] || s === HARD[m]).flatMap(([s, qs]) => qs.filter(q => q[0] >= 4).map(q => [s, q]));
     let fresh = pool.filter(x => !seen.has(x[1][1]));
     if (fresh.length < 20) { pool.forEach(x => seen.delete(x[1][1])); fresh = pool; }
     return shuffle(fresh).concat(shuffle(pool.filter(x => !fresh.includes(x))));
@@ -157,7 +162,7 @@ function buildDeck(m) {
 }
 
 function start(m) {
-  mode = m; deck = buildDeck(m); idx = 0; score = 0; good = 0; lives = m === 'hard' ? 1 : 2; saved = false;
+  mode = m; deck = buildDeck(m); idx = 0; score = 0; good = 0; lives = m in HARD ? 1 : 2; saved = false;
   $('score').textContent = 0;
   show('quiz');
   ask();
@@ -165,7 +170,7 @@ function start(m) {
 
 function ask() {
   const [sport, [lvl, q, ...choices]] = deck[idx];
-  if (mode === 'hard') {
+  if (mode in HARD) {
     seen.add(q);
     try { localStorage.setItem('quiz-seen', JSON.stringify([...seen])); } catch {}
     $('count').textContent = `💀 Question ${idx + 1} · ❤️ 1 vie`;
@@ -210,7 +215,7 @@ function answer(btn, ok, lvl) {
     btn?.classList.add('ko');
     lives--;
     let msg = btn ? '❌ Raté !' : '⏱️ Temps écoulé !';
-    if (mode !== 'hard') { // foot / multi : l'erreur coûte la moitié de la valeur de la question
+    if (!(mode in HARD)) { // foot / multi : l'erreur coûte la moitié de la valeur de la question
       const lost = Math.min(score, lvl * 50);
       score -= lost;
       $('score').textContent = score;
@@ -226,12 +231,12 @@ function answer(btn, ok, lvl) {
 function finish() {
   $('progress').style.width = '100%';
   $('final').textContent = score + ' pts';
-  if (mode === 'hard') {
-    const msg = good >= 25 ? 'Inhumain ! 🐐' : good >= 12 ? 'Énorme ! 🔥' : good >= 5 ? 'Solide ! 💪' : 'Le mode Hard porte bien son nom… 💀';
-    $('summary').textContent = `${good} bonne${good > 1 ? 's' : ''} réponse${good > 1 ? 's' : ''} d'affilée — ${msg} (Mode Hard)`;
+  if (mode in HARD) {
+    const msg = good >= 25 ? 'Inhumain ! 🐐' : good >= 12 ? 'Énorme ! 🔥' : good >= 5 ? 'Solide ! 💪' : `Le ${NAMES[mode]} porte bien son nom… 💀`;
+    $('summary').textContent = `${good} bonne${good > 1 ? 's' : ''} réponse${good > 1 ? 's' : ''} d'affilée — ${msg} (${NAMES[mode]})`;
   } else {
     const msg = good >= 13 ? 'Une légende du sport ! 🐐' : good >= 10 ? 'Excellent ! 🔥' : good >= 6 ? 'Pas mal du tout ! 👍' : 'Il faut réviser ! 📚';
-    $('summary').textContent = `${lives ? '' : `Éliminé à la question ${idx + 1} ! `}${good} / ${deck.length} bonnes réponses — ${msg} (${mode === 'foot' ? 'Spécial Foot' : 'Multisport'})`;
+    $('summary').textContent = `${lives ? '' : `Éliminé à la question ${idx + 1} ! `}${good} / ${deck.length} bonnes réponses — ${msg} (${NAMES[mode]})`;
   }
   $('saveMsg').textContent = '';
   $('saveForm').classList.remove('hidden');
@@ -243,7 +248,7 @@ function finish() {
 function renderBoard(rows, table, me, m) {
   table.innerHTML = rows.length ? rows.map((r, i) =>
     `<tr class="${me && r.name.toLowerCase() === me.toLowerCase() ? 'me' : ''}"><td>${['🥇', '🥈', '🥉'][i] || i + 1}</td>` +
-    `<td>${esc(r.name)} <small style="color:var(--dim)">${m === 'hard' ? r.good + ' ✔' : r.good + '/15'}</small></td><td>${r.score}</td></tr>`).join('')
+    `<td>${esc(r.name)} <small style="color:var(--dim)">${m in HARD ? r.good + ' ✔' : r.good + '/15'}</small></td><td>${r.score}</td></tr>`).join('')
     : '<tr><td colspan="3" class="empty">Personne pour l\'instant… à toi de jouer !</td></tr>';
 }
 
