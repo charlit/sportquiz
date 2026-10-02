@@ -80,6 +80,7 @@
     </div>
     <p class="rules">5 niveaux (Facile → Légende), 3 questions par niveau. Une bonne réponse rapporte jusqu'à 100 points × le niveau
       (moitié des points si tu réponds au dernier moment). 20 secondes par question.<br>
+      2 vies : une erreur coûte une vie et 50 points × le niveau, la deuxième erreur arrête la partie.<br>
       Mode Hard : questions sans fin, la première erreur arrête tout.</p>
   </section>
 
@@ -121,7 +122,7 @@ const shuffle = a => { a = [...a]; for (let i = a.length - 1; i > 0; i--) { cons
 const show = id => ['home', 'quiz', 'end'].forEach(s => $(s).classList.toggle('hidden', s !== id));
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
 
-let mode, deck, idx, score, good, timer, t0, saved;
+let mode, deck, idx, score, good, lives, timer, t0, saved;
 
 // Questions déjà posées sur ce navigateur : on ne les repose qu'une fois toutes les autres du même lot épuisées.
 let seen;
@@ -156,7 +157,7 @@ function buildDeck(m) {
 }
 
 function start(m) {
-  mode = m; deck = buildDeck(m); idx = 0; score = 0; good = 0; saved = false;
+  mode = m; deck = buildDeck(m); idx = 0; score = 0; good = 0; lives = m === 'hard' ? 1 : 2; saved = false;
   $('score').textContent = 0;
   show('quiz');
   ask();
@@ -170,7 +171,7 @@ function ask() {
     $('count').textContent = `💀 Question ${idx + 1} · ❤️ 1 vie`;
     $('progress').style.width = '0';
   } else {
-    $('count').textContent = `Question ${idx + 1} / ${deck.length}`;
+    $('count').textContent = `Question ${idx + 1} / ${deck.length} · ${'❤️'.repeat(lives)}`;
     $('progress').style.width = (idx / deck.length * 100) + '%';
   }
   $('level').textContent = `Niveau ${lvl} · ${LEVELS[lvl]}`;
@@ -207,11 +208,18 @@ function answer(btn, ok, lvl) {
     $('feedback').style.color = 'var(--ok)';
   } else {
     btn?.classList.add('ko');
-    $('feedback').textContent = btn ? '❌ Raté !' : '⏱️ Temps écoulé !';
+    lives--;
+    let msg = btn ? '❌ Raté !' : '⏱️ Temps écoulé !';
+    if (mode !== 'hard') { // foot / multi : l'erreur coûte la moitié de la valeur de la question
+      const lost = Math.min(score, lvl * 50);
+      score -= lost;
+      $('score').textContent = score;
+      if (lost) msg += ` −${lost} points`;
+    }
+    $('feedback').textContent = msg + (lives ? ` · plus qu'${lives > 1 ? lives + ' vies' : 'une vie'} ❤️` : ' 💀 Game over');
     $('feedback').style.color = 'var(--ko)';
   }
-  const over = !ok && mode === 'hard'; // 1 vie : première erreur = fin
-  if (over) $('feedback').textContent += ' 💀 Game over';
+  const over = lives === 0;
   setTimeout(() => !over && ++idx < deck.length ? ask() : finish(), ok ? 1200 : 2200);
 }
 
@@ -223,7 +231,7 @@ function finish() {
     $('summary').textContent = `${good} bonne${good > 1 ? 's' : ''} réponse${good > 1 ? 's' : ''} d'affilée — ${msg} (Mode Hard)`;
   } else {
     const msg = good >= 13 ? 'Une légende du sport ! 🐐' : good >= 10 ? 'Excellent ! 🔥' : good >= 6 ? 'Pas mal du tout ! 👍' : 'Il faut réviser ! 📚';
-    $('summary').textContent = `${good} / ${deck.length} bonnes réponses — ${msg} (${mode === 'foot' ? 'Spécial Foot' : 'Multisport'})`;
+    $('summary').textContent = `${lives ? '' : `Éliminé à la question ${idx + 1} ! `}${good} / ${deck.length} bonnes réponses — ${msg} (${mode === 'foot' ? 'Spécial Foot' : 'Multisport'})`;
   }
   $('saveMsg').textContent = '';
   $('saveForm').classList.remove('hidden');
