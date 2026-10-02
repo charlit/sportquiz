@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sport Quiz</title>
+<style>
+  :root { --bg:#0b1d14; --card:#13301f; --line:#24513a; --txt:#eef7f0; --dim:#9db8a6; --acc:#ffd23f; --ok:#2ecc71; --ko:#e74c3c; }
+  * { box-sizing:border-box; }
+  body { margin:0; min-height:100vh; background:radial-gradient(circle at 50% 0, #1d4a31, var(--bg) 70%); color:var(--txt);
+         font:16px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width:640px; margin:0 auto; padding:20px 16px 40px; }
+  h1 { font-size:2.2rem; text-align:center; margin:10px 0 4px; letter-spacing:1px; }
+  h1 span { color:var(--acc); }
+  .sub { text-align:center; color:var(--dim); margin:0 0 24px; }
+  .hidden { display:none !important; }
+  .modes { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .mode { background:var(--card); border:2px solid var(--line); border-radius:16px; padding:20px 12px; color:var(--txt);
+          font:inherit; cursor:pointer; text-align:center; transition:transform .1s, border-color .1s; }
+  .mode:hover { transform:translateY(-3px); border-color:var(--acc); }
+  .mode b { display:block; font-size:2.6rem; }
+  .mode strong { display:block; font-size:1.2rem; margin:6px 0 2px; }
+  .mode small { color:var(--dim); }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:16px; padding:16px; margin-top:20px; }
+  .card h2 { margin:0 0 10px; font-size:1.2rem; }
+  .tabs { display:flex; gap:8px; margin-bottom:10px; }
+  .tabs button { flex:1; padding:8px; border-radius:10px; border:1px solid var(--line); background:transparent; color:var(--dim); font:inherit; cursor:pointer; }
+  .tabs button.on { background:var(--acc); color:#222; border-color:var(--acc); font-weight:700; }
+  table { width:100%; border-collapse:collapse; }
+  td { padding:7px 6px; border-top:1px solid var(--line); }
+  td:first-child { width:2.5em; color:var(--dim); }
+  td:last-child { text-align:right; font-weight:700; color:var(--acc); }
+  tr.me td { background:#2b5a3f; }
+  td.empty { text-align:center; font-weight:400; color:var(--dim); text-align:center; padding:12px; }
+  .rules { color:var(--dim); font-size:.9rem; }
+  /* quiz */
+  .top { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; color:var(--dim); }
+  .top b { color:var(--acc); font-size:1.3rem; }
+  .bar { height:8px; background:#0006; border-radius:4px; overflow:hidden; }
+  .bar i { display:block; height:100%; background:var(--acc); transition:width .3s; }
+  #timer i { background:var(--ok); transition:none; }
+  .badges { display:flex; gap:8px; margin:16px 0 8px; flex-wrap:wrap; }
+  .badge { padding:3px 10px; border-radius:999px; font-size:.85rem; font-weight:700; background:#0005; }
+  #question { font-size:1.35rem; margin:8px 0 18px; min-height:3em; }
+  .answers { display:grid; gap:10px; }
+  .answers button { padding:14px 16px; border-radius:12px; border:2px solid var(--line); background:var(--card); color:var(--txt);
+                    font:inherit; font-size:1.05rem; text-align:left; cursor:pointer; }
+  .answers button:hover:not(:disabled) { border-color:var(--acc); }
+  .answers button.ok { background:var(--ok); border-color:var(--ok); color:#06210f; font-weight:700; }
+  .answers button.ko { background:var(--ko); border-color:var(--ko); }
+  .answers button:disabled { cursor:default; }
+  #feedback { text-align:center; min-height:1.6em; margin-top:14px; font-weight:700; font-size:1.1rem; }
+  /* fin */
+  .big { text-align:center; font-size:3.5rem; font-weight:800; color:var(--acc); margin:6px 0 0; }
+  .center { text-align:center; }
+  form { display:flex; gap:8px; margin-top:12px; }
+  input { flex:1; min-width:0; padding:12px; border-radius:10px; border:2px solid var(--line); background:#0005; color:var(--txt); font:inherit; }
+  .btn { padding:12px 18px; border-radius:10px; border:0; background:var(--acc); color:#222; font:inherit; font-weight:700; cursor:pointer; }
+  .btn.alt { background:transparent; color:var(--txt); border:2px solid var(--line); }
+  .row { display:flex; gap:10px; justify-content:center; margin-top:18px; flex-wrap:wrap; }
+  #saveMsg { color:var(--dim); min-height:1.4em; margin:8px 0 0; }
+</style>
+</head>
+<body>
+<main>
+  <section id="home">
+    <h1>SPORT <span>QUIZ</span></h1>
+    <p class="sub">15 questions, de plus en plus dures. Réponds vite pour gagner plus !</p>
+    <div class="modes">
+      <button class="mode" data-mode="foot"><b>⚽</b><strong>Spécial Foot</strong><small>Ligue 1, Coupe du monde, Ballon d'or…</small></button>
+      <button class="mode" data-mode="multi"><b>🏆</b><strong>Multisport</strong><small>Foot, tennis, rugby, F1, cyclisme</small></button>
+    </div>
+    <div class="card">
+      <h2>🏅 Classement</h2>
+      <div class="tabs"><button data-tab="foot" class="on">⚽ Foot</button><button data-tab="multi">🏆 Multisport</button></div>
+      <table id="board"></table>
+    </div>
+    <p class="rules">5 niveaux (Facile → Légende), 3 questions par niveau. Une bonne réponse rapporte jusqu'à 100 points × le niveau
+      (moitié des points si tu réponds au dernier moment). 20 secondes par question.</p>
+  </section>
+
+  <section id="quiz" class="hidden">
+    <div class="top"><span id="count"></span><b id="score">0</b></div>
+    <div class="bar"><i id="progress"></i></div>
+    <div class="badges"><span class="badge" id="level"></span><span class="badge" id="sport"></span></div>
+    <div id="question"></div>
+    <div class="bar" id="timer"><i></i></div>
+    <div class="answers" id="answers" style="margin-top:16px"></div>
+    <div id="feedback"></div>
+  </section>
+
+  <section id="end" class="hidden">
+    <h1>Terminé !</h1>
+    <p class="big" id="final"></p>
+    <p class="center" id="summary"></p>
+    <div class="card">
+      <h2>Enregistre ton score</h2>
+      <form id="saveForm">
+        <input id="pseudo" maxlength="16" placeholder="Ton pseudo" required autocomplete="nickname">
+        <button class="btn">Enregistrer</button>
+      </form>
+      <p id="saveMsg"></p>
+      <table id="endBoard"></table>
+    </div>
+    <div class="row"><button class="btn" id="again">Rejouer</button><button class="btn alt" id="toHome">Accueil</button></div>
+  </section>
+</main>
+
+<script src="questions.js"></script>
+<script>
+const LEVELS = ['', 'Facile', 'Moyen', 'Difficile', 'Expert', 'Légende'];
+const LEVEL_COLORS = ['', '#2ecc71', '#3fa7ff', '#ffb02e', '#ff6b3f', '#c56cff'];
+const SPORTS = { foot: '⚽ Foot', tennis: '🎾 Tennis', rugby: '🏉 Rugby', f1: '🏎️ F1', velo: '🚴 Cyclisme' };
+const PER_LEVEL = 3, TIME = 20;
+const $ = id => document.getElementById(id);
+const shuffle = a => { a = [...a]; for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const show = id => ['home', 'quiz', 'end'].forEach(s => $(s).classList.toggle('hidden', s !== id));
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+
+let mode, deck, idx, score, good, timer, t0, saved;
+
+function buildDeck(m) {
+  const out = [];
+  for (let lvl = 1; lvl <= 5; lvl++) {
+    if (m === 'foot') {
+      shuffle(QUESTIONS.foot.filter(q => q[0] === lvl)).slice(0, PER_LEVEL).forEach(q => out.push(['foot', q]));
+    } else { // 3 sports différents par niveau
+      shuffle(Object.keys(QUESTIONS)).slice(0, PER_LEVEL).forEach(s =>
+        out.push([s, shuffle(QUESTIONS[s].filter(q => q[0] === lvl))[0]]));
+    }
+  }
+  return out;
+}
+
+function start(m) {
+  mode = m; deck = buildDeck(m); idx = 0; score = 0; good = 0; saved = false;
+  $('score').textContent = 0;
+  show('quiz');
+  ask();
+}
+
+function ask() {
+  const [sport, [lvl, q, ...choices]] = deck[idx];
+  $('count').textContent = `Question ${idx + 1} / ${deck.length}`;
+  $('progress').style.width = (idx / deck.length * 100) + '%';
+  $('level').textContent = `Niveau ${lvl} · ${LEVELS[lvl]}`;
+  $('level').style.background = LEVEL_COLORS[lvl]; $('level').style.color = '#111';
+  $('sport').textContent = SPORTS[sport];
+  $('question').textContent = q;
+  $('feedback').textContent = '';
+  $('answers').innerHTML = '';
+  shuffle(choices).forEach(c => {
+    const b = document.createElement('button');
+    b.textContent = c;
+    b.onclick = () => answer(b, c === choices[0], lvl);
+    $('answers').append(b);
+  });
+  t0 = performance.now();
+  clearInterval(timer);
+  timer = setInterval(() => {
+    const left = TIME - (performance.now() - t0) / 1000;
+    $('timer').firstElementChild.style.width = Math.max(0, left / TIME * 100) + '%';
+    if (left <= 0) answer(null, false, lvl);
+  }, 50);
+}
+
+function answer(btn, ok, lvl) {
+  clearInterval(timer);
+  const left = Math.max(0, TIME - (performance.now() - t0) / 1000);
+  const correct = deck[idx][1][2];
+  [...$('answers').children].forEach(b => { b.disabled = true; if (b.textContent === correct) b.classList.add('ok'); });
+  if (ok) {
+    const pts = Math.round(lvl * 100 * (0.5 + 0.5 * left / TIME) / 10) * 10;
+    score += pts; good++;
+    $('score').textContent = score;
+    $('feedback').textContent = `✅ Bravo ! +${pts} points`;
+    $('feedback').style.color = 'var(--ok)';
+  } else {
+    btn?.classList.add('ko');
+    $('feedback').textContent = btn ? '❌ Raté !' : '⏱️ Temps écoulé !';
+    $('feedback').style.color = 'var(--ko)';
+  }
+  setTimeout(() => ++idx < deck.length ? ask() : finish(), ok ? 1200 : 2200);
+}
+
+function finish() {
+  $('progress').style.width = '100%';
+  $('final').textContent = score + ' pts';
+  const msg = good >= 13 ? 'Une légende du sport ! 🐐' : good >= 10 ? 'Excellent ! 🔥' : good >= 6 ? 'Pas mal du tout ! 👍' : 'Il faut réviser ! 📚';
+  $('summary').textContent = `${good} / ${deck.length} bonnes réponses — ${msg} (${mode === 'foot' ? 'Spécial Foot' : 'Multisport'})`;
+  $('saveMsg').textContent = '';
+  $('saveForm').classList.remove('hidden');
+  try { $('pseudo').value = localStorage.getItem('quiz-pseudo') || ''; } catch {}
+  show('end');
+  loadBoard(mode, $('endBoard'));
+}
+
+function renderBoard(rows, table, me) {
+  table.innerHTML = rows.length ? rows.map((r, i) =>
+    `<tr class="${me && r.name.toLowerCase() === me.toLowerCase() ? 'me' : ''}"><td>${['🥇', '🥈', '🥉'][i] || i + 1}</td>` +
+    `<td>${esc(r.name)} <small style="color:var(--dim)">${r.good}/15</small></td><td>${r.score}</td></tr>`).join('')
+    : '<tr><td colspan="3" class="empty">Personne pour l\'instant… à toi de jouer !</td></tr>';
+}
+
+async function loadBoard(m, table, me) {
+  try {
+    const r = await fetch('api/scores?mode=' + m);
+    if (!r.ok) throw 0;
+    renderBoard(await r.json(), table, me);
+  } catch { table.innerHTML = '<tr><td class="empty">Classement indisponible (serveur hors ligne)</td></tr>'; }
+}
+
+$('saveForm').onsubmit = async e => {
+  e.preventDefault();
+  if (saved) return;
+  const name = $('pseudo').value.trim();
+  try {
+    const r = await fetch('api/scores', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, mode, score, good }) });
+    if (!r.ok) throw 0;
+    saved = true;
+    try { localStorage.setItem('quiz-pseudo', name); } catch {}
+    const rows = await r.json();
+    const rank = rows.findIndex(x => x.name.toLowerCase() === name.toLowerCase()) + 1;
+    $('saveMsg').textContent = rank ? `Enregistré ! Tu es ${rank === 1 ? '1er 🏆' : rank + 'e'} au classement.` : 'Enregistré ! (ton meilleur score est gardé)';
+    $('saveForm').classList.add('hidden');
+    renderBoard(rows, $('endBoard'), name);
+  } catch { $('saveMsg').textContent = "Impossible d'enregistrer, réessaie."; }
+};
+
+document.querySelectorAll('.mode').forEach(b => b.onclick = () => start(b.dataset.mode));
+document.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => {
+  document.querySelectorAll('[data-tab]').forEach(x => x.classList.toggle('on', x === b));
+  loadBoard(b.dataset.tab, $('board'));
+});
+$('again').onclick = () => start(mode);
+$('toHome').onclick = () => { show('home'); document.querySelector('[data-tab="' + mode + '"]').click(); };
+loadBoard('foot', $('board'));
+</script>
+</body>
+</html>

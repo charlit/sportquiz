@@ -1,0 +1,93 @@
+"""Sport Quiz : sert le jeu + classement partagé (stdlib uniquement)."""
+import json
+import os
+import threading
+import time
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+
+ROOT = os.path.dirname(os.path.abspath(__file__))
+DB = os.environ.get('QUIZ_DB', os.path.join(ROOT, 'data', 'scores.json'))
+FILES = {'/': ('index.html', 'text/html; charset=utf-8'),
+         '/index.html': ('index.html', 'text/html; charset=utf-8'),
+         '/questions.js': ('questions.js', 'text/javascript; charset=utf-8')}
+MODES = ('foot', 'multi')
+MAX_SCORE = 4500  # 15 questions, 3 par niveau, max niveau*100 points
+# ponytail: global lock + whole-file JSON rewrite and client-trusted scores, fine for friends; SQLite + server-side scoring if it goes public
+lock = threading.Lock()
+
+
+def load():
+    try:
+        with open(DB, encoding='utf-8') as f:
+            return json.load(f)
+    except (FileNotFoundError, ValueError):
+        return {}
+
+
+def save(db):
+    os.makedirs(os.path.dirname(DB), exist_ok=True)
+    tmp = DB + '.tmp'
+    with open(tmp, 'w', encoding='utf-8') as f:
+        json.dump(db, f, ensure_ascii=False)
+    os.replace(tmp, DB)
+
+
+def top(db, mode, n=20):
+    rows = sorted(db.get(mode, {}).values(), key=lambda p: (-p['score'], p['date']))
+    return rows[:n]
+
+
+class Handler(BaseHTTPRequestHandler):
+    def send(self, code, body, ctype='application/json'):
+        if not isinstance(body, bytes):
+            body = json.dumps(body, ensure_ascii=False).encode()
+        self.send_response(code)
+        self.send_header('Content-Type', ctype)
+        self.send_header('Content-Length', str(len(body)))
+        self.send_header('Cache-Control', 'no-store')
+        self.end_headers()
+        self.wfile.write(body)
+
+    def do_GET(self):
+        path, _, query = self.path.partition('?')
+        if path in FILES:
+            name, ctype = FILES[path]
+            with open(os.path.join(ROOT, name), 'rb') as f:
+                return self.send(200, f.read(), ctype)
+        if path == '/api/scores':
+            mode = query.removeprefix('mode=')
+            if mode not in MODES:
+                return self.send(400, {'error': 'mode inconnu'})
+            return self.send(200, top(load(), mode))
+        self.send(404, {'error': 'introuvable'})
+
+    def do_POST(self):
+        if self.path != '/api/scores':
+            return self.send(404, {'error': 'introuvable'})
+        try:
+            n = int(self.headers.get('Content-Length', 0))
+            if not 0 < n <= 1000:
+                raise ValueError
+            d = json.loads(self.rfile.read(n))
+            name = ' '.join(str(d.get('name', '')).split())[:16]
+            score = int(d.get('score', -1))
+            good = int(d.get('good', 0))
+            mode = d.get('mode')
+            if not name or mode not in MODES or not 0 <= score <= MAX_SCORE or not 0 <= good <= 15:
+                raise ValueError
+        except (ValueError, TypeError, AttributeError):
+            return self.send(400, {'error': 'requête invalide'})
+        key = name.lower()
+        with lock:
+            db = load()
+            board = db.setdefault(mode, {})
+            p = board.get(key)
+            if not p or score > p['score']:  # on garde le meilleur score par pseudo
+                board[key] = {'name': name, 'score': score, 'good': good, 'date': int(time.time())}
+                save(db)
+            rows = top(db, mode)
+        self.send(200, rows)
+
+
+if __name__ == '__main__':
+    ThreadingHTTPServer(('', int(os.environ.get('PORT', 8000))), Handler).serve_forever()
