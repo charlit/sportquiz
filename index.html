@@ -84,7 +84,8 @@
     <p class="rules">5 niveaux (Facile → Légende), 3 questions par niveau. Une bonne réponse rapporte jusqu'à 100 points × le niveau
       (moitié des points si tu réponds au dernier moment). 20 secondes par question.<br>
       2 vies : une erreur coûte une vie et 50 points × le niveau, la deuxième erreur arrête la partie.<br>
-      Modes Hard et Hardcore : questions sans fin, la première erreur arrête tout.</p>
+      Modes Hard et Hardcore : questions sans fin, la première erreur arrête tout, et la vitesse paie double
+      (jusqu'à 200 points × le niveau si tu réponds tout de suite, 20 % au dernier moment).</p>
   </section>
 
   <section id="quiz" class="hidden">
@@ -161,6 +162,9 @@ function buildDeck(m) {
   return out;
 }
 
+// Points d'une bonne réponse selon le temps restant. Hard/Hardcore : 2× si instantané, 0,2× au dernier moment.
+const points = (lvl, left) => Math.round(lvl * 100 * (mode in HARD ? 0.2 + 1.8 * left / TIME : 0.5 + 0.5 * left / TIME) / 10) * 10;
+
 function start(m) {
   mode = m; deck = buildDeck(m); idx = 0; score = 0; good = 0; lives = m in HARD ? 1 : 2; saved = false;
   $('score').textContent = 0;
@@ -196,6 +200,7 @@ function ask() {
   timer = setInterval(() => {
     const left = TIME - (performance.now() - t0) / 1000;
     $('timer').firstElementChild.style.width = Math.max(0, left / TIME * 100) + '%';
+    if (mode in HARD && left > 0) $('feedback').textContent = `⚡ ${points(lvl, left)} pts en jeu`;
     if (left <= 0) answer(null, false, lvl);
   }, 50);
 }
@@ -206,7 +211,7 @@ function answer(btn, ok, lvl) {
   const correct = deck[idx][1][2];
   [...$('answers').children].forEach(b => { b.disabled = true; if (b.textContent === correct) b.classList.add('ok'); });
   if (ok) {
-    const pts = Math.round(lvl * 100 * (0.5 + 0.5 * left / TIME) / 10) * 10;
+    const pts = points(lvl, left);
     score += pts; good++;
     $('score').textContent = score;
     $('feedback').textContent = `✅ Bravo ! +${pts} points`;

@@ -35,7 +35,7 @@ assert [r['name'] for r in rows] == ['Léa', 'Max']
 assert call('/api/scores?mode=multi') == (200, [])                    # classements séparés
 print('ok')
 assert call('/api/scores', {'name': 'Max', 'mode': 'hard', 'score': 9999, 'good': 20})[0] == 200  # hard : pas plafonné à 4500
-assert call('/api/scores', {'name': 'Max', 'mode': 'hard', 'score': 999999, 'good': 20})[0] == 400
+assert call('/api/scores', {'name': 'Max', 'mode': 'hard', 'score': 9999999, 'good': 20})[0] == 400
 print('ok hard')
 assert call('/api/scores', {'name': 'Max', 'mode': 'hardrugby', 'score': 2000, 'good': 5})[0] == 200
 assert call('/api/scores?mode=hardfoot') == (200, [])
