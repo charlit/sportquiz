@@ -271,19 +271,19 @@ async function loadBoard(m, table, me) {
 $('saveForm').onsubmit = async e => {
   e.preventDefault();
   if (saved) return;
+  saved = true; // bloque les clics répétés pendant l'envoi
   const name = $('pseudo').value.trim();
   try {
     const r = await fetch('api/scores', { method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name, mode, score, good }) });
     if (!r.ok) throw 0;
-    saved = true;
     try { localStorage.setItem('quiz-pseudo', name); } catch {}
     const rows = await r.json();
     const rank = rows.findIndex(x => x.name.toLowerCase() === name.toLowerCase()) + 1;
     $('saveMsg').textContent = rank ? `Enregistré ! Tu es ${rank === 1 ? '1er 🏆' : rank + 'e'} au classement.` : 'Enregistré ! (ton meilleur score est gardé)';
     $('saveForm').classList.add('hidden');
     renderBoard(rows, $('endBoard'), name, mode);
-  } catch { $('saveMsg').textContent = "Impossible d'enregistrer, réessaie."; }
+  } catch { saved = false; $('saveMsg').textContent = "Impossible d'enregistrer, réessaie."; }
 };
 
 document.querySelectorAll('.mode').forEach(b => b.onclick = () => start(b.dataset.mode));
