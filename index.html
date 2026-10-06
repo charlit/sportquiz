@@ -132,6 +132,10 @@ const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;',
 
 let mode, deck, idx, score, good, lives, timer, next, t0, saved;
 
+// Dans l'app iOS, le classement passe par Game Center : pas de pseudo, le score part tout seul.
+const GC = !!window.__quizGC;
+let gcName = null;
+
 // Questions déjà posées sur ce navigateur : on ne les repose qu'une fois toutes les autres du même lot épuisées.
 let seen;
 try { seen = new Set(JSON.parse(localStorage.getItem('quiz-seen')) || []); } catch { seen = new Set(); }
@@ -246,6 +250,12 @@ function finish() {
     const msg = good >= 13 ? 'Une légende du sport ! 🐐' : good >= 10 ? 'Excellent ! 🔥' : good >= 6 ? 'Pas mal du tout ! 👍' : 'Il faut réviser ! 📚';
     $('summary').textContent = `${lives ? '' : `Éliminé à la question ${idx + 1} ! `}${good} / ${deck.length} bonnes réponses — ${msg} (${NAMES[mode]})`;
   }
+  if (GC) {
+    show('end');
+    if (gcName) { $('saveMsg').textContent = 'Envoi du score…'; sendScore(gcName); }
+    else { $('saveMsg').textContent = 'Connecte-toi à Game Center pour entrer au classement'; loadBoard(mode, $('endBoard')); }
+    return;
+  }
   $('saveMsg').textContent = '';
   $('saveForm').classList.remove('hidden');
   try { $('pseudo').value = localStorage.getItem('quiz-pseudo') || ''; } catch {}
@@ -268,23 +278,29 @@ async function loadBoard(m, table, me) {
   } catch { table.innerHTML = '<tr><td class="empty">Classement indisponible (serveur hors ligne)</td></tr>'; }
 }
 
-$('saveForm').onsubmit = async e => {
+$('saveForm').onsubmit = e => {
   e.preventDefault();
-  if (saved) return;
+  if (!saved) sendScore($('pseudo').value.trim());
+};
+
+async function sendScore(name) {
   saved = true; // bloque les clics répétés pendant l'envoi
-  const name = $('pseudo').value.trim();
   try {
     const r = await fetch('api/scores', { method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name, mode, score, good }) });
     if (!r.ok) throw 0;
-    try { localStorage.setItem('quiz-pseudo', name); } catch {}
+    if (!GC) try { localStorage.setItem('quiz-pseudo', name); } catch {}
     const rows = await r.json();
     const rank = rows.findIndex(x => x.name.toLowerCase() === name.toLowerCase()) + 1;
     $('saveMsg').textContent = rank ? `Enregistré ! Tu es ${rank === 1 ? '1er 🏆' : rank + 'e'} au classement.` : 'Enregistré ! (ton meilleur score est gardé)';
     $('saveForm').classList.add('hidden');
     renderBoard(rows, $('endBoard'), name, mode);
-  } catch { saved = false; $('saveMsg').textContent = "Impossible d'enregistrer, réessaie."; }
-};
+  } catch {
+    saved = false;
+    $('saveMsg').textContent = GC ? 'Classement Game Center indisponible' : "Impossible d'enregistrer, réessaie.";
+    if (GC) loadBoard(mode, $('endBoard'));
+  }
+}
 
 document.querySelectorAll('.mode').forEach(b => b.onclick = () => start(b.dataset.mode));
 document.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => {
@@ -298,6 +314,12 @@ $('quit').onclick = () => { // abandon : on coupe le chrono et la question suiva
 };
 $('toHome').onclick = () => { show('home'); document.querySelector('[data-tab="' + mode + '"]').click(); };
 loadBoard('foot', $('board'));
+if (GC) {                                        // l'app prévient quand le joueur Game Center change
+  $('saveForm').classList.add('hidden');
+  document.querySelector('#end h2').textContent = 'Classement';
+  window.__quizPlayer = name => { gcName = name; };
+  fetch('api/me').then(r => r.json()).then(r => { gcName = r.name || null; }, () => {});
+}
 </script>
 </body>
 </html>
