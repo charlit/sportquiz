@@ -131,7 +131,7 @@
     <p class="sub">Des questions de plus en plus dures. Réponds vite pour gagner plus !</p>
     <div class="tiles">
       <button class="tile c-foot" data-mode="foot"><b>⚽</b><strong>Spécial Foot</strong><small>100 questions, 3 vies</small></button>
-      <button class="tile c-multi" data-mode="multi"><b>🏆</b><strong>Multisport</strong><small>Foot, rugby, basket, tennis, auto, vélo</small></button>
+      <button class="tile c-multi" data-mode="multi"><b>🏆</b><strong>Multisport</strong><small>Foot, rugby, basket, tennis, auto, vélo, boxe</small></button>
       <button class="tile c-hc" id="goHard"><span class="tag">1 VIE</span><b>💀</b><strong>Hardcore</strong><small>Que du très dur, choisis ton sport</small></button>
       <button class="tile c-adv" id="goAdv"><span class="tag">NOUVEAU</span><b>🗺️</b><strong>Aventure</strong><small>10 étapes à débloquer par sport</small></button>
     </div>
@@ -204,15 +204,15 @@
 <script>
 const LEVELS = ['', 'Facile', 'Moyen', 'Difficile', 'Expert', 'Légende'];
 const LEVEL_COLORS = ['', '#2ecc71', '#3fa7ff', '#ffb02e', '#ff6b3f', '#c56cff'];
-const SPORTS = { foot: '⚽ Foot', tennis: '🎾 Tennis', rugby: '🏉 Rugby', basket: '🏀 Basket', f1: '🏎️ Sport auto', velo: '🚴 Cyclisme' };
-const SPORT_COLORS = { foot: '#2ecc71', rugby: '#ff8a3d', basket: '#ff6b1a', f1: '#ff3b3b', tennis: '#d4f53c', velo: '#ffd23f', all: '#ff5a4f' };
+const SPORTS = { foot: '⚽ Foot', tennis: '🎾 Tennis', rugby: '🏉 Rugby', basket: '🏀 Basket', f1: '🏎️ Sport auto', velo: '🚴 Cyclisme', boxe: '🥊 Boxe' };
+const SPORT_COLORS = { foot: '#2ecc71', rugby: '#ff8a3d', basket: '#ff6b1a', f1: '#ff3b3b', tennis: '#d4f53c', velo: '#ffd23f', boxe: '#ff4d6d', all: '#ff5a4f' };
 const PER_LEVEL = 3, TIME = 20; // Multisport : 3 questions par niveau (15)
 const FOOT_PLAN = [0, 10, 20, 25, 25, 20]; // Spécial Foot : questions par niveau 1→5 (100)
 const HARD = { hard: null, hardfoot: 'foot', hardrugby: 'rugby', hardbasket: 'basket', hardtennis: 'tennis', hardf1: 'f1', hardvelo: 'velo' }; // modes 1 vie, niveaux 4-5, sans fin (null = tous les sports)
 const NAMES = { foot: 'Spécial Foot', multi: 'Multisport', hard: 'Hardcore Tous sports', hardfoot: 'Hardcore Foot', hardrugby: 'Hardcore Rugby',
                 hardbasket: 'Hardcore Basket', hardtennis: 'Hardcore Tennis', hardf1: 'Hardcore Sport auto', hardvelo: 'Hardcore Cyclisme', adv: 'Aventure' };
 // Aventure : 10 étapes par sport (2 par niveau), 5 questions, 4 bonnes réponses pour passer
-const ADV_SPORTS = ['foot', 'rugby', 'basket', 'f1', 'tennis'], STAGES = 10, PER_STAGE = 5, NEED = 4;
+const ADV_SPORTS = ['foot', 'rugby', 'basket', 'f1', 'tennis', 'boxe'], STAGES = 10, PER_STAGE = 5, NEED = 4;
 const stageLevel = k => Math.ceil(k / 2);
 const $ = id => document.getElementById(id);
 const shuffle = a => { a = [...a]; for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
@@ -504,19 +504,23 @@ $('toHome').onclick = goHome;
 // et sert dès la partie suivante. Hors ligne ou fichier invalide : on garde ce qu'on a.
 const QUESTIONS_URL = 'https://raw.githubusercontent.com/charlit/sportquiz/main/questions.json';
 const countQ = q => Object.values(q).reduce((n, a) => n + a.length, 0);
+// Renvoie les questions utilisables (sports connus de cette version), ou null si le fichier est invalide.
+// Un sport inconnu (ajouté dans une version plus récente de l'app) est ignoré, pas bloquant.
 function validQuestions(q) {
-  if (!q || typeof q !== 'object' || Array.isArray(q)) return false;
-  const shapeOk = Object.entries(q).every(([s, qs]) => s in SPORTS && Array.isArray(qs) && qs.every(x =>
+  if (!q || typeof q !== 'object' || Array.isArray(q)) return null;
+  const known = Object.fromEntries(Object.entries(q).filter(([s]) => s in SPORTS));
+  const shapeOk = Object.values(known).every(qs => Array.isArray(qs) && qs.every(x =>
     Array.isArray(x) && x.length === 6 && Number.isInteger(x[0]) && x[0] >= 1 && x[0] <= 5 && x.slice(1).every(t => typeof t === 'string' && t)));
   // assez de questions partout pour tous les modes (Aventure : 5 par niveau, Spécial Foot : FOOT_PLAN)
-  return shapeOk && Object.keys(QUESTIONS).every(s => q[s] && [1, 2, 3, 4, 5].every(l =>
-    q[s].filter(x => x[0] === l).length >= Math.max(PER_STAGE, s === 'foot' ? FOOT_PLAN[l] : 0)));
+  const enough = Object.keys(QUESTIONS).every(s => known[s] && [1, 2, 3, 4, 5].every(l =>
+    known[s].filter(x => x[0] === l).length >= Math.max(PER_STAGE, s === 'foot' ? FOOT_PLAN[l] : 0)));
+  return shapeOk && enough ? known : null;
 }
 if (GC) {
-  const cached = load('quiz-questions', null); // pas si l'app vient d'être mise à jour avec plus de questions
-  if (validQuestions(cached) && countQ(cached) >= countQ(QUESTIONS)) Object.assign(QUESTIONS, cached);
+  const cached = validQuestions(load('quiz-questions', null)); // pas si l'app vient d'être mise à jour avec plus de questions
+  if (cached && countQ(cached) >= countQ(QUESTIONS)) Object.assign(QUESTIONS, cached);
   fetch(QUESTIONS_URL, { cache: 'no-store' }).then(r => r.ok ? r.json() : null)
-    .then(q => { if (validQuestions(q)) { Object.assign(QUESTIONS, q); store('quiz-questions', q); } })
+    .then(q => { const ok = validQuestions(q); if (ok) { Object.assign(QUESTIONS, ok); store('quiz-questions', ok); } })
     .catch(() => {});
 }
 if (GC) {                                        // l'app prévient quand le joueur Game Center change
