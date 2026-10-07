@@ -431,7 +431,7 @@ function advFinish() {
 function renderBoard(rows, table, me, m) {
   table.innerHTML = rows.length ? rows.map((r, i) =>
     `<tr class="${me && r.name.toLowerCase() === me.toLowerCase() ? 'me' : ''}"><td>${['🥇', '🥈', '🥉'][i] || i + 1}</td>` +
-    `<td>${esc(r.name)} <small style="color:var(--dim)">${m === 'multi' ? r.good + '/15' : r.good + ' ✔'}</small></td><td>${r.score}</td></tr>`).join('')
+    `<td>${esc(r.name)} <small style="color:var(--dim)">${r.good} ✔</small></td><td>${r.score}</td></tr>`).join('')
     : '<tr><td colspan="3" class="empty">Personne pour l\'instant… à toi de jouer !</td></tr>';
 }
 
