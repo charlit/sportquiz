@@ -25,7 +25,7 @@ def call(path, body=None):
 
 assert call('/api/scores?mode=foot') == (200, [])
 assert call('/api/scores?mode=golf')[0] == 400
-assert call('/api/scores', {'name': 'Max', 'mode': 'foot', 'score': 9999, 'good': 15})[0] == 400   # au-dessus du max
+assert call('/api/scores', {'name': 'Max', 'mode': 'foot', 'score': 99999, 'good': 15})[0] == 400   # au-dessus du max (30 000)
 assert call('/api/scores', {'name': '  ', 'mode': 'foot', 'score': 100, 'good': 1})[0] == 400
 assert call('/api/scores', {'name': 'Max', 'mode': 'golf', 'score': 100, 'good': 1})[0] == 400
 assert call('/api/scores', {'name': 'Max', 'mode': 'foot', 'score': 1200, 'good': 8})[0] == 200
@@ -43,3 +43,6 @@ print('ok hardcore')
 assert call('/api/scores', {'name': 'Max', 'mode': 'hardbasket', 'score': 3000, 'good': 6})[0] == 200
 assert call('/api/scores?mode=hardbasket')[1][0]['name'] == 'Max'
 print('ok basket')
+assert call('/api/scores', {'name': 'Cent', 'mode': 'foot', 'score': 25000, 'good': 95})[0] == 200   # Spécial Foot : 100 questions
+assert call('/api/scores', {'name': 'Cent', 'mode': 'multi', 'score': 25000, 'good': 15})[0] == 400  # multi reste plafonné
+print('ok foot 100')

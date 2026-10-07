@@ -130,13 +130,14 @@
     <div class="logo">Sport <span>Quiz</span></div>
     <p class="sub">Des questions de plus en plus dures. Réponds vite pour gagner plus !</p>
     <div class="tiles">
-      <button class="tile c-foot" data-mode="foot"><b>⚽</b><strong>Spécial Foot</strong><small>15 questions, 2 vies</small></button>
+      <button class="tile c-foot" data-mode="foot"><b>⚽</b><strong>Spécial Foot</strong><small>100 questions, 3 vies</small></button>
       <button class="tile c-multi" data-mode="multi"><b>🏆</b><strong>Multisport</strong><small>Foot, rugby, basket, tennis, F1, vélo</small></button>
       <button class="tile c-hc" id="goHard"><span class="tag">1 VIE</span><b>💀</b><strong>Hardcore</strong><small>Que du très dur, choisis ton sport</small></button>
       <button class="tile c-adv" id="goAdv"><span class="tag">NOUVEAU</span><b>🗺️</b><strong>Aventure</strong><small>10 étapes à débloquer par sport</small></button>
     </div>
     <button class="rankbtn" id="goRanks">🏅 Classement</button>
-    <p class="rules">Spécial Foot et Multisport : 5 niveaux (Facile → Légende), 3 questions par niveau, 20 secondes par question.
+    <p class="rules">Spécial Foot : 100 questions, la difficulté monte toutes les 20 questions (Facile → Légende), 3 vies.
+      Multisport : 15 questions (3 par niveau), 2 vies. 20 secondes par question.
       Une bonne réponse rapporte jusqu'à 100 points × le niveau (moitié au dernier moment). 2 vies : une erreur coûte une vie et 50 points × le niveau.<br>
       Hardcore : questions Expert et Légende sans fin, la première erreur arrête tout, et la vitesse paie double (jusqu'à 200 points × le niveau).<br>
       Aventure : 5 questions par étape, il faut au moins 4 bonnes réponses pour débloquer l'étape suivante.</p>
@@ -205,7 +206,7 @@ const LEVELS = ['', 'Facile', 'Moyen', 'Difficile', 'Expert', 'Légende'];
 const LEVEL_COLORS = ['', '#2ecc71', '#3fa7ff', '#ffb02e', '#ff6b3f', '#c56cff'];
 const SPORTS = { foot: '⚽ Foot', tennis: '🎾 Tennis', rugby: '🏉 Rugby', basket: '🏀 Basket', f1: '🏎️ F1', velo: '🚴 Cyclisme' };
 const SPORT_COLORS = { foot: '#2ecc71', rugby: '#ff8a3d', basket: '#ff6b1a', f1: '#ff3b3b', tennis: '#d4f53c', all: '#ff5a4f' };
-const PER_LEVEL = 3, TIME = 20;
+const PER_LEVEL = 3, FOOT_PER_LEVEL = 20, TIME = 20; // Multisport 15 questions, Spécial Foot 100
 const HARD = { hard: null, hardfoot: 'foot', hardrugby: 'rugby', hardbasket: 'basket' }; // modes 1 vie, niveaux 4-5, sans fin (null = tous les sports)
 const NAMES = { foot: 'Spécial Foot', multi: 'Multisport', hard: 'Hardcore Tous sports', hardfoot: 'Hardcore Foot', hardrugby: 'Hardcore Rugby',
                 hardbasket: 'Hardcore Basket', adv: 'Aventure' };
@@ -252,7 +253,7 @@ function buildDeck(m) {
   } else {
     for (let lvl = 1; lvl <= 5; lvl++) {
       if (m === 'foot') {
-        pick(QUESTIONS.foot.filter(q => q[0] === lvl), PER_LEVEL).forEach(q => out.push(['foot', q]));
+        pick(QUESTIONS.foot.filter(q => q[0] === lvl), FOOT_PER_LEVEL).forEach(q => out.push(['foot', q]));
       } else { // 3 sports différents par niveau
         shuffle(Object.keys(QUESTIONS)).slice(0, PER_LEVEL).forEach(s =>
           out.push([s, pick(QUESTIONS[s].filter(q => q[0] === lvl), 1)[0]]));
@@ -268,7 +269,7 @@ const points = (lvl, left) => Math.round(lvl * 100 * (mode in HARD ? 0.2 + 1.8 *
 
 function start(m) {
   mode = m; deck = buildDeck(m); idx = 0; score = 0; good = 0; saved = false;
-  lives = m in HARD ? 1 : m === 'adv' ? PER_STAGE - NEED + 1 : 2;
+  lives = m in HARD ? 1 : m === 'adv' ? PER_STAGE - NEED + 1 : m === 'foot' ? 3 : 2;
   $('score').textContent = 0;
   show('quiz');
   ask();
@@ -348,7 +349,8 @@ function finish() {
     const msg = good >= 25 ? 'Inhumain ! 🐐' : good >= 12 ? 'Énorme ! 🔥' : good >= 5 ? 'Solide ! 💪' : `Le ${NAMES[mode]} porte bien son nom… 💀`;
     $('summary').textContent = `${good} bonne${good > 1 ? 's' : ''} réponse${good > 1 ? 's' : ''} d'affilée — ${msg} (${NAMES[mode]})`;
   } else {
-    const msg = good >= 13 ? 'Une légende du sport ! 🐐' : good >= 10 ? 'Excellent ! 🔥' : good >= 6 ? 'Pas mal du tout ! 👍' : 'Il faut réviser ! 📚';
+    const r = good / deck.length;
+    const msg = r >= .85 ? 'Une légende du sport ! 🐐' : r >= .65 ? 'Excellent ! 🔥' : r >= .4 ? 'Pas mal du tout ! 👍' : 'Il faut réviser ! 📚';
     $('summary').textContent = `${lives ? '' : `Éliminé à la question ${idx + 1} ! `}${good} / ${deck.length} bonnes réponses — ${msg} (${NAMES[mode]})`;
   }
   if (GC) {
@@ -427,7 +429,7 @@ function advFinish() {
 function renderBoard(rows, table, me, m) {
   table.innerHTML = rows.length ? rows.map((r, i) =>
     `<tr class="${me && r.name.toLowerCase() === me.toLowerCase() ? 'me' : ''}"><td>${['🥇', '🥈', '🥉'][i] || i + 1}</td>` +
-    `<td>${esc(r.name)} <small style="color:var(--dim)">${m in HARD ? r.good + ' ✔' : r.good + '/15'}</small></td><td>${r.score}</td></tr>`).join('')
+    `<td>${esc(r.name)} <small style="color:var(--dim)">${m === 'multi' ? r.good + '/15' : r.good + ' ✔'}</small></td><td>${r.score}</td></tr>`).join('')
     : '<tr><td colspan="3" class="empty">Personne pour l\'instant… à toi de jouer !</td></tr>';
 }
 
