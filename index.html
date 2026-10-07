@@ -131,7 +131,7 @@
     <p class="sub">Des questions de plus en plus dures. Réponds vite pour gagner plus !</p>
     <div class="tiles">
       <button class="tile c-foot" data-mode="foot"><b>⚽</b><strong>Spécial Foot</strong><small>100 questions, 3 vies</small></button>
-      <button class="tile c-multi" data-mode="multi"><b>🏆</b><strong>Multisport</strong><small>Foot, rugby, basket, tennis, F1, vélo</small></button>
+      <button class="tile c-multi" data-mode="multi"><b>🏆</b><strong>Multisport</strong><small>Foot, rugby, basket, tennis, auto, vélo</small></button>
       <button class="tile c-hc" id="goHard"><span class="tag">1 VIE</span><b>💀</b><strong>Hardcore</strong><small>Que du très dur, choisis ton sport</small></button>
       <button class="tile c-adv" id="goAdv"><span class="tag">NOUVEAU</span><b>🗺️</b><strong>Aventure</strong><small>10 étapes à débloquer par sport</small></button>
     </div>
@@ -148,7 +148,7 @@
     <div class="card" style="margin-top:0">
       <div class="tabs">
         <button data-tab="foot" class="on">⚽ Foot</button><button data-tab="multi">🏆 Multi</button><button data-tab="hard">💀 HC Tous</button>
-        <button data-tab="hardfoot">💀⚽ HC Foot</button><button data-tab="hardrugby">💀🏉 HC Rugby</button><button data-tab="hardbasket">💀🏀 HC Basket</button><button data-tab="hardtennis">💀🎾 HC Tennis</button><button data-tab="hardf1">💀🏎️ HC F1</button><button data-tab="hardvelo">💀🚴 HC Vélo</button>
+        <button data-tab="hardfoot">💀⚽ HC Foot</button><button data-tab="hardrugby">💀🏉 HC Rugby</button><button data-tab="hardbasket">💀🏀 HC Basket</button><button data-tab="hardtennis">💀🎾 HC Tennis</button><button data-tab="hardf1">💀🏎️ HC Auto</button><button data-tab="hardvelo">💀🚴 HC Vélo</button>
       </div>
       <table id="board"></table>
     </div>
@@ -204,13 +204,13 @@
 <script>
 const LEVELS = ['', 'Facile', 'Moyen', 'Difficile', 'Expert', 'Légende'];
 const LEVEL_COLORS = ['', '#2ecc71', '#3fa7ff', '#ffb02e', '#ff6b3f', '#c56cff'];
-const SPORTS = { foot: '⚽ Foot', tennis: '🎾 Tennis', rugby: '🏉 Rugby', basket: '🏀 Basket', f1: '🏎️ F1', velo: '🚴 Cyclisme' };
+const SPORTS = { foot: '⚽ Foot', tennis: '🎾 Tennis', rugby: '🏉 Rugby', basket: '🏀 Basket', f1: '🏎️ Sport auto', velo: '🚴 Cyclisme' };
 const SPORT_COLORS = { foot: '#2ecc71', rugby: '#ff8a3d', basket: '#ff6b1a', f1: '#ff3b3b', tennis: '#d4f53c', velo: '#ffd23f', all: '#ff5a4f' };
 const PER_LEVEL = 3, TIME = 20; // Multisport : 3 questions par niveau (15)
 const FOOT_PLAN = [0, 10, 20, 25, 25, 20]; // Spécial Foot : questions par niveau 1→5 (100)
 const HARD = { hard: null, hardfoot: 'foot', hardrugby: 'rugby', hardbasket: 'basket', hardtennis: 'tennis', hardf1: 'f1', hardvelo: 'velo' }; // modes 1 vie, niveaux 4-5, sans fin (null = tous les sports)
 const NAMES = { foot: 'Spécial Foot', multi: 'Multisport', hard: 'Hardcore Tous sports', hardfoot: 'Hardcore Foot', hardrugby: 'Hardcore Rugby',
-                hardbasket: 'Hardcore Basket', hardtennis: 'Hardcore Tennis', hardf1: 'Hardcore F1', hardvelo: 'Hardcore Cyclisme', adv: 'Aventure' };
+                hardbasket: 'Hardcore Basket', hardtennis: 'Hardcore Tennis', hardf1: 'Hardcore Sport auto', hardvelo: 'Hardcore Cyclisme', adv: 'Aventure' };
 // Aventure : 10 étapes par sport (2 par niveau), 5 questions, 4 bonnes réponses pour passer
 const ADV_SPORTS = ['foot', 'rugby', 'basket', 'f1', 'tennis'], STAGES = 10, PER_STAGE = 5, NEED = 4;
 const stageLevel = k => Math.ceil(k / 2);
@@ -375,7 +375,7 @@ function openPick(kind) {
                                  : 'Choisis ton sport, puis réussis chaque étape pour débloquer la suivante.';
   const items = hc
     ? [['hard', 'all', '💀', 'Tous les sports'], ['hardfoot', 'foot', '⚽', 'Foot'], ['hardrugby', 'rugby', '🏉', 'Rugby'], ['hardbasket', 'basket', '🏀', 'Basket'],
-       ['hardtennis', 'tennis', '🎾', 'Tennis'], ['hardf1', 'f1', '🏎️', 'F1'], ['hardvelo', 'velo', '🚴', 'Cyclisme']]
+       ['hardtennis', 'tennis', '🎾', 'Tennis'], ['hardf1', 'f1', '🏎️', 'Sport auto'], ['hardvelo', 'velo', '🚴', 'Cyclisme']]
     : ADV_SPORTS.map(s => [s, s, SPORTS[s].split(' ')[0], SPORTS[s].split(' ').slice(1).join(' ')]);
   $('pickList').innerHTML = items.map(([id, s, icon, name], i) => {
     const n = hc ? (s === 'all' ? Object.values(QUESTIONS).flat() : QUESTIONS[s]).filter(q => q[0] >= 4).length : 0;
