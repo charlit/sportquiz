@@ -5,100 +5,156 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Sport Quiz</title>
 <style>
-  :root { --bg:#0b1d14; --card:#13301f; --line:#24513a; --txt:#eef7f0; --dim:#9db8a6; --acc:#ffd23f; --ok:#2ecc71; --ko:#e74c3c; }
+  :root { --bg:#0a1220; --card:#131d30; --card2:#1a2740; --line:#26365a; --txt:#eef2fb; --dim:#97a6c4;
+          --acc:#ffd23f; --ok:#2ecc71; --ko:#ff5a4f; }
   * { box-sizing:border-box; }
-  body { margin:0; min-height:100vh; background:radial-gradient(circle at 50% 0, #1d4a31, var(--bg) 70%); color:var(--txt);
-         font:16px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  body { margin:0; min-height:100vh; color:var(--txt); font:16px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif;
+         background:radial-gradient(ellipse at 50% -10%, #1f3d6b 0, var(--bg) 60%) fixed, var(--bg); }
   main { max-width:640px; margin:0 auto; padding:20px 16px 40px; }
-  h1 { font-size:2.2rem; text-align:center; margin:10px 0 4px; letter-spacing:1px; }
-  h1 span { color:var(--acc); }
-  .sub { text-align:center; color:var(--dim); margin:0 0 24px; }
+  button { font:inherit; color:inherit; }
   .hidden { display:none !important; }
-  .modes { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
-  .mode { background:var(--card); border:2px solid var(--line); border-radius:16px; padding:20px 12px; color:var(--txt);
-          font:inherit; cursor:pointer; text-align:center; transition:transform .1s, border-color .1s; }
-  .mode:hover { transform:translateY(-3px); border-color:var(--acc); }
-  .mode b { display:block; font-size:2.6rem; }
-  .mode strong { display:block; font-size:1.2rem; margin:6px 0 2px; }
-  .mode small { color:var(--dim); }
-  .mode.hard { grid-column:1/-1; background:#2a1216; border-color:#5a2028; }
-  .mode.hard:hover { border-color:var(--ko); }
-  .mode.hc { grid-column:auto; }
-  .card { background:var(--card); border:1px solid var(--line); border-radius:16px; padding:16px; margin-top:20px; }
+
+  /* en-tête */
+  .logo { text-align:center; margin:12px 0 4px; font-size:2.6rem; font-weight:900; font-style:italic; letter-spacing:1px; text-transform:uppercase; }
+  .logo span { color:var(--acc); }
+  .sub { text-align:center; color:var(--dim); margin:0 0 22px; }
+  .head { display:flex; align-items:center; gap:12px; margin:6px 0 18px; }
+  .head h2 { margin:0; font-size:1.5rem; }
+  .back { padding:8px 12px; border-radius:10px; border:1px solid var(--line); background:var(--card); cursor:pointer; }
+
+  /* tuiles des modes */
+  .tiles { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .tile { --c:var(--acc); position:relative; overflow:hidden; text-align:left; cursor:pointer; padding:18px 16px 16px; min-height:150px;
+          border-radius:20px; border:1px solid color-mix(in srgb, var(--c) 45%, var(--line));
+          background:linear-gradient(150deg, color-mix(in srgb, var(--c) 32%, var(--card)) 0, var(--card) 75%);
+          transition:transform .12s, box-shadow .12s; }
+  .tile:hover { transform:translateY(-3px); box-shadow:0 10px 28px -10px var(--c); }
+  .tile b { display:block; font-size:2.4rem; line-height:1; }
+  .tile strong { display:block; font-size:1.25rem; margin:12px 0 4px; }
+  .tile small { color:var(--dim); display:block; }
+  .tile .tag { position:absolute; top:12px; right:12px; font-size:.75rem; font-weight:800; padding:2px 8px; border-radius:999px; background:var(--c); color:#111; }
+  .c-foot { --c:#2ecc71; } .c-multi { --c:#3fa7ff; } .c-hc { --c:#ff5a4f; } .c-adv { --c:#ffb02e; }
+
+  /* choix du sport */
+  .sports { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .sport { --c:var(--acc); text-align:left; cursor:pointer; padding:16px; border-radius:16px; border:1px solid var(--line); background:var(--card);
+           transition:border-color .12s, transform .12s; }
+  .sport:hover { border-color:var(--c); transform:translateY(-2px); }
+  .sport b { font-size:2rem; display:block; }
+  .sport strong { display:block; margin:8px 0 2px; font-size:1.1rem; }
+  .sport small { color:var(--dim); }
+  .sport.wide { grid-column:1/-1; }
+  .meter { height:6px; border-radius:3px; background:#0006; margin-top:10px; overflow:hidden; }
+  .meter i { display:block; height:100%; background:var(--c); }
+
+  /* carte de l'aventure */
+  .path { list-style:none; margin:0; padding:0 0 0 8px; position:relative; }
+  .path::before { content:""; position:absolute; left:31px; top:24px; bottom:24px; width:4px; background:var(--line); border-radius:2px; }
+  .stage { position:relative; display:flex; align-items:center; gap:14px; width:100%; padding:10px 12px 10px 0; margin:6px 0; text-align:left;
+           border:0; background:none; cursor:pointer; border-radius:14px; }
+  .stage:disabled { cursor:default; opacity:.5; }
+  .stage:not(:disabled):hover { background:var(--card); }
+  .dot { flex:none; width:48px; height:48px; border-radius:50%; display:grid; place-items:center; font-weight:900; font-size:1.1rem;
+         background:var(--card2); border:3px solid var(--line); position:relative; z-index:1; }
+  .stage.done .dot { background:var(--ok); border-color:var(--ok); color:#06210f; }
+  .stage.cur .dot { background:var(--acc); border-color:var(--acc); color:#111; box-shadow:0 0 0 6px #ffd23f33; animation:pulse 1.6s infinite; }
+  @keyframes pulse { 50% { box-shadow:0 0 0 12px #ffd23f00; } }
+  .stage strong { display:block; }
+  .stage small { color:var(--dim); }
+  .advinfo { color:var(--dim); margin:-8px 0 14px; }
+
+  /* classement */
+  .card { background:var(--card); border:1px solid var(--line); border-radius:18px; padding:16px; margin-top:20px; }
   .card h2 { margin:0 0 10px; font-size:1.2rem; }
   .tabs { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:10px; }
-  .tabs button { flex:1 1 30%; white-space:nowrap; padding:8px; border-radius:10px; border:1px solid var(--line); background:transparent; color:var(--dim); font:inherit; cursor:pointer; }
-  .tabs button.on { background:var(--acc); color:#222; border-color:var(--acc); font-weight:700; }
+  .tabs button { flex:1 1 30%; white-space:nowrap; padding:8px; border-radius:10px; border:1px solid var(--line); background:transparent; color:var(--dim); cursor:pointer; }
+  .tabs button.on { background:var(--acc); color:#111; border-color:var(--acc); font-weight:700; }
   table { width:100%; border-collapse:collapse; }
   td { padding:7px 6px; border-top:1px solid var(--line); }
   td:first-child { width:2.5em; color:var(--dim); }
   td:last-child { text-align:right; font-weight:700; color:var(--acc); }
-  tr.me td { background:#2b5a3f; }
-  td.empty { text-align:center; font-weight:400; color:var(--dim); text-align:center; padding:12px; }
+  tr.me td { background:#2a3d63; }
+  td.empty { text-align:center; font-weight:400; color:var(--dim); padding:12px; }
   .rules { color:var(--dim); font-size:.9rem; }
+
   /* quiz */
   .top { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; color:var(--dim); }
   .top b { color:var(--acc); font-size:1.3rem; }
-  .quit { margin-left:12px; padding:2px 10px; border-radius:8px; border:1px solid var(--line); background:transparent; color:var(--dim); font:inherit; cursor:pointer; }
+  .quit { margin-left:12px; padding:2px 10px; border-radius:8px; border:1px solid var(--line); background:transparent; color:var(--dim); cursor:pointer; }
   .bar { height:8px; background:#0006; border-radius:4px; overflow:hidden; }
   .bar i { display:block; height:100%; background:var(--acc); transition:width .3s; }
   #timer i { background:var(--ok); transition:none; }
   .badges { display:flex; gap:8px; margin:16px 0 8px; flex-wrap:wrap; }
   .badge { padding:3px 10px; border-radius:999px; font-size:.85rem; font-weight:700; background:#0005; }
   #question { font-size:1.35rem; margin:8px 0 18px; min-height:3em; }
-  .answers { display:grid; gap:10px; }
-  .answers button { padding:14px 16px; border-radius:12px; border:2px solid var(--line); background:var(--card); color:var(--txt);
-                    font:inherit; font-size:1.05rem; text-align:left; cursor:pointer; }
+  .answers { display:grid; gap:10px; margin-top:16px; }
+  .answers button { padding:14px 16px; border-radius:12px; border:2px solid var(--line); background:var(--card); font-size:1.05rem; text-align:left; cursor:pointer; }
   .answers button:hover:not(:disabled) { border-color:var(--acc); }
   .answers button.ok { background:var(--ok); border-color:var(--ok); color:#06210f; font-weight:700; }
   .answers button.ko { background:var(--ko); border-color:var(--ko); }
   .answers button:disabled { cursor:default; }
   .fbbox { display:grid; text-align:center; min-height:1.6em; margin-top:14px; font-weight:700; font-size:1.1rem; }
   .fbbox > div { grid-area:1/1; } /* résultat et points en jeu au même endroit */
-  /* fin */
+
+  /* fins de partie */
   .big { text-align:center; font-size:3.5rem; font-weight:800; color:var(--acc); margin:6px 0 0; }
   .center { text-align:center; }
+  h1.center { margin:20px 0 4px; }
   form { display:flex; gap:8px; margin-top:12px; }
   input { flex:1; min-width:0; padding:12px; border-radius:10px; border:2px solid var(--line); background:#0005; color:var(--txt); font:inherit; }
-  .btn { padding:12px 18px; border-radius:10px; border:0; background:var(--acc); color:#222; font:inherit; font-weight:700; cursor:pointer; }
+  .btn { padding:12px 18px; border-radius:10px; border:0; background:var(--acc); color:#111; font-weight:700; cursor:pointer; }
   .btn.alt { background:transparent; color:var(--txt); border:2px solid var(--line); }
   .row { display:flex; gap:10px; justify-content:center; margin-top:18px; flex-wrap:wrap; }
   #saveMsg { color:var(--dim); min-height:1.4em; margin:8px 0 0; }
   /* téléphone : la partie occupe toute la hauteur — infos en haut, question au centre,
-     réponses en bas sous le pouce ; l'écran de fin est centré */
+     réponses en bas sous le pouce ; les écrans de fin sont centrés */
   @media (pointer: coarse) {
     main { min-height:100vh; min-height:100dvh; display:flex; flex-direction:column; padding-bottom:20px; }
-    #quiz:not(.hidden), #end:not(.hidden) { flex:1; display:flex; flex-direction:column; }
+    #quiz:not(.hidden), #end:not(.hidden), #advEnd:not(.hidden) { flex:1; display:flex; flex-direction:column; }
     #question { flex:1; display:flex; align-items:center; font-size:1.55rem; margin:12px 0 20px; }
     .answers { gap:12px; }
     .answers button { padding:18px 16px; font-size:1.15rem; }
     .fbbox { min-height:2.4em; }
-    #end:not(.hidden) { justify-content:center; }
+    #end:not(.hidden), #advEnd:not(.hidden) { justify-content:center; }
   }
+  @media (max-width:420px) { .tile { min-height:140px; padding:14px 12px; } .tile strong { font-size:1.1rem; } .logo { font-size:2.2rem; } }
 </style>
 </head>
 <body>
 <main>
   <section id="home">
-    <h1>SPORT <span>QUIZ</span></h1>
+    <div class="logo">Sport <span>Quiz</span></div>
     <p class="sub">Des questions de plus en plus dures. Réponds vite pour gagner plus !</p>
-    <div class="modes">
-      <button class="mode" data-mode="foot"><b>⚽</b><strong>Spécial Foot</strong><small>Ligue 1, Coupe du monde, Ballon d'or…</small></button>
-      <button class="mode" data-mode="multi"><b>🏆</b><strong>Multisport</strong><small>Foot, tennis, rugby, F1, cyclisme</small></button>
-      <button class="mode hard" data-mode="hard"><b>💀</b><strong>Mode Hard</strong><small>1 seule vie · que des questions Expert et Légende · tous les sports</small></button>
-      <button class="mode hard hc" data-mode="hardfoot"><b>💀⚽</b><strong>Hardcore Foot</strong><small>1 vie · que du foot Expert et Légende</small></button>
-      <button class="mode hard hc" data-mode="hardrugby"><b>💀🏉</b><strong>Hardcore Rugby</strong><small>1 vie · que du rugby Expert et Légende</small></button>
+    <div class="tiles">
+      <button class="tile c-foot" data-mode="foot"><b>⚽</b><strong>Spécial Foot</strong><small>15 questions, 2 vies</small></button>
+      <button class="tile c-multi" data-mode="multi"><b>🏆</b><strong>Multisport</strong><small>Foot, rugby, basket, tennis, F1, vélo</small></button>
+      <button class="tile c-hc" id="goHard"><span class="tag">1 VIE</span><b>💀</b><strong>Hardcore</strong><small>Que du très dur, choisis ton sport</small></button>
+      <button class="tile c-adv" id="goAdv"><span class="tag">NOUVEAU</span><b>🗺️</b><strong>Aventure</strong><small>10 étapes à débloquer par sport</small></button>
     </div>
     <div class="card">
       <h2>🏅 Classement</h2>
-      <div class="tabs"><button data-tab="foot" class="on">⚽ Foot</button><button data-tab="multi">🏆 Multi</button><button data-tab="hard">💀 Hard</button><button data-tab="hardfoot">💀⚽ HC Foot</button><button data-tab="hardrugby">💀🏉 HC Rugby</button></div>
+      <div class="tabs">
+        <button data-tab="foot" class="on">⚽ Foot</button><button data-tab="multi">🏆 Multi</button><button data-tab="hard">💀 HC Tous</button>
+        <button data-tab="hardfoot">💀⚽ HC Foot</button><button data-tab="hardrugby">💀🏉 HC Rugby</button><button data-tab="hardbasket">💀🏀 HC Basket</button>
+      </div>
       <table id="board"></table>
     </div>
-    <p class="rules">5 niveaux (Facile → Légende), 3 questions par niveau. Une bonne réponse rapporte jusqu'à 100 points × le niveau
-      (moitié des points si tu réponds au dernier moment). 20 secondes par question.<br>
-      2 vies : une erreur coûte une vie et 50 points × le niveau, la deuxième erreur arrête la partie.<br>
-      Modes Hard et Hardcore : questions sans fin, la première erreur arrête tout, et la vitesse paie double
-      (jusqu'à 200 points × le niveau si tu réponds tout de suite, 20 % au dernier moment).</p>
+    <p class="rules">Spécial Foot et Multisport : 5 niveaux (Facile → Légende), 3 questions par niveau, 20 secondes par question.
+      Une bonne réponse rapporte jusqu'à 100 points × le niveau (moitié au dernier moment). 2 vies : une erreur coûte une vie et 50 points × le niveau.<br>
+      Hardcore : questions Expert et Légende sans fin, la première erreur arrête tout, et la vitesse paie double (jusqu'à 200 points × le niveau).<br>
+      Aventure : 5 questions par étape, il faut au moins 4 bonnes réponses pour débloquer l'étape suivante.</p>
+  </section>
+
+  <section id="pick" class="hidden">
+    <div class="head"><button class="back" data-back="home">← Accueil</button><h2 id="pickTitle"></h2></div>
+    <p class="advinfo" id="pickInfo"></p>
+    <div class="sports" id="pickList"></div>
+  </section>
+
+  <section id="adv" class="hidden">
+    <div class="head"><button class="back" id="advBack">← Sports</button><h2 id="advTitle"></h2></div>
+    <p class="advinfo" id="advInfo"></p>
+    <ol class="path" id="advPath"></ol>
   </section>
 
   <section id="quiz" class="hidden">
@@ -107,12 +163,12 @@
     <div class="badges"><span class="badge" id="level"></span><span class="badge" id="sport"></span></div>
     <div id="question"></div>
     <div class="bar" id="timer"><i></i></div>
-    <div class="answers" id="answers" style="margin-top:16px"></div>
+    <div class="answers" id="answers"></div>
     <div class="fbbox"><div id="stake" aria-hidden="true"></div><div id="feedback" role="status" aria-live="polite"></div></div>
   </section>
 
   <section id="end" class="hidden">
-    <h1>Terminé !</h1>
+    <h1 class="center">Terminé !</h1>
     <p class="big" id="final"></p>
     <p class="center" id="summary"></p>
     <div class="card">
@@ -126,30 +182,46 @@
     </div>
     <div class="row"><button class="btn" id="again">Rejouer</button><button class="btn alt" id="toHome">Accueil</button></div>
   </section>
+
+  <section id="advEnd" class="hidden">
+    <h1 class="center" id="advEndTitle"></h1>
+    <p class="big" id="advEndScore"></p>
+    <p class="center" id="advEndText"></p>
+    <div class="row"><button class="btn" id="advNext"></button><button class="btn alt" id="advMap">Carte</button></div>
+  </section>
 </main>
 
 <script src="questions.js"></script>
 <script>
 const LEVELS = ['', 'Facile', 'Moyen', 'Difficile', 'Expert', 'Légende'];
 const LEVEL_COLORS = ['', '#2ecc71', '#3fa7ff', '#ffb02e', '#ff6b3f', '#c56cff'];
-const SPORTS = { foot: '⚽ Foot', tennis: '🎾 Tennis', rugby: '🏉 Rugby', f1: '🏎️ F1', velo: '🚴 Cyclisme' };
+const SPORTS = { foot: '⚽ Foot', tennis: '🎾 Tennis', rugby: '🏉 Rugby', basket: '🏀 Basket', f1: '🏎️ F1', velo: '🚴 Cyclisme' };
+const SPORT_COLORS = { foot: '#2ecc71', rugby: '#ff8a3d', basket: '#ff6b1a', f1: '#ff3b3b', tennis: '#d4f53c', all: '#ff5a4f' };
 const PER_LEVEL = 3, TIME = 20;
-const HARD = { hard: null, hardfoot: 'foot', hardrugby: 'rugby' }; // modes 1 vie, niveaux 4-5, sans fin (null = tous les sports)
-const NAMES = { foot: 'Spécial Foot', multi: 'Multisport', hard: 'Mode Hard', hardfoot: 'Hardcore Foot', hardrugby: 'Hardcore Rugby' };
+const HARD = { hard: null, hardfoot: 'foot', hardrugby: 'rugby', hardbasket: 'basket' }; // modes 1 vie, niveaux 4-5, sans fin (null = tous les sports)
+const NAMES = { foot: 'Spécial Foot', multi: 'Multisport', hard: 'Hardcore Tous sports', hardfoot: 'Hardcore Foot', hardrugby: 'Hardcore Rugby',
+                hardbasket: 'Hardcore Basket', adv: 'Aventure' };
+// Aventure : 10 étapes par sport (2 par niveau), 5 questions, 4 bonnes réponses pour passer
+const ADV_SPORTS = ['foot', 'rugby', 'basket', 'f1', 'tennis'], STAGES = 10, PER_STAGE = 5, NEED = 4;
+const stageLevel = k => Math.ceil(k / 2);
 const $ = id => document.getElementById(id);
 const shuffle = a => { a = [...a]; for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
-const show = id => ['home', 'quiz', 'end'].forEach(s => $(s).classList.toggle('hidden', s !== id));
+const SCREENS = ['home', 'pick', 'adv', 'quiz', 'end', 'advEnd'];
+const show = id => { SCREENS.forEach(s => $(s).classList.toggle('hidden', s !== id)); scrollTo(0, 0); };
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+const store = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} };
+const load = (k, d) => { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch { return d; } };
 
-let mode, deck, idx, score, good, lives, timer, next, t0, saved;
+let mode, deck, idx, score, good, lives, timer, next, t0, saved, advSport, stage;
 
 // Dans l'app iOS, le classement passe par Game Center : pas de pseudo, le score part tout seul.
 const GC = !!window.__quizGC;
 let gcName = null;
 
 // Questions déjà posées sur ce navigateur : on ne les repose qu'une fois toutes les autres du même lot épuisées.
-let seen;
-try { seen = new Set(JSON.parse(localStorage.getItem('quiz-seen')) || []); } catch { seen = new Set(); }
+const seen = new Set(load('quiz-seen', []));
+// Aventure : nombre d'étapes réussies par sport (sur cet appareil)
+const advDone = load('quiz-adv', {});
 
 function pick(pool, n) {
   let fresh = pool.filter(q => !seen.has(q[1]));
@@ -167,23 +239,28 @@ function buildDeck(m) {
     if (fresh.length < 20) { pool.forEach(x => seen.delete(x[1][1])); fresh = pool; }
     return shuffle(fresh).concat(shuffle(pool.filter(x => !fresh.includes(x))));
   }
-  for (let lvl = 1; lvl <= 5; lvl++) {
-    if (m === 'foot') {
-      pick(QUESTIONS.foot.filter(q => q[0] === lvl), PER_LEVEL).forEach(q => out.push(['foot', q]));
-    } else { // 3 sports différents par niveau
-      shuffle(Object.keys(QUESTIONS)).slice(0, PER_LEVEL).forEach(s =>
-        out.push([s, pick(QUESTIONS[s].filter(q => q[0] === lvl), 1)[0]]));
+  if (m === 'adv') {
+    pick(QUESTIONS[advSport].filter(q => q[0] === stageLevel(stage)), PER_STAGE).forEach(q => out.push([advSport, q]));
+  } else {
+    for (let lvl = 1; lvl <= 5; lvl++) {
+      if (m === 'foot') {
+        pick(QUESTIONS.foot.filter(q => q[0] === lvl), PER_LEVEL).forEach(q => out.push(['foot', q]));
+      } else { // 3 sports différents par niveau
+        shuffle(Object.keys(QUESTIONS)).slice(0, PER_LEVEL).forEach(s =>
+          out.push([s, pick(QUESTIONS[s].filter(q => q[0] === lvl), 1)[0]]));
+      }
     }
   }
-  try { localStorage.setItem('quiz-seen', JSON.stringify([...seen])); } catch {}
+  store('quiz-seen', [...seen]);
   return out;
 }
 
-// Points d'une bonne réponse selon le temps restant. Hard/Hardcore : 2× si instantané, 0,2× au dernier moment.
+// Points d'une bonne réponse selon le temps restant. Hardcore : 2× si instantané, 0,2× au dernier moment.
 const points = (lvl, left) => Math.round(lvl * 100 * (mode in HARD ? 0.2 + 1.8 * left / TIME : 0.5 + 0.5 * left / TIME) / 10) * 10;
 
 function start(m) {
-  mode = m; deck = buildDeck(m); idx = 0; score = 0; good = 0; lives = m in HARD ? 1 : 2; saved = false;
+  mode = m; deck = buildDeck(m); idx = 0; score = 0; good = 0; saved = false;
+  lives = m in HARD ? 1 : m === 'adv' ? PER_STAGE - NEED + 1 : 2;
   $('score').textContent = 0;
   show('quiz');
   ask();
@@ -193,11 +270,13 @@ function ask() {
   const [sport, [lvl, q, ...choices]] = deck[idx];
   if (mode in HARD) {
     seen.add(q);
-    try { localStorage.setItem('quiz-seen', JSON.stringify([...seen])); } catch {}
+    store('quiz-seen', [...seen]);
     $('count').textContent = `💀 Question ${idx + 1} · ❤️ 1 vie`;
     $('progress').style.width = '0';
   } else {
-    $('count').textContent = `Question ${idx + 1} / ${deck.length} · ${'❤️'.repeat(lives)}`;
+    $('count').textContent = mode === 'adv'
+      ? `🗺️ Étape ${stage} · Question ${idx + 1} / ${PER_STAGE} · ✅ ${good}/${NEED}`
+      : `Question ${idx + 1} / ${deck.length} · ${'❤️'.repeat(lives)}`;
     $('progress').style.width = (idx / deck.length * 100) + '%';
   }
   $('level').textContent = `Niveau ${lvl} · ${LEVELS[lvl]}`;
@@ -238,13 +317,15 @@ function answer(btn, ok, lvl) {
     btn?.classList.add('ko');
     lives--;
     let msg = btn ? '❌ Raté !' : '⏱️ Temps écoulé !';
-    if (!(mode in HARD)) { // foot / multi : l'erreur coûte la moitié de la valeur de la question
+    if (mode === 'foot' || mode === 'multi') { // l'erreur coûte la moitié de la valeur de la question
       const lost = Math.min(score, lvl * 50);
       score -= lost;
       $('score').textContent = score;
       if (lost) msg += ` −${lost} points`;
     }
-    $('feedback').textContent = msg + (lives ? ` · plus qu'${lives > 1 ? lives + ' vies' : 'une vie'} ❤️` : ' 💀 Game over');
+    if (mode === 'adv') msg += lives ? ' · encore une erreur et l\'étape est ratée' : ' · étape ratée';
+    else msg += lives ? ` · plus qu'${lives > 1 ? lives + ' vies' : 'une vie'} ❤️` : ' 💀 Game over';
+    $('feedback').textContent = msg;
     $('feedback').style.color = 'var(--ko)';
   }
   const over = lives === 0;
@@ -253,6 +334,7 @@ function answer(btn, ok, lvl) {
 
 function finish() {
   $('progress').style.width = '100%';
+  if (mode === 'adv') return advFinish();
   $('final').textContent = score + ' pts';
   if (mode in HARD) {
     const msg = good >= 25 ? 'Inhumain ! 🐐' : good >= 12 ? 'Énorme ! 🔥' : good >= 5 ? 'Solide ! 💪' : `Le ${NAMES[mode]} porte bien son nom… 💀`;
@@ -269,11 +351,71 @@ function finish() {
   }
   $('saveMsg').textContent = '';
   $('saveForm').classList.remove('hidden');
-  try { $('pseudo').value = localStorage.getItem('quiz-pseudo') || ''; } catch {}
+  $('pseudo').value = load('quiz-pseudo', '');
   show('end');
   loadBoard(mode, $('endBoard'));
 }
 
+/* ---------- Choix du sport (Hardcore / Aventure) ---------- */
+function openPick(kind) {
+  const hc = kind === 'hard';
+  $('pickTitle').textContent = hc ? '💀 Hardcore' : '🗺️ Aventure';
+  $('pickInfo').textContent = hc ? '1 seule vie, que des questions Expert et Légende. Choisis ton sport :'
+                                 : 'Choisis ton sport, puis réussis chaque étape pour débloquer la suivante.';
+  const items = hc
+    ? [['hard', 'all', '💀', 'Tous les sports'], ['hardfoot', 'foot', '⚽', 'Foot'], ['hardrugby', 'rugby', '🏉', 'Rugby'], ['hardbasket', 'basket', '🏀', 'Basket']]
+    : ADV_SPORTS.map(s => [s, s, SPORTS[s].split(' ')[0], SPORTS[s].split(' ').slice(1).join(' ')]);
+  $('pickList').innerHTML = items.map(([id, s, icon, name], i) => {
+    const n = hc ? (s === 'all' ? Object.values(QUESTIONS).flat() : QUESTIONS[s]).filter(q => q[0] >= 4).length : 0;
+    const d = advDone[s] || 0;
+    const info = hc ? `${n} questions` : d >= STAGES ? '🏆 Terminé !' : `Étape ${d + 1} / ${STAGES}`;
+    const wide = !hc && i === items.length - 1 && items.length % 2 ? ' wide' : '';
+    return `<button class="sport${wide}" data-id="${id}" style="--c:${SPORT_COLORS[s]}"><b>${icon}</b><strong>${name}</strong><small>${info}</small>` +
+           (hc ? '' : `<div class="meter"><i style="width:${d / STAGES * 100}%"></i></div>`) + '</button>';
+  }).join('');
+  $('pickList').querySelectorAll('.sport').forEach(b => b.onclick = () => hc ? start(b.dataset.id) : openAdv(b.dataset.id));
+  $('pickList').dataset.kind = kind;
+  show('pick');
+}
+
+/* ---------- Aventure ---------- */
+function openAdv(s) {
+  advSport = s;
+  const d = advDone[s] || 0;
+  $('advTitle').textContent = `${SPORTS[s]} · Aventure`;
+  $('advInfo').textContent = d >= STAGES ? '🏆 Tu as terminé cette aventure ! Rejoue les étapes pour t\'entraîner.'
+                                         : `${d} / ${STAGES} étapes réussies. ${NEED} bonnes réponses sur ${PER_STAGE} pour passer.`;
+  $('advPath').innerHTML = Array.from({ length: STAGES }, (_, i) => {
+    const k = i + 1, lvl = stageLevel(k);
+    const state = k <= d ? 'done' : k === d + 1 ? 'cur' : 'lock';
+    const label = state === 'done' ? '✅ Réussie' : state === 'cur' ? '▶ À jouer' : '🔒 Verrouillée';
+    return `<li><button class="stage ${state}" data-k="${k}" ${state === 'lock' ? 'disabled' : ''}>` +
+           `<span class="dot">${state === 'done' ? '✓' : k}</span><span><strong>Étape ${k} · ${LEVELS[lvl]}</strong><small>${label}</small></span></button></li>`;
+  }).join('');
+  $('advPath').querySelectorAll('.stage:not(:disabled)').forEach(b => b.onclick = () => { stage = +b.dataset.k; start('adv'); });
+  show('adv');
+}
+
+function advFinish() {
+  const passed = lives > 0;
+  const d = advDone[advSport] || 0;
+  if (passed && stage > d) { advDone[advSport] = stage; store('quiz-adv', advDone); }
+  const champion = passed && stage === STAGES;
+  $('advEndTitle').textContent = champion ? '🏆 Champion !' : passed ? '✅ Étape réussie !' : '❌ Étape ratée';
+  $('advEndScore').textContent = `${good} / ${PER_STAGE}`;
+  $('advEndText').textContent = champion ? `Tu as terminé l'aventure ${SPORTS[advSport]} ! Respect.`
+    : passed ? `L'étape ${stage + 1} (${LEVELS[stageLevel(stage + 1)]}) est débloquée.`
+    : `Il faut ${NEED} bonnes réponses sur ${PER_STAGE}. Réessaie, les questions changent !`;
+  $('advNext').textContent = champion ? 'Autre sport' : passed ? 'Étape suivante ▶' : 'Réessayer';
+  $('advNext').onclick = () => {
+    if (champion) return openPick('adv');
+    if (passed) stage++;
+    start('adv');
+  };
+  show('advEnd');
+}
+
+/* ---------- Classements ---------- */
 function renderBoard(rows, table, me, m) {
   table.innerHTML = rows.length ? rows.map((r, i) =>
     `<tr class="${me && r.name.toLowerCase() === me.toLowerCase() ? 'me' : ''}"><td>${['🥇', '🥈', '🥉'][i] || i + 1}</td>` +
@@ -300,7 +442,7 @@ async function sendScore(name) {
     const r = await fetch('api/scores', { method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name, mode, score, good }) });
     if (!r.ok) throw 0;
-    if (!GC) try { localStorage.setItem('quiz-pseudo', name); } catch {}
+    if (!GC) store('quiz-pseudo', name);
     const rows = await r.json();
     const rank = rows.findIndex(x => x.name.toLowerCase() === name.toLowerCase()) + 1;
     $('saveMsg').textContent = rank ? `Enregistré ! Tu es ${rank === 1 ? '1er 🏆' : rank + 'e'} au classement.` : 'Enregistré ! (ton meilleur score est gardé)';
@@ -313,17 +455,29 @@ async function sendScore(name) {
   }
 }
 
-document.querySelectorAll('.mode').forEach(b => b.onclick = () => start(b.dataset.mode));
+/* ---------- Navigation ---------- */
+const goHome = () => {
+  show('home');
+  const tab = document.querySelector(`[data-tab="${mode}"]`);
+  if (tab) tab.click();
+};
+document.querySelectorAll('[data-mode]').forEach(b => b.onclick = () => start(b.dataset.mode));
+$('goHard').onclick = () => openPick('hard');
+$('goAdv').onclick = () => openPick('adv');
+document.querySelectorAll('[data-back]').forEach(b => b.onclick = () => show(b.dataset.back));
+$('advBack').onclick = () => openPick('adv');
+$('advMap').onclick = () => openAdv(advSport);
 document.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => {
   document.querySelectorAll('[data-tab]').forEach(x => x.classList.toggle('on', x === b));
   loadBoard(b.dataset.tab, $('board'));
 });
 $('again').onclick = () => start(mode);
 $('quit').onclick = () => { // abandon : on coupe le chrono et la question suivante déjà programmée
-  if (!confirm('Abandonner la partie ? Le score ne sera pas enregistré.')) return;
-  clearInterval(timer); clearTimeout(next); show('home');
+  if (!confirm(mode === 'adv' ? 'Abandonner l\'étape ?' : 'Abandonner la partie ? Le score ne sera pas enregistré.')) return;
+  clearInterval(timer); clearTimeout(next);
+  mode === 'adv' ? openAdv(advSport) : goHome();
 };
-$('toHome').onclick = () => { show('home'); document.querySelector('[data-tab="' + mode + '"]').click(); };
+$('toHome').onclick = goHome;
 loadBoard('foot', $('board'));
 if (GC) {                                        // l'app prévient quand le joueur Game Center change
   $('saveForm').classList.add('hidden');

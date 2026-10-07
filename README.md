@@ -2,7 +2,9 @@
 
 QCM de sport : 15 questions de plus en plus difficiles (5 niveaux), 20 s par question, classement partagé.
 
-- **Spécial Foot** ou **Multisport** (foot, tennis, rugby, F1, cyclisme)
+- **Spécial Foot** et **Multisport** (foot, rugby, basket, tennis, F1, cyclisme) : 15 questions, 2 vies
+- **Hardcore** : 1 vie, niveaux 4-5 sans fin, au choix tous sports / foot / rugby / basket (classement par mode)
+- **Aventure** : foot, rugby, basket, F1 ou tennis, 10 étapes de 5 questions, 4 bonnes réponses pour débloquer la suivante (progression gardée dans le navigateur)
 - Questions dans `questions.js` : `[niveau, question, bonne réponse, mauvaise, mauvaise, mauvaise]`
 - `server.py` (Python, stdlib) sert le jeu + `api/scores` ; scores dans `data/scores.json`
 

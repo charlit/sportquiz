@@ -10,8 +10,8 @@ DB = os.environ.get('QUIZ_DB', os.path.join(ROOT, 'data', 'scores.json'))
 FILES = {'/': ('index.html', 'text/html; charset=utf-8'),
          '/index.html': ('index.html', 'text/html; charset=utf-8'),
          '/questions.js': ('questions.js', 'text/javascript; charset=utf-8')}
-MAX_SCORE = {'foot': 4500, 'multi': 4500, 'hard': 400_000, 'hardfoot': 400_000, 'hardrugby': 400_000}  # 15 questions max niveau*100 pts ; hard* = sans fin
-MAX_GOOD = {'foot': 15, 'multi': 15, 'hard': 400, 'hardfoot': 400, 'hardrugby': 400}
+MAX_SCORE = {'foot': 4500, 'multi': 4500, 'hard': 400_000, 'hardfoot': 400_000, 'hardrugby': 400_000, 'hardbasket': 400_000}  # 15 questions max niveau*100 pts ; hard* = sans fin
+MAX_GOOD = {'foot': 15, 'multi': 15, 'hard': 400, 'hardfoot': 400, 'hardrugby': 400, 'hardbasket': 400}
 # ponytail: global lock + whole-file JSON rewrite and client-trusted scores, fine for friends; SQLite + server-side scoring if it goes public
 lock = threading.Lock()
 

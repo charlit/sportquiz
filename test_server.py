@@ -40,3 +40,6 @@ print('ok hard')
 assert call('/api/scores', {'name': 'Max', 'mode': 'hardrugby', 'score': 2000, 'good': 5})[0] == 200
 assert call('/api/scores?mode=hardfoot') == (200, [])
 print('ok hardcore')
+assert call('/api/scores', {'name': 'Max', 'mode': 'hardbasket', 'score': 3000, 'good': 6})[0] == 200
+assert call('/api/scores?mode=hardbasket')[1][0]['name'] == 'Max'
+print('ok basket')
