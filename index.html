@@ -32,7 +32,17 @@
   .tile b { display:block; font-size:2.4rem; line-height:1; }
   .tile strong { display:block; font-size:1.25rem; margin:12px 0 4px; }
   .tile small { color:var(--dim); display:block; }
-  .tile .tag { position:absolute; top:12px; right:12px; font-size:.75rem; font-weight:800; padding:2px 8px; border-radius:999px; background:var(--c); color:#111; }
+  .tw { position:relative; display:grid; }
+  .info { position:absolute; top:10px; right:10px; width:28px; height:28px; border-radius:50%; cursor:pointer; padding:0;
+          border:1px solid #ffffff40; background:#0006; font:italic 800 .95rem Georgia, serif; }
+  .info:hover { background:#000a; border-color:#fff8; }
+  dialog { width:calc(100% - 32px); max-width:420px; padding:20px; border-radius:18px; border:1px solid var(--line); background:var(--card); color:var(--txt); }
+  dialog::backdrop { background:#000b; }
+  dialog h2 { margin:0 0 10px; font-size:1.3rem; }
+  dialog ul { margin:0 0 18px; padding-left:20px; color:var(--dim); }
+  dialog li { margin:6px 0; }
+  dialog .btn { width:100%; }
+  .tile .tag { position:absolute; top:46px; right:10px; font-size:.75rem; font-weight:800; padding:2px 8px; border-radius:999px; background:var(--c); color:#111; }
   .c-foot { --c:#2ecc71; } .c-multi { --c:#3fa7ff; } .c-hc { --c:#ff5a4f; } .c-adv { --c:#ffb02e; }
 
   /* choix du sport */
@@ -75,7 +85,6 @@
   td:last-child { text-align:right; font-weight:700; color:var(--acc); }
   tr.me td { background:#2a3d63; }
   td.empty { text-align:center; font-weight:400; color:var(--dim); padding:12px; }
-  .rules { color:var(--dim); font-size:.9rem; }
   .rankbtn { display:block; width:100%; margin-top:12px; padding:16px; border-radius:16px; cursor:pointer; font-size:1.15rem; font-weight:800;
              border:1px solid color-mix(in srgb, var(--acc) 50%, var(--line)); background:linear-gradient(150deg, #ffd23f33 0, var(--card) 75%); }
   .rankbtn:hover { border-color:var(--acc); }
@@ -130,17 +139,21 @@
     <div class="logo">Sport <span>Quiz</span></div>
     <p class="sub">Des questions de plus en plus dures. Réponds vite pour gagner plus !</p>
     <div class="tiles">
-      <button class="tile c-foot" data-mode="foot"><b>⚽</b><strong>Spécial Foot</strong><small>100 questions, 3 vies</small></button>
-      <button class="tile c-multi" data-mode="multi"><b>🏆</b><strong>Multisport</strong><small>Foot, rugby, basket, tennis, auto, vélo, boxe</small></button>
-      <button class="tile c-hc" id="goHard"><span class="tag">1 VIE</span><b>💀</b><strong>Hardcore</strong><small>Que du très dur, choisis ton sport</small></button>
-      <button class="tile c-adv" id="goAdv"><span class="tag">NOUVEAU</span><b>🗺️</b><strong>Aventure</strong><small>10 étapes à débloquer par sport</small></button>
+      <div class="tw"><button class="tile c-foot" data-mode="foot"><b>⚽</b><strong>Spécial Foot</strong><small>100 questions, 3 vies</small></button>
+        <button class="info" data-info="foot" aria-label="Règles du Spécial Foot">i</button></div>
+      <div class="tw"><button class="tile c-multi" data-mode="multi"><b>🏆</b><strong>Multisport</strong><small>Foot, rugby, basket, tennis, auto, vélo, boxe</small></button>
+        <button class="info" data-info="multi" aria-label="Règles du Multisport">i</button></div>
+      <div class="tw"><button class="tile c-hc" id="goHard"><span class="tag">1 VIE</span><b>💀</b><strong>Hardcore</strong><small>Que du très dur, choisis ton sport</small></button>
+        <button class="info" data-info="hard" aria-label="Règles du Hardcore">i</button></div>
+      <div class="tw"><button class="tile c-adv" id="goAdv"><span class="tag">NOUVEAU</span><b>🗺️</b><strong>Aventure</strong><small>10 étapes à débloquer par sport</small></button>
+        <button class="info" data-info="adv" aria-label="Règles de l'Aventure">i</button></div>
     </div>
     <button class="rankbtn" id="goRanks">🏅 Classement</button>
-    <p class="rules">Spécial Foot : 100 questions de plus en plus dures (10 faciles, puis Moyen, Difficile, Expert et 20 en Légende), 3 vies.
-      Multisport : 15 questions (3 par niveau), 2 vies. 20 secondes par question.
-      Une bonne réponse rapporte jusqu'à 100 points × le niveau (moitié au dernier moment). 2 vies : une erreur coûte une vie et 50 points × le niveau.<br>
-      Hardcore : questions Expert et Légende sans fin, la première erreur arrête tout, et la vitesse paie double (jusqu'à 200 points × le niveau).<br>
-      Aventure : 5 questions par étape, il faut au moins 4 bonnes réponses pour débloquer l'étape suivante.</p>
+    <dialog id="infoBox" aria-labelledby="infoTitle">
+      <h2 id="infoTitle"></h2>
+      <ul id="infoText"></ul>
+      <button class="btn" id="infoClose">Compris</button>
+    </dialog>
   </section>
 
   <section id="ranks" class="hidden">
@@ -476,6 +489,29 @@ $('goRanks').onclick = () => {
 };
 document.querySelectorAll('[data-mode]').forEach(b => b.onclick = () => start(b.dataset.mode));
 $('goHard').onclick = () => openPick('hard');
+// Règles de chaque mode, affichées par le bouton ⓘ de sa tuile
+const RULES = {
+  foot: ['⚽ Spécial Foot', ['100 questions de plus en plus dures : 10 faciles, puis Moyen, Difficile, Expert et 20 en Légende.',
+    '3 vies : une erreur coûte une vie et 50 points × le niveau.', '20 secondes par question.',
+    'Une bonne réponse rapporte jusqu’à 100 points × le niveau (la moitié si tu réponds au dernier moment).']],
+  multi: ['🏆 Multisport', ['15 questions, 3 par niveau de Facile à Légende, avec des sports tirés au sort.',
+    '2 vies : une erreur coûte une vie et 50 points × le niveau.', '20 secondes par question.',
+    'Une bonne réponse rapporte jusqu’à 100 points × le niveau (la moitié si tu réponds au dernier moment).']],
+  hard: ['💀 Hardcore', ['Questions Expert et Légende sans fin, dans le sport de ton choix.',
+    '1 seule vie : la première erreur arrête tout.', '20 secondes par question.',
+    'La vitesse paie double : jusqu’à 200 points × le niveau si tu réponds tout de suite, 20 % au dernier moment.']],
+  adv: ['🗺️ Aventure', ['Choisis ton sport et avance sur une carte de 10 étapes, de Facile à Légende.',
+    '5 questions par étape : il faut au moins 4 bonnes réponses pour débloquer l’étape suivante.',
+    '20 secondes par question.', 'Ta progression est gardée sur cet appareil.']],
+};
+document.querySelectorAll('[data-info]').forEach(b => b.onclick = () => {
+  const [title, lines] = RULES[b.dataset.info];
+  $('infoTitle').textContent = title;
+  $('infoText').innerHTML = lines.map(l => `<li>${esc(l)}</li>`).join('');
+  $('infoBox').showModal();
+});
+$('infoClose').onclick = () => $('infoBox').close();
+$('infoBox').onclick = e => { if (e.target === $('infoBox')) $('infoBox').close(); }; // clic à côté de la fenêtre
 $('goAdv').onclick = () => openPick('adv');
 document.querySelectorAll('[data-back]').forEach(b => b.onclick = () => show(b.dataset.back));
 $('advBack').onclick = () => openPick('adv');
