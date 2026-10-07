@@ -499,6 +499,26 @@ $('quit').onclick = () => {
   mode === 'adv' ? openAdv(advSport) : goHome();
 };
 $('toHome').onclick = goHome;
+// App iOS : les questions embarquées (ou celles téléchargées la fois d'avant) servent tout de suite ;
+// la dernière version est téléchargée en arrière-plan depuis GitHub (données JSON, jamais bloquant)
+// et sert dès la partie suivante. Hors ligne ou fichier invalide : on garde ce qu'on a.
+const QUESTIONS_URL = 'https://raw.githubusercontent.com/charlit/sportquiz/main/questions.json';
+const countQ = q => Object.values(q).reduce((n, a) => n + a.length, 0);
+function validQuestions(q) {
+  if (!q || typeof q !== 'object' || Array.isArray(q)) return false;
+  const shapeOk = Object.entries(q).every(([s, qs]) => s in SPORTS && Array.isArray(qs) && qs.every(x =>
+    Array.isArray(x) && x.length === 6 && Number.isInteger(x[0]) && x[0] >= 1 && x[0] <= 5 && x.slice(1).every(t => typeof t === 'string' && t)));
+  // assez de questions partout pour tous les modes (Aventure : 5 par niveau, Spécial Foot : FOOT_PLAN)
+  return shapeOk && Object.keys(QUESTIONS).every(s => q[s] && [1, 2, 3, 4, 5].every(l =>
+    q[s].filter(x => x[0] === l).length >= Math.max(PER_STAGE, s === 'foot' ? FOOT_PLAN[l] : 0)));
+}
+if (GC) {
+  const cached = load('quiz-questions', null); // pas si l'app vient d'être mise à jour avec plus de questions
+  if (validQuestions(cached) && countQ(cached) >= countQ(QUESTIONS)) Object.assign(QUESTIONS, cached);
+  fetch(QUESTIONS_URL, { cache: 'no-store' }).then(r => r.ok ? r.json() : null)
+    .then(q => { if (validQuestions(q)) { Object.assign(QUESTIONS, q); store('quiz-questions', q); } })
+    .catch(() => {});
+}
 if (GC) {                                        // l'app prévient quand le joueur Game Center change
   $('saveForm').classList.add('hidden');
   document.querySelector('#end h2').textContent = 'Classement';

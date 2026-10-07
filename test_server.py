@@ -49,3 +49,8 @@ print('ok foot 100')
 for m in ('hardtennis', 'hardf1', 'hardvelo'):
     assert call('/api/scores', {'name': 'Max', 'mode': m, 'score': 1500, 'good': 3})[0] == 200
 print('ok tennis f1 velo')
+with urllib.request.urlopen(URL + '/questions.js') as r:  # questions.js fabriqué depuis questions.json
+    js = r.read().decode()
+assert js.startswith('const QUESTIONS = {') and js.rstrip().endswith('};')
+assert json.loads(js.removeprefix('const QUESTIONS = ').rstrip().rstrip(';')) == json.load(open(os.path.join(os.path.dirname(server.__file__), 'questions.json'), encoding='utf-8'))
+print('ok questions.js')
