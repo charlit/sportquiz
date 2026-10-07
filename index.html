@@ -76,6 +76,9 @@
   tr.me td { background:#2a3d63; }
   td.empty { text-align:center; font-weight:400; color:var(--dim); padding:12px; }
   .rules { color:var(--dim); font-size:.9rem; }
+  .rankbtn { display:block; width:100%; margin-top:12px; padding:16px; border-radius:16px; cursor:pointer; font-size:1.15rem; font-weight:800;
+             border:1px solid color-mix(in srgb, var(--acc) 50%, var(--line)); background:linear-gradient(150deg, #ffd23f33 0, var(--card) 75%); }
+  .rankbtn:hover { border-color:var(--acc); }
 
   /* quiz */
   .top { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; color:var(--dim); }
@@ -132,18 +135,22 @@
       <button class="tile c-hc" id="goHard"><span class="tag">1 VIE</span><b>💀</b><strong>Hardcore</strong><small>Que du très dur, choisis ton sport</small></button>
       <button class="tile c-adv" id="goAdv"><span class="tag">NOUVEAU</span><b>🗺️</b><strong>Aventure</strong><small>10 étapes à débloquer par sport</small></button>
     </div>
-    <div class="card">
-      <h2>🏅 Classement</h2>
+    <button class="rankbtn" id="goRanks">🏅 Classement</button>
+    <p class="rules">Spécial Foot et Multisport : 5 niveaux (Facile → Légende), 3 questions par niveau, 20 secondes par question.
+      Une bonne réponse rapporte jusqu'à 100 points × le niveau (moitié au dernier moment). 2 vies : une erreur coûte une vie et 50 points × le niveau.<br>
+      Hardcore : questions Expert et Légende sans fin, la première erreur arrête tout, et la vitesse paie double (jusqu'à 200 points × le niveau).<br>
+      Aventure : 5 questions par étape, il faut au moins 4 bonnes réponses pour débloquer l'étape suivante.</p>
+  </section>
+
+  <section id="ranks" class="hidden">
+    <div class="head"><button class="back" data-back="home">← Accueil</button><h2>🏅 Classement</h2></div>
+    <div class="card" style="margin-top:0">
       <div class="tabs">
         <button data-tab="foot" class="on">⚽ Foot</button><button data-tab="multi">🏆 Multi</button><button data-tab="hard">💀 HC Tous</button>
         <button data-tab="hardfoot">💀⚽ HC Foot</button><button data-tab="hardrugby">💀🏉 HC Rugby</button><button data-tab="hardbasket">💀🏀 HC Basket</button>
       </div>
       <table id="board"></table>
     </div>
-    <p class="rules">Spécial Foot et Multisport : 5 niveaux (Facile → Légende), 3 questions par niveau, 20 secondes par question.
-      Une bonne réponse rapporte jusqu'à 100 points × le niveau (moitié au dernier moment). 2 vies : une erreur coûte une vie et 50 points × le niveau.<br>
-      Hardcore : questions Expert et Légende sans fin, la première erreur arrête tout, et la vitesse paie double (jusqu'à 200 points × le niveau).<br>
-      Aventure : 5 questions par étape, il faut au moins 4 bonnes réponses pour débloquer l'étape suivante.</p>
   </section>
 
   <section id="pick" class="hidden">
@@ -207,7 +214,7 @@ const ADV_SPORTS = ['foot', 'rugby', 'basket', 'f1', 'tennis'], STAGES = 10, PER
 const stageLevel = k => Math.ceil(k / 2);
 const $ = id => document.getElementById(id);
 const shuffle = a => { a = [...a]; for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
-const SCREENS = ['home', 'pick', 'adv', 'quiz', 'end', 'advEnd'];
+const SCREENS = ['home', 'ranks', 'pick', 'adv', 'quiz', 'end', 'advEnd'];
 const show = id => { SCREENS.forEach(s => $(s).classList.toggle('hidden', s !== id)); scrollTo(0, 0); };
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
 const store = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} };
@@ -457,10 +464,11 @@ async function sendScore(name) {
 }
 
 /* ---------- Navigation ---------- */
-const goHome = () => {
-  show('home');
-  const tab = document.querySelector(`[data-tab="${mode}"]`);
-  if (tab) tab.click();
+const goHome = () => show('home');
+// Classement : ouvre sur l'onglet du dernier mode joué (Foot par défaut)
+$('goRanks').onclick = () => {
+  show('ranks');
+  (document.querySelector(`[data-tab="${mode}"]`) || document.querySelector('[data-tab="foot"]')).click();
 };
 document.querySelectorAll('[data-mode]').forEach(b => b.onclick = () => start(b.dataset.mode));
 $('goHard').onclick = () => openPick('hard');
@@ -487,7 +495,6 @@ $('quit').onclick = () => {
   mode === 'adv' ? openAdv(advSport) : goHome();
 };
 $('toHome').onclick = goHome;
-loadBoard('foot', $('board'));
 if (GC) {                                        // l'app prévient quand le joueur Game Center change
   $('saveForm').classList.add('hidden');
   document.querySelector('#end h2').textContent = 'Classement';
