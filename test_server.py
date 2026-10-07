@@ -46,6 +46,6 @@ print('ok basket')
 assert call('/api/scores', {'name': 'Cent', 'mode': 'foot', 'score': 25000, 'good': 95})[0] == 200   # Spécial Foot : 100 questions
 assert call('/api/scores', {'name': 'Cent', 'mode': 'multi', 'score': 25000, 'good': 15})[0] == 400  # multi reste plafonné
 print('ok foot 100')
-for m in ('hardtennis', 'hardf1'):
+for m in ('hardtennis', 'hardf1', 'hardvelo'):
     assert call('/api/scores', {'name': 'Max', 'mode': m, 'score': 1500, 'good': 3})[0] == 200
-print('ok tennis f1')
+print('ok tennis f1 velo')
