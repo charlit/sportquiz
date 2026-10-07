@@ -81,6 +81,7 @@
   .top { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; color:var(--dim); }
   .top b { color:var(--acc); font-size:1.3rem; }
   .quit { margin-left:12px; padding:2px 10px; border-radius:8px; border:1px solid var(--line); background:transparent; color:var(--dim); cursor:pointer; }
+  .quit.armed { background:var(--ko); border-color:var(--ko); color:#fff; font-weight:700; }
   .bar { height:8px; background:#0006; border-radius:4px; overflow:hidden; }
   .bar i { display:block; height:100%; background:var(--acc); transition:width .3s; }
   #timer i { background:var(--ok); transition:none; }
@@ -275,7 +276,7 @@ function ask() {
     $('progress').style.width = '0';
   } else {
     $('count').textContent = mode === 'adv'
-      ? `🗺️ Étape ${stage} · Question ${idx + 1} / ${PER_STAGE} · ✅ ${good}/${NEED}`
+      ? `🗺️ Étape ${stage} · ${idx + 1}/${PER_STAGE} · ✅ ${good}/${NEED}`
       : `Question ${idx + 1} / ${deck.length} · ${'❤️'.repeat(lives)}`;
     $('progress').style.width = (idx / deck.length * 100) + '%';
   }
@@ -472,9 +473,17 @@ document.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => {
   loadBoard(b.dataset.tab, $('board'));
 });
 $('again').onclick = () => start(mode);
-$('quit').onclick = () => { // abandon : on coupe le chrono et la question suivante déjà programmée
-  if (!confirm(mode === 'adv' ? 'Abandonner l\'étape ?' : 'Abandonner la partie ? Le score ne sera pas enregistré.')) return;
-  clearInterval(timer); clearTimeout(next);
+// Abandon en 2 appuis (pas de confirm() : la WebView de l'app iOS ne l'affiche pas et répond « non »)
+let quitTimer;
+const disarmQuit = () => { clearTimeout(quitTimer); $('quit').classList.remove('armed'); $('quit').textContent = '✕'; };
+$('quit').onclick = () => {
+  if (!$('quit').classList.contains('armed')) {
+    $('quit').classList.add('armed'); $('quit').textContent = 'Quitter ?';
+    quitTimer = setTimeout(disarmQuit, 3000);
+    return;
+  }
+  disarmQuit();
+  clearInterval(timer); clearTimeout(next); // on coupe le chrono et la question suivante déjà programmée
   mode === 'adv' ? openAdv(advSport) : goHome();
 };
 $('toHome').onclick = goHome;
