@@ -352,7 +352,7 @@ function finish() {
   } else {
     const r = good / deck.length;
     const msg = r >= .85 ? 'Une légende du sport ! 🐐' : r >= .65 ? 'Excellent ! 🔥' : r >= .4 ? 'Pas mal du tout ! 👍' : 'Il faut réviser ! 📚';
-    $('summary').textContent = `${lives ? '' : `Éliminé à la question ${idx + 1} ! `}${good} / ${deck.length} bonnes réponses — ${msg} (${NAMES[mode]})`;
+    $('summary').textContent = `${lives ? '' : `Éliminé à la question ${idx + 1} ! `}${good} bonne${good > 1 ? 's' : ''} réponse${good > 1 ? 's' : ''} — ${msg} (${NAMES[mode]})`;
   }
   if (GC) {
     show('end');
