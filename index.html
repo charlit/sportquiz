@@ -490,7 +490,7 @@ function advFinish() {
   $('advEndScore').textContent = `${good} / ${PER_STAGE}`;
   $('advEndText').textContent = champion ? `Tu connais l'histoire de ${CLUBS[advClub].nom} sur 30 ans ! Respect.`
     : passed ? `L'étape ${stage + 1} (${ERAS[stage + 1]}) est débloquée.`
-    : `Il faut ${NEED} bonnes réponses sur ${PER_STAGE}. Réessaie, les questions changent !`;
+    : `Il faut ${NEED} bonnes réponses sur ${PER_STAGE}. Réessaie, tu connais maintenant certaines réponses !`;
   $('advNext').textContent = champion ? 'Autre club' : passed ? 'Étape suivante ▶' : 'Réessayer';
   $('advNext').onclick = () => {
     if (champion) return openClubs();
