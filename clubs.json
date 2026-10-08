@@ -56,7 +56,7 @@
   ]},
   "om": {"nom": "Olympique de Marseille", "court": "OM", "ville": "Marseille", "lat": 43.2698, "lon": 5.3959, "couleur": "#2faee0", "q": [
     [1,"Comment s'appelle le stade de l'Olympique de Marseille ?","Le Vélodrome","Le stade Louis-II","L'Allianz Riviera","Le stade de la Mosson"],
-    [1,"Quel groupe de supporters de l'OM a été créé en 1984 ?","Le Commando Ultra' 84","Les South Winners","Les Dodger's","Marseille Trop Puissant"],
+    [1,"Quel est le plus ancien groupe d'ultras de l'OM, fondé dans les années 1980 ?","Le Commando Ultra' 84","Les South Winners","Les Dodger's","Marseille Trop Puissant"],
     [1,"Quel entraîneur italien est arrivé sur le banc de l'OM en 2024 ?","Roberto De Zerbi","Gennaro Gattuso","Igor Tudor","Claudio Ranieri"],
     [1,"Quelle place l'OM a-t-il obtenue en Ligue 1 en 2024-2025 ?","2e","1re","4e","6e"],
     [1,"Quel attaquant anglais de l'OM a été meilleur buteur de Ligue 1 en 2024-2025 ?","Mason Greenwood","Jadon Sancho","Marcus Rashford","Danny Ings"],
@@ -181,7 +181,7 @@
     [4,"Pendant la rénovation de Bollaert pour l'Euro 2016, où Lens a-t-il joué en 2014-2015 ?","Au stade de la Licorne, à Amiens","Au Stadium de Villeneuve-d'Ascq","Au stade du Hainaut, à Valenciennes","Au stade de France"],
     [4,"Pour quel grand tournoi le stade Bollaert a-t-il été rénové ?","L'Euro 2016","La Coupe du monde 1998","L'Euro 2008","La Coupe du monde 2006"],
     [4,"Quel entraîneur d'origine kanake a dirigé Lens de 2013 à 2016 ?","Antoine Kombouaré","Christian Karembeu","Jean-Marc Furlan","Rudi Garcia"],
-    [4,"À quelle place (sur 20) Lens a-t-il terminé la Ligue 1 2014-2015 ?","20e","18e","17e","15e"],
+    [4,"À quelle place Lens a-t-il terminé la Ligue 1 2014-2015 ?","20e","18e","17e","15e"],
     [4,"Quel homme d'affaires azerbaïdjanais a quitté l'actionnariat de Lens en 2016 ?","Hafiz Mammadov","Rinat Akhmetov","Roman Abramovitch","Dmitri Rybolovlev"],
     [5,"En quelle année Lens est-il remonté en Ligue 1 sous Antoine Kombouaré ?","2014","2012","2013","2015"],
     [5,"Quel club a été champion de Ligue 2 en 2014, devant Lens ?","FC Metz","SM Caen","Angers","Dijon"],
@@ -323,7 +323,7 @@
   ]},
   "monaco": {"nom": "AS Monaco", "court": "Monaco", "ville": "Monaco", "lat": 43.7276, "lon": 7.4156, "couleur": "#ff4b5c", "q": [
     [1,"Comment s'appelle le stade de l'AS Monaco ?","Le stade Louis-II","L'Allianz Riviera","Le stade du Ray","Le Vélodrome"],
-    [1,"Quel groupe d'ultras de l'AS Monaco a été créé en 1994 ?","Les Ultras Monaco 1994","La Brigade Sud Nice","Les South Winners","Les Indians Tolosa"],
+    [1,"Quel groupe d'ultras soutient l'AS Monaco ?","Les Ultras Monaco 1994","La Brigade Sud Nice","Les South Winners","Les Indians Tolosa"],
     [1,"Quel milliardaire russe est propriétaire de l'AS Monaco depuis 2011 ?","Dmitri Rybolovlev","Roman Abramovitch","Alicher Ousmanov","Vladimir Potanine"],
     [1,"Quelle place Monaco a-t-il obtenue en Ligue 1 en 2024-2025 ?","3e","1er","7e","12e"],
     [1,"Quel club Monaco a-t-il battu 2-1 lors de son premier match de Ligue des champions 2024-2025 ?","Barcelone","Le Real Madrid","Arsenal","L'Inter Milan"],
@@ -429,7 +429,7 @@
   ]},
   "rcsa": {"nom": "RC Strasbourg Alsace", "court": "Strasbourg", "ville": "Strasbourg", "lat": 48.5602, "lon": 7.7553, "couleur": "#2d8cff", "q": [
     [1,"Comment s'appelle le stade du RC Strasbourg ?","La Meinau","Le Moustoir","Saint-Symphorien","Bonal"],
-    [1,"Quel groupe d'ultras strasbourgeois a été créé en 1990 ?","Les Ultra Boys 90","Les Red Tigers","Les Indians Tolosa","Les Bad Gones"],
+    [1,"Quel groupe d'ultras soutient le RC Strasbourg ?","Les Ultra Boys 90","Les Red Tigers","Les Indians Tolosa","Les Bad Gones"],
     [1,"Quel consortium américain, aussi propriétaire de Chelsea, a racheté Strasbourg en 2023 ?","BlueCo","RedBird","Eagle Football","Amber Capital"],
     [1,"Jusqu'à quel stade Strasbourg est-il allé en Ligue Conférence 2025-2026 ?","Les demi-finales","La finale","Les huitièmes de finale","Les quarts de finale"],
     [1,"Quelle place Strasbourg a-t-il obtenue en Ligue 1 en 2024-2025 ?","7e","2e","12e","15e"],
