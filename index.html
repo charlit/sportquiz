@@ -135,6 +135,22 @@
   .profbtn:hover { border-color:var(--acc); }
   .avatar { width:34px; height:34px; border-radius:50%; display:grid; place-items:center; flex:none; font-weight:900;
             background:var(--acc); color:#111; }
+  /* encart autour de la lettre : bronze (1-2 badges), argent (3-4), or (5), légende (tous) */
+  .avatar { position:relative; --ring:transparent; }
+  .avatar::before { content:''; position:absolute; inset:-5px; padding:3px; border-radius:50%; background:var(--ring);
+                    -webkit-mask:linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+                    mask:linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0); pointer-events:none; }
+  .who .avatar::before { inset:-8px; padding:5px; }
+  .avatar[data-tier="bronze"] { --ring:linear-gradient(135deg, #f0b27a, #a0522d); }
+  .avatar[data-tier="argent"] { --ring:linear-gradient(135deg, #ffffff, #8e9bb0); }
+  .avatar[data-tier="or"] { --ring:linear-gradient(135deg, #fff3a8, #e0a800); box-shadow:0 0 14px #ffd23f88; }
+  .avatar[data-tier="legende"] { --ring:conic-gradient(from var(--a, 0deg), #ff5a4f, #ffd23f, #2ecc71, #3fa9ff, #b06bff, #ff5a4f);
+                                 box-shadow:0 0 18px #ffd23faa; animation:ringspin 4s linear infinite; }
+  @property --a { syntax:'<angle>'; inherits:true; initial-value:0deg; }
+  @keyframes ringspin { to { --a:360deg; } }
+  @media (prefers-reduced-motion: reduce) { .avatar[data-tier="legende"] { animation:none; } }
+  .profbtn { padding-left:7px; gap:10px; }
+  .who { padding-left:8px; }
   .profbtn small { font-weight:800; color:var(--acc); }
   .who { display:flex; align-items:center; gap:14px; margin:0 0 18px; }
   .who .avatar { width:64px; height:64px; font-size:1.8rem; }
@@ -576,6 +592,9 @@ const BADGES = [
   ['tour', '🇫🇷', 'Tour de France des clubs', 'Finir les 18 clubs de l’Aventure'],
 ];
 const earned = load('quiz-badges', {});
+// Encart autour de la lettre du profil, selon le nombre de badges : [minimum, id, nom]
+const TIERS = [[1, 'bronze', 'Bronze'], [3, 'argent', 'Argent'], [5, 'or', 'Or'], [BADGES.length, 'legende', 'Légende']];
+const tierOf = n => TIERS.filter(t => n >= t[0]).pop();
 let toastTimer;
 
 function unlock(id) {
@@ -653,7 +672,10 @@ function refreshProfile() {
     $('codeHint').textContent = 'Ton code pour retrouver ton profil sur un autre appareil :';
     $('logout').textContent = 'Se déconnecter de cet appareil';
   }
-  $('whoCount').textContent = `${n} badge${n > 1 ? 's' : ''} sur ${BADGES.length}` + (!name && GC ? ' · connecte-toi à Game Center' : '');
+  const tier = tierOf(n), next = TIERS.find(t => n < t[0]);
+  $('profAvatar').dataset.tier = $('whoAvatar').dataset.tier = tier ? tier[1] : '';
+  $('whoCount').textContent = `${n} badge${n > 1 ? 's' : ''} sur ${BADGES.length}` + (tier ? ` · encart ${tier[2]}` : '') +
+    (next ? ` · encore ${next[0] - n} pour l’encart ${next[2]}` : '') + (!name && GC ? ' · connecte-toi à Game Center' : '');
   $('trophies').innerHTML = BADGES.map(([id, icon, title, how]) => {
     const d = earned[id];
     return `<div class="trophy${d ? '' : ' lock'}"><b>${icon}</b><strong>${esc(title)}</strong><small>${esc(how)}</small>` +
