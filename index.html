@@ -89,7 +89,8 @@
   .tabs button { flex:1 1 30%; white-space:nowrap; padding:8px; border-radius:10px; border:1px solid var(--line); background:transparent; color:var(--dim); cursor:pointer; }
   .tabs button.on { background:var(--acc); color:#111; border-color:var(--acc); font-weight:700; }
   #landTabs { flex-wrap:nowrap; }
-  #landTabs button { flex:1 1 0; min-width:0; padding:8px 4px; white-space:normal; line-height:1.2; }
+  #landTabs button { flex:1 1 0; min-width:0; padding:6px 2px; display:flex; flex-direction:column; align-items:center; gap:2px; font-size:13px; }
+  #landTabs b { font-size:18px; line-height:1; }
   table { width:100%; border-collapse:collapse; }
   td { padding:7px 6px; border-top:1px solid var(--line); }
   td:first-child { width:2.5em; color:var(--dim); }
@@ -263,7 +264,7 @@
   <section id="clubs" class="hidden">
     <div class="head"><button class="back" data-back="home">← Accueil</button><h2>🗺️ Aventure</h2></div>
     <div class="tabs" id="landTabs">
-      <button data-land="fr">🇫🇷 France</button><button data-land="es">🇪🇸 Espagne</button><button data-land="uk">🇬🇧 Royaume-Uni</button>
+      <button data-land="fr"><b>🇫🇷</b>France</button><button data-land="es"><b>🇪🇸</b>Espagne</button><button data-land="uk"><b>🇬🇧</b>Royaume-Uni</button>
     </div>
     <p class="advinfo" id="landInfo"></p>
     <svg id="frMap" role="img"></svg>
