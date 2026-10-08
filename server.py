@@ -15,7 +15,7 @@ FILES = {'/': ('index.html', 'text/html; charset=utf-8'),
 # questions.json (questions par sport ; l'app iOS le télécharge aussi depuis GitHub) et clubs.json (Aventure Ligue 1)
 # sont les seules sources ; la page les reçoit sous forme de script pour rester synchrone au chargement.
 DATA_JS = {'/questions.js': ('QUESTIONS', 'questions.json'), '/clubs.js': ('CLUBS', 'clubs.json')}
-MAX_SCORE = {'foot': 30_000, 'multi': 4500, 'hard': 400_000, 'hardfoot': 400_000, 'hardrugby': 400_000, 'hardbasket': 400_000, 'hardtennis': 400_000, 'hardf1': 400_000, 'hardvelo': 400_000}  # foot 100 questions / multi 15, max niveau*100 pts ; hard* = sans fin
+MAX_SCORE = {'foot': 32_500, 'multi': 4500, 'hard': 400_000, 'hardfoot': 400_000, 'hardrugby': 400_000, 'hardbasket': 400_000, 'hardtennis': 400_000, 'hardf1': 400_000, 'hardvelo': 400_000}  # foot 100 questions (FOOT_PLAN : 100 × (10×1 + 20×2 + 25×3 + 25×4 + 20×5)) / multi 15, max niveau*100 pts ; hard* = sans fin
 MAX_GOOD = {'foot': 100, 'multi': 15, 'hard': 400, 'hardfoot': 400, 'hardrugby': 400, 'hardbasket': 400, 'hardtennis': 400, 'hardf1': 400, 'hardvelo': 400}
 # Profils web : pseudo + code secret pour retrouver ses badges sur un autre appareil (l'app iOS utilise Game Center).
 PROFILES = os.environ.get('QUIZ_PROFILES', os.path.join(os.path.dirname(DB), 'profiles.json'))
