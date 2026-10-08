@@ -59,3 +59,21 @@ with urllib.request.urlopen(URL + '/clubs.js') as r:  # clubs.js fabriqué depui
 clubs = json.loads(js.removeprefix('const CLUBS = ').rstrip().rstrip(';'))
 assert len(clubs) == 18 and all(sum(q[0] == k for q in c['q']) >= 5 for c in clubs.values() for k in range(1, 11))
 print('ok clubs.js')
+# profils web : pseudo + code
+st, p = call('/api/profile/create', {'name': 'Zoé', 'badges': {'first': 1700000000, 'triche': 5}})
+assert st == 200 and len(p['code']) == 7 and p['badges'] == {'first': 1700000000}   # badge inconnu ignoré
+code = p['code']
+assert call('/api/profile/create', {'name': 'zoé'})[0] == 409                      # pseudo déjà pris
+assert call('/api/profile/sync', {'name': 'Zoé', 'code': 'AAA-AAA'})[0] == 403
+st, p = call('/api/profile/sync', {'name': 'ZOÉ', 'code': code.lower().replace('-', ''), 'badges': {'first': 1800000000, 'reflex': 1750000000}})
+assert st == 200 and p['name'] == 'Zoé' and p['badges'] == {'first': 1700000000, 'reflex': 1750000000}  # fusion, date la plus ancienne
+assert call('/api/profile/sync', {'name': 'Personne', 'code': code})[0] == 404
+# pseudo protégé au classement
+assert call('/api/scores', {'name': 'Zoé', 'mode': 'foot', 'score': 100, 'good': 1})[0] == 403
+assert call('/api/scores', {'name': 'Zoé', 'mode': 'foot', 'score': 100, 'good': 1, 'code': code})[0] == 200
+# trop de codes faux : bloqué, même avec le bon code
+for _ in range(server.MAX_FAILS):
+    call('/api/profile/sync', {'name': 'Zoé', 'code': 'BBB-BBB'})
+assert call('/api/profile/sync', {'name': 'Zoé', 'code': code})[0] == 429
+print('ok profils')
+

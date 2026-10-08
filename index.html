@@ -15,7 +15,7 @@
   .hidden { display:none !important; }
 
   /* en-tête */
-  .logo { text-align:center; margin:12px 0 4px; font-size:2.6rem; font-weight:900; font-style:italic; letter-spacing:1px; text-transform:uppercase; }
+  .logo { text-align:center; margin:4px 0 4px; font-size:2.6rem; font-weight:900; font-style:italic; letter-spacing:1px; text-transform:uppercase; }
   .logo span { color:var(--acc); }
   .sub { text-align:center; color:var(--dim); margin:0 0 22px; }
   .head { display:flex; align-items:center; gap:12px; margin:6px 0 18px; }
@@ -128,6 +128,40 @@
   .btn.alt { background:transparent; color:var(--txt); border:2px solid var(--line); }
   .row { display:flex; gap:10px; justify-content:center; margin-top:18px; flex-wrap:wrap; }
   #saveMsg { color:var(--dim); min-height:1.4em; margin:8px 0 0; }
+  /* profil et badges */
+  .topbar { display:flex; justify-content:flex-end; }
+  .profbtn { display:flex; align-items:center; gap:6px; padding:4px 10px 4px 4px; cursor:pointer;
+             border-radius:999px; border:1px solid var(--line); background:var(--card); }
+  .profbtn:hover { border-color:var(--acc); }
+  .avatar { width:34px; height:34px; border-radius:50%; display:grid; place-items:center; flex:none; font-weight:900;
+            background:var(--acc); color:#111; }
+  .profbtn small { font-weight:800; color:var(--acc); }
+  .who { display:flex; align-items:center; gap:14px; margin:0 0 18px; }
+  .who .avatar { width:64px; height:64px; font-size:1.8rem; }
+  .who strong { display:block; font-size:1.35rem; }
+  .who small { color:var(--dim); }
+  .trophies { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .trophy { padding:16px 14px; border-radius:16px; border:1px solid color-mix(in srgb, var(--acc) 45%, var(--line));
+            background:linear-gradient(150deg, #ffd23f2e 0, var(--card) 75%); }
+  .trophy b { display:block; font-size:2.2rem; line-height:1; }
+  .trophy strong { display:block; margin:10px 0 2px; }
+  .trophy small { display:block; color:var(--dim); }
+  .trophy em { display:block; margin-top:8px; font-size:.8rem; font-style:normal; color:var(--acc); font-weight:700; }
+  .trophy.lock { border-color:var(--line); background:var(--card); }
+  .trophy.lock b { filter:grayscale(1); opacity:.35; }
+  .trophy.lock em { color:var(--dim); }
+  #account { margin-top:20px; }
+  #account p { color:var(--dim); margin:0 0 12px; }
+  #account form { margin:0 0 10px; }
+  .codebox { font:800 1.6rem ui-monospace, Menlo, monospace; letter-spacing:4px; text-align:center; padding:12px; margin:8px 0 12px;
+             border-radius:12px; border:2px dashed var(--acc); color:var(--acc); }
+  .linkbtn { border:0; background:none; color:var(--acc); text-decoration:underline; cursor:pointer; padding:4px 0; }
+  .accmsg { color:var(--ko) !important; min-height:1.2em; }
+  #toast { position:fixed; left:50%; top:max(16px, env(safe-area-inset-top)); z-index:50; transform:translate(-50%, -150%);
+           display:flex; align-items:center; gap:10px; padding:10px 16px; border-radius:999px; pointer-events:none; white-space:nowrap;
+           background:var(--acc); color:#111; font-weight:800; box-shadow:0 10px 30px -8px #000; transition:transform .35s; }
+  #toast.on { transform:translate(-50%, 0); }
+  #toast b { font-size:1.4rem; }
   /* téléphone : la partie occupe toute la hauteur — infos en haut, question au centre,
      réponses en bas sous le pouce ; les écrans de fin sont centrés */
   @media (pointer: coarse) {
@@ -145,6 +179,7 @@
 <body>
 <main>
   <section id="home">
+    <div class="topbar"><button class="profbtn" id="goProfile" aria-label="Mon profil et mes badges"><span class="avatar" id="profAvatar">👤</span><small id="profCount"></small></button></div>
     <div class="logo">Sport <span>Quiz</span></div>
     <p class="sub">Des questions de plus en plus dures. Réponds vite pour gagner plus !</p>
     <div class="tiles">
@@ -163,6 +198,30 @@
       <ul id="infoText"></ul>
       <button class="btn" id="infoClose">Compris</button>
     </dialog>
+  </section>
+
+  <section id="profile" class="hidden">
+    <div class="head"><button class="back" data-back="home">← Accueil</button><h2>Mon profil</h2></div>
+    <div class="who"><span class="avatar" id="whoAvatar">👤</span><span><strong id="whoName"></strong><small id="whoCount"></small></span></div>
+    <div class="trophies" id="trophies"></div>
+    <div class="card hidden" id="account">
+      <div id="accNew">
+        <h2>💾 Garde tes badges</h2>
+        <p>Choisis un pseudo : tu recevras un code pour retrouver tes badges sur un autre appareil. Ton pseudo sera aussi protégé au classement.</p>
+        <form id="createForm"><input id="createName" maxlength="16" placeholder="Ton pseudo" required pattern=".*\S.*" autocomplete="nickname"><button class="btn">Créer</button></form>
+        <button class="linkbtn" id="showLogin" type="button">J'ai déjà un profil</button>
+        <form id="loginForm" class="hidden"><input id="loginName" maxlength="16" placeholder="Pseudo" required autocomplete="username">
+          <input id="loginCode" maxlength="7" placeholder="Code" required autocomplete="current-password" autocapitalize="characters" style="max-width:7.5em"><button class="btn">OK</button></form>
+        <p class="accmsg" id="accMsg"></p>
+      </div>
+      <div id="accHave" class="hidden">
+        <h2>💾 Profil sauvegardé</h2>
+        <p id="codeHint">Ton code pour retrouver ton profil sur un autre appareil :</p>
+        <div class="codebox" id="codeBox">••• •••</div>
+        <button class="linkbtn" id="toggleCode" type="button">Afficher mon code</button><br>
+        <button class="linkbtn" id="logout" type="button">Se déconnecter de cet appareil</button>
+      </div>
+    </div>
   </section>
 
   <section id="ranks" class="hidden">
@@ -230,6 +289,7 @@
     <div class="row"><button class="btn" id="advNext"></button><button class="btn alt" id="advMap">Carte</button></div>
   </section>
 </main>
+<div id="toast" role="status" aria-live="polite"><b id="toastIcon"></b><span id="toastText"></span></div>
 
 <script src="questions.js"></script>
 <script src="clubs.js"></script>
@@ -251,7 +311,7 @@ const ERAS = ['', '2024-2026', '2021-2023', '2018-2020', '2015-2017', '2012-2014
 const stageLevel = k => Math.ceil(k / 2); // difficulté (points) : étapes 1-2 → niveau 1 … 9-10 → niveau 5
 const $ = id => document.getElementById(id);
 const shuffle = a => { a = [...a]; for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
-const SCREENS = ['home', 'ranks', 'pick', 'clubs', 'adv', 'quiz', 'end', 'advEnd'];
+const SCREENS = ['home', 'profile', 'ranks', 'pick', 'clubs', 'adv', 'quiz', 'end', 'advEnd'];
 const show = id => { SCREENS.forEach(s => $(s).classList.toggle('hidden', s !== id)); scrollTo(0, 0); };
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
 const store = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} };
@@ -354,6 +414,8 @@ function answer(btn, ok, lvl) {
   const correct = deck[idx][1][2];
   [...$('answers').children].forEach(b => { b.disabled = true; if (b.textContent === correct) b.classList.add('ok'); });
   if (ok) {
+    if (TIME - left < 2) unlock('reflex');
+    if (mode in HARD && good + 1 >= 10) unlock('streak');   // en Hardcore, une erreur arrête tout : good = série en cours
     const pts = points(lvl, left);
     score += pts; good++;
     $('score').textContent = score;
@@ -380,6 +442,8 @@ function answer(btn, ok, lvl) {
 
 function finish() {
   $('progress').style.width = '100%';
+  unlock('first');
+  if (mode === 'foot' && good === deck.length) unlock('perfect');
   if (mode === 'adv') return advFinish();
   $('final').textContent = score + ' pts';
   if (mode in HARD) {
@@ -398,7 +462,7 @@ function finish() {
   }
   $('saveMsg').textContent = '';
   $('saveForm').classList.remove('hidden');
-  $('pseudo').value = load('quiz-pseudo', '');
+  $('pseudo').value = prof?.name || load('quiz-pseudo', '');
   show('end');
   loadBoard(mode, $('endBoard'));
 }
@@ -485,6 +549,7 @@ function advFinish() {
   const passed = lives > 0;
   const d = advDone[advClub] || 0;
   if (passed && stage > d) { advDone[advClub] = stage; store('quiz-adv', advDone); }
+  checkAdvBadges();
   const champion = passed && stage === STAGES;
   $('advEndTitle').textContent = champion ? '🏆 Champion !' : passed ? '✅ Étape réussie !' : '❌ Étape ratée';
   $('advEndScore').textContent = `${good} / ${PER_STAGE}`;
@@ -499,6 +564,103 @@ function advFinish() {
   };
   show('advEnd');
 }
+
+/* ---------- Profil et badges ---------- */
+// Gagnés sur cet appareil (id → date). Dans l'app iOS, ils sont aussi envoyés à Game Center (succès « sportquiz.badge.<id> »).
+const BADGES = [
+  ['first', '🎮', 'Première partie', 'Jouer une partie jusqu’au bout'],
+  ['perfect', '🎯', 'Sans faute', 'Finir le Spécial Foot sans aucune erreur'],
+  ['reflex', '⚡', 'Réflexe', 'Bonne réponse en moins de 2 secondes'],
+  ['streak', '🔥', 'Série', '10 bonnes réponses d’affilée en Hardcore'],
+  ['supporter', '📣', 'Supporter', 'Finir les 10 étapes d’un club de l’Aventure'],
+  ['tour', '🇫🇷', 'Tour de France des clubs', 'Finir les 18 clubs de l’Aventure'],
+];
+const earned = load('quiz-badges', {});
+let toastTimer;
+
+function unlock(id) {
+  if (earned[id]) return;
+  earned[id] = Date.now();
+  store('quiz-badges', earned);
+  const [, icon, title] = BADGES.find(b => b[0] === id);
+  $('toastIcon').textContent = icon; $('toastText').textContent = `Badge débloqué : ${title}`;
+  $('toast').classList.add('on');
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => $('toast').classList.remove('on'), 3000);
+  reportBadges([id]);
+  syncProfile();
+  refreshProfile();
+}
+function reportBadges(ids) {
+  if (GC && ids.length) fetch('api/achievements', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ids }) }).catch(() => {});
+}
+function checkAdvBadges() {
+  const done = Object.keys(CLUBS).filter(id => (advDone[id] || 0) >= STAGES);
+  if (done.length) unlock('supporter');
+  if (done.length === Object.keys(CLUBS).length) unlock('tour');
+}
+// Web : profil = pseudo + code secret, badges sauvegardés sur le serveur (app iOS : Game Center).
+let prof = load('quiz-profile', null), showCode = false;
+const playerName = () => (GC ? gcName : prof?.name || load('quiz-pseudo', '')) || '';
+const post = (path, body) => fetch(path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+const ACC_ERRORS = { 403: 'Code incorrect', 404: 'Aucun profil avec ce pseudo', 409: 'Ce pseudo est déjà pris : si c’est le tien, utilise ton code',
+                     429: 'Trop d’essais : réessaie dans 15 minutes' };
+function useProfile(p, code) {                    // profil retrouvé ou créé : on garde l'union des badges
+  prof = { name: p.name, code }; store('quiz-profile', prof);
+  Object.assign(earned, p.badges); store('quiz-badges', earned);
+  refreshProfile();
+}
+async function syncProfile() {
+  if (GC || !prof) return;
+  try {
+    const r = await post('api/profile/sync', { name: prof.name, code: prof.code, badges: earned });
+    if (r.ok) useProfile(await r.json(), prof.code);
+  } catch {}                                       // hors ligne : les badges restent sur l'appareil, envoyés la prochaine fois
+}
+async function account(path, body, code) {
+  $('accMsg').textContent = '…';
+  try {
+    const r = await post(path, { ...body, badges: earned });
+    if (!r.ok) { $('accMsg').textContent = ACC_ERRORS[r.status] || 'Serveur indisponible, réessaie plus tard'; return; }
+    const p = await r.json();
+    $('accMsg').textContent = '';
+    showCode = !!p.code;                            // nouveau profil : on montre le code tout de suite
+    useProfile(p, p.code || code);
+  } catch { $('accMsg').textContent = 'Serveur indisponible, réessaie plus tard'; }
+}
+$('createForm').onsubmit = e => { e.preventDefault(); account('api/profile/create', { name: $('createName').value.trim() }); };
+$('loginForm').onsubmit = e => {
+  e.preventDefault();
+  const code = $('loginCode').value.trim().toUpperCase();
+  account('api/profile/sync', { name: $('loginName').value.trim(), code }, code);
+};
+$('showLogin').onclick = () => { $('loginForm').classList.toggle('hidden'); $('loginName').focus(); };
+$('toggleCode').onclick = () => { showCode = !showCode; refreshProfile(); };
+$('logout').onclick = () => {
+  if (!showCode) { showCode = true; refreshProfile(); $('codeHint').textContent = 'Note bien ton code avant de te déconnecter :'; $('logout').textContent = 'Je l’ai noté, me déconnecter'; return; }
+  prof = null; showCode = false; store('quiz-profile', null); refreshProfile();
+};
+function refreshProfile() {
+  const n = BADGES.filter(b => earned[b[0]]).length, name = playerName();
+  $('profAvatar').textContent = $('whoAvatar').textContent = name ? name[0].toUpperCase() : '👤';
+  $('profCount').textContent = `🏅 ${n}`;
+  $('whoName').textContent = name || 'Joueur anonyme';
+  $('account').classList.toggle('hidden', GC);
+  $('accNew').classList.toggle('hidden', !!prof); $('accHave').classList.toggle('hidden', !prof);
+  if (prof) {
+    $('codeBox').textContent = showCode ? prof.code : '••• •••';
+    $('toggleCode').textContent = showCode ? 'Masquer mon code' : 'Afficher mon code';
+    $('codeHint').textContent = 'Ton code pour retrouver ton profil sur un autre appareil :';
+    $('logout').textContent = 'Se déconnecter de cet appareil';
+  }
+  $('whoCount').textContent = `${n} badge${n > 1 ? 's' : ''} sur ${BADGES.length}` + (!name && GC ? ' · connecte-toi à Game Center' : '');
+  $('trophies').innerHTML = BADGES.map(([id, icon, title, how]) => {
+    const d = earned[id];
+    return `<div class="trophy${d ? '' : ' lock'}"><b>${icon}</b><strong>${esc(title)}</strong><small>${esc(how)}</small>` +
+           `<em>${d ? 'Gagné le ' + new Date(d).toLocaleDateString('fr-FR') : '🔒 À débloquer'}</em></div>`;
+  }).join('');
+}
+$('goProfile').onclick = () => { refreshProfile(); show('profile'); };
 
 /* ---------- Classements ---------- */
 function renderBoard(rows, table, me, m) {
@@ -525,7 +687,8 @@ async function sendScore(name) {
   saved = true; // bloque les clics répétés pendant l'envoi
   try {
     const r = await fetch('api/scores', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, mode, score, good }) });
+      body: JSON.stringify({ name, mode, score, good, code: prof && name.toLowerCase() === prof.name.toLowerCase() ? prof.code : undefined }) });
+    if (r.status === 403 || r.status === 429) { saved = false; $('saveMsg').textContent = 'Ce pseudo est protégé par un code : retrouve ton profil (en haut à droite de l’accueil) ou choisis un autre pseudo.'; return; }
     if (!r.ok) throw 0;
     if (!GC) store('quiz-pseudo', name);
     const rows = await r.json();
@@ -623,9 +786,12 @@ if (GC) {
 if (GC) {                                        // l'app prévient quand le joueur Game Center change
   $('saveForm').classList.add('hidden');
   document.querySelector('#end h2').textContent = 'Classement';
-  window.__quizPlayer = name => { gcName = name; };
-  fetch('api/me').then(r => r.json()).then(r => { gcName = r.name || null; }, () => {});
+  window.__quizPlayer = name => { gcName = name; refreshProfile(); if (name) reportBadges(Object.keys(earned)); };
+  fetch('api/me').then(r => r.json()).then(r => { gcName = r.name || null; refreshProfile(); }, () => {});
 }
+checkAdvBadges(); // progression de l'Aventure gagnée avant l'arrivée des badges
+refreshProfile();
+syncProfile();
 </script>
 </body>
 </html>
