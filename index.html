@@ -437,6 +437,7 @@ function answer(btn, ok, lvl) {
     if (TIME - left < 2) unlock('reflex');
     if (mode in HARD && good + 1 >= 10) unlock('streak');   // en Hardcore, une erreur arrête tout : good = série en cours
     if (mode in HARD && good + 1 >= 25) unlock('beast');
+    if (mode in HARD && good + 1 >= 15) unlock(mode);         // badge du Hardcore joué (même id que le mode)
     const pts = points(lvl, left);
     score += pts; good++;
     $('score').textContent = score;
@@ -467,6 +468,8 @@ function finish() {
   if (mode === 'foot' && good === deck.length) unlock('perfect');
   if (mode === 'foot' && lives > 0) unlock('marathon');
   if (mode === 'multi' && good === deck.length) unlock('multi');
+  if (mode === 'foot' && score >= 20000) unlock('footscore');
+  if (mode === 'multi' && score >= 3000) unlock('multiscore');
   if (HARD[mode]) { // Hardcore par sport : on retient les sports joués
     const hc = new Set(load('quiz-hc', [])).add(mode);
     store('quiz-hc', [...hc]);
@@ -642,6 +645,15 @@ const BADGES = [
   ['multi', '🏆', 'Polyvalent', 'Finir le Multisport sans aucune erreur'],
   ['beast', '💀', 'Increvable', '25 bonnes réponses d’affilée en Hardcore'],
   ['allround', '🎽', 'Touche-à-tout', 'Jouer une partie Hardcore dans chacun des 6 sports'],
+  ['footscore', '🥇', 'Légende du foot', 'Marquer 20 000 points au Spécial Foot'],
+  ['multiscore', '🎖️', 'Décathlonien', 'Marquer 3 000 points au Multisport'],
+  ['hard', '🌐', 'Encyclopédie', '15 bonnes réponses d’affilée en Hardcore Tous sports'],
+  ['hardfoot', '⚽', 'Maître du ballon rond', '15 bonnes réponses d’affilée en Hardcore Foot'],
+  ['hardrugby', '🏉', 'Pilier', '15 bonnes réponses d’affilée en Hardcore Rugby'],
+  ['hardbasket', '🏀', 'Roi du parquet', '15 bonnes réponses d’affilée en Hardcore Basket'],
+  ['hardtennis', '🎾', 'Grand Chelem', '15 bonnes réponses d’affilée en Hardcore Tennis'],
+  ['hardf1', '🏎️', 'Pole position', '15 bonnes réponses d’affilée en Hardcore Sport auto'],
+  ['hardvelo', '🚴', 'Roi de la montagne', '15 bonnes réponses d’affilée en Hardcore Cyclisme'],
 ];
 const earned = load('quiz-badges', {});
 // Encart autour de la lettre du profil, selon le nombre de badges : [minimum, id, nom]
