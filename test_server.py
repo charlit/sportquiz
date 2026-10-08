@@ -65,8 +65,8 @@ assert st == 200 and len(p['code']) == 7 and p['badges'] == {'first': 1700000000
 code = p['code']
 assert call('/api/profile/create', {'name': 'zoé'})[0] == 409                      # pseudo déjà pris
 assert call('/api/profile/sync', {'name': 'Zoé', 'code': 'AAA-AAA'})[0] == 403
-st, p = call('/api/profile/sync', {'name': 'ZOÉ', 'code': code.lower().replace('-', ''), 'badges': {'first': 1800000000, 'reflex': 1750000000}})
-assert st == 200 and p['name'] == 'Zoé' and p['badges'] == {'first': 1700000000, 'reflex': 1750000000}  # fusion, date la plus ancienne
+st, p = call('/api/profile/sync', {'name': 'ZOÉ', 'code': code.lower().replace('-', ''), 'badges': {'first': 1800000000, 'reflex': 1750000000, 'globe': 1760000000}})
+assert st == 200 and p['name'] == 'Zoé' and p['badges'] == {'first': 1700000000, 'reflex': 1750000000, 'globe': 1760000000}  # fusion, date la plus ancienne
 assert call('/api/profile/sync', {'name': 'Personne', 'code': code})[0] == 404
 # pseudo protégé au classement
 assert call('/api/scores', {'name': 'Zoé', 'mode': 'foot', 'score': 100, 'good': 1})[0] == 403

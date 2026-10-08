@@ -436,6 +436,7 @@ function answer(btn, ok, lvl) {
   if (ok) {
     if (TIME - left < 2) unlock('reflex');
     if (mode in HARD && good + 1 >= 10) unlock('streak');   // en Hardcore, une erreur arrête tout : good = série en cours
+    if (mode in HARD && good + 1 >= 25) unlock('beast');
     const pts = points(lvl, left);
     score += pts; good++;
     $('score').textContent = score;
@@ -464,6 +465,13 @@ function finish() {
   $('progress').style.width = '100%';
   unlock('first');
   if (mode === 'foot' && good === deck.length) unlock('perfect');
+  if (mode === 'foot' && lives > 0) unlock('marathon');
+  if (mode === 'multi' && good === deck.length) unlock('multi');
+  if (HARD[mode]) { // Hardcore par sport : on retient les sports joués
+    const hc = new Set(load('quiz-hc', [])).add(mode);
+    store('quiz-hc', [...hc]);
+    if (Object.keys(HARD).every(m => !HARD[m] || hc.has(m))) unlock('allround');
+  }
   if (mode === 'adv') return advFinish();
   $('final').textContent = score + ' pts';
   if (mode in HARD) {
@@ -627,6 +635,13 @@ const BADGES = [
   ['streak', '🔥', 'Série', '10 bonnes réponses d’affilée en Hardcore'],
   ['supporter', '📣', 'Supporter', 'Finir les 10 étapes d’un club de l’Aventure'],
   ['tour', '🇫🇷', 'Tour de France des clubs', 'Finir les 18 clubs français de l’Aventure'],
+  ['liga', '🇪🇸', 'Vuelta des clubs', 'Finir les 10 clubs espagnols de l’Aventure'],
+  ['albion', '🇬🇧', 'Tour du Royaume-Uni', 'Finir les 10 clubs britanniques de l’Aventure'],
+  ['globe', '🌍', 'Globe-trotter', 'Finir un club dans chacun des trois pays de l’Aventure'],
+  ['marathon', '🏃', 'Marathon', 'Aller au bout des 100 questions du Spécial Foot'],
+  ['multi', '🏆', 'Polyvalent', 'Finir le Multisport sans aucune erreur'],
+  ['beast', '💀', 'Increvable', '25 bonnes réponses d’affilée en Hardcore'],
+  ['allround', '🎽', 'Touche-à-tout', 'Jouer une partie Hardcore dans chacun des 6 sports'],
 ];
 const earned = load('quiz-badges', {});
 // Encart autour de la lettre du profil, selon le nombre de badges : [minimum, id, nom]
@@ -653,8 +668,11 @@ function reportBadges(ids) {
 function checkAdvBadges() {
   const done = Object.keys(CLUBS).filter(id => (advDone[id] || 0) >= STAGES);
   if (done.length) unlock('supporter');
-  const fr = Object.keys(CLUBS).filter(id => landOf(id) === 'fr');
-  if (fr.every(id => done.includes(id))) unlock('tour');
+  const land = l => Object.keys(CLUBS).filter(id => landOf(id) === l);
+  if (land('fr').every(id => done.includes(id))) unlock('tour');
+  if (land('es').every(id => done.includes(id))) unlock('liga');
+  if (land('uk').every(id => done.includes(id))) unlock('albion');
+  if (Object.keys(LANDS).every(l => land(l).some(id => done.includes(id)))) unlock('globe');
 }
 // Web : profil = pseudo + code secret, badges sauvegardés sur le serveur (app iOS : Game Center).
 let prof = load('quiz-profile', null), showCode = false;
