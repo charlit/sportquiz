@@ -441,13 +441,16 @@ function openClubs() {
       const pos = LABEL_POS[ville] || 'right';
       const [tx, ty, anchor] = pos === 'left' ? [x - 8, +y + 3, 'end'] : pos === 'top' ? [x, y - 8, 'middle'] : [+x + 8, +y + 3, 'start'];
       const label = ville + (cl.length > 1 ? ` (${cl.length})` : '');
-      return `<g class="city${done ? ' done' : ''}${cityFilter === ville ? ' on' : ''}" data-ville="${esc(ville)}" tabindex="0" role="button" aria-label="${esc(label)}">` +
+      return `<g class="city${done ? ' done' : ''}${cityFilter === ville ? ' on' : ''}" data-ville="${esc(ville)}" tabindex="0" role="button" aria-pressed="${cityFilter === ville}" aria-label="${esc(label)}">` +
         `<circle cx="${x}" cy="${y}" r="5"/><text x="${tx}" y="${ty}" text-anchor="${anchor}">${esc(label)}</text></g>`;
     }).join('');
   $('frMap').querySelectorAll('.city').forEach(g => g.onclick = g.onkeydown = e => {
-    if (e.type === 'keydown' && e.key !== 'Enter') return;
-    cityFilter = cityFilter === g.dataset.ville ? null : g.dataset.ville;
-    openClubs();
+    if (e.type === 'keydown' && e.key !== 'Enter' && e.key !== ' ') return;
+    e.preventDefault(); // Espace : pas de défilement de la page
+    const ville = g.dataset.ville;
+    cityFilter = cityFilter === ville ? null : ville;
+    openClubs(); // la carte est redessinée : on rend le focus au même point
+    if (e.type === 'keydown') $('frMap').querySelector(`[data-ville="${CSS.escape(ville)}"]`).focus();
   });
   $('cityChip').classList.toggle('hidden', !cityFilter);
   $('cityChip').textContent = cityFilter ? `📍 ${cityFilter} ✕` : '';
