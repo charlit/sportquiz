@@ -54,3 +54,8 @@ with urllib.request.urlopen(URL + '/questions.js') as r:  # questions.js fabriqu
 assert js.startswith('const QUESTIONS = {') and js.rstrip().endswith('};')
 assert json.loads(js.removeprefix('const QUESTIONS = ').rstrip().rstrip(';')) == json.load(open(os.path.join(os.path.dirname(server.__file__), 'questions.json'), encoding='utf-8'))
 print('ok questions.js')
+with urllib.request.urlopen(URL + '/clubs.js') as r:  # clubs.js fabriqué depuis clubs.json (Aventure Ligue 1)
+    js = r.read().decode()
+clubs = json.loads(js.removeprefix('const CLUBS = ').rstrip().rstrip(';'))
+assert len(clubs) == 18 and all(sum(q[0] == k for q in c['q']) >= 5 for c in clubs.values() for k in range(1, 11))
+print('ok clubs.js')

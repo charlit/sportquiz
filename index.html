@@ -72,6 +72,15 @@
   .stage strong { display:block; }
   .stage small { color:var(--dim); }
   .advinfo { color:var(--dim); margin:-8px 0 14px; }
+  #frMap { display:block; width:100%; max-width:440px; margin:0 auto 14px; }
+  #frMap .fr { fill:#16233b; stroke:#3a5288; stroke-width:1.2; stroke-linejoin:round; }
+  #frMap .city { cursor:pointer; }
+  #frMap .city circle { fill:var(--acc); stroke:#0a1220; stroke-width:1.5; }
+  #frMap .city.done circle { fill:var(--ok); }
+  #frMap .city.on circle { fill:#fff; }
+  #frMap .city text { fill:var(--txt); font-size:9px; font-weight:700; paint-order:stroke; stroke:#0a1220; stroke-width:3px; }
+  .chip { display:inline-flex; align-items:center; gap:8px; margin:0 0 12px; padding:6px 12px; border-radius:999px;
+          border:1px solid var(--line); background:var(--card); cursor:pointer; }
 
   /* classement */
   .card { background:var(--card); border:1px solid var(--line); border-radius:18px; padding:16px; margin-top:20px; }
@@ -145,7 +154,7 @@
         <button class="info" data-info="multi" aria-label="Règles du Multisport">i</button></div>
       <div class="tw"><button class="tile c-hc" id="goHard"><span class="tag">1 VIE</span><b>💀</b><strong>Hardcore</strong><small>Que du très dur, choisis ton sport</small></button>
         <button class="info" data-info="hard" aria-label="Règles du Hardcore">i</button></div>
-      <div class="tw"><button class="tile c-adv" id="goAdv"><span class="tag">NOUVEAU</span><b>🗺️</b><strong>Aventure</strong><small>10 étapes à débloquer par sport</small></button>
+      <div class="tw"><button class="tile c-adv" id="goAdv"><span class="tag">NOUVEAU</span><b>🗺️</b><strong>Aventure</strong><small>Le tour des 18 clubs de Ligue 1</small></button>
         <button class="info" data-info="adv" aria-label="Règles de l'Aventure">i</button></div>
     </div>
     <button class="rankbtn" id="goRanks">🏅 Classement</button>
@@ -173,8 +182,17 @@
     <div class="sports" id="pickList"></div>
   </section>
 
+  <section id="clubs" class="hidden">
+    <div class="head"><button class="back" data-back="home">← Accueil</button><h2>🗺️ Aventure Ligue 1</h2></div>
+    <p class="advinfo">Fais le tour des 18 clubs de Ligue 1 : 10 étapes par club, des dernières saisons jusqu'aux années 1990.
+      Touche une ville sur la carte pour voir ses clubs.</p>
+    <svg id="frMap" viewBox="-4 -4 308 298" role="img" aria-label="Carte de France des clubs de Ligue 1"></svg>
+    <button class="chip hidden" id="cityChip"></button>
+    <div class="sports" id="clubList"></div>
+  </section>
+
   <section id="adv" class="hidden">
-    <div class="head"><button class="back" id="advBack">← Sports</button><h2 id="advTitle"></h2></div>
+    <div class="head"><button class="back" id="advBack">← Clubs</button><h2 id="advTitle"></h2></div>
     <p class="advinfo" id="advInfo"></p>
     <ol class="path" id="advPath"></ol>
   </section>
@@ -214,6 +232,7 @@
 </main>
 
 <script src="questions.js"></script>
+<script src="clubs.js"></script>
 <script>
 const LEVELS = ['', 'Facile', 'Moyen', 'Difficile', 'Expert', 'Légende'];
 const LEVEL_COLORS = ['', '#2ecc71', '#3fa7ff', '#ffb02e', '#ff6b3f', '#c56cff'];
@@ -225,17 +244,20 @@ const HARD = { hard: null, hardfoot: 'foot', hardrugby: 'rugby', hardbasket: 'ba
 const NAMES = { foot: 'Spécial Foot', multi: 'Multisport', hard: 'Hardcore Tous sports', hardfoot: 'Hardcore Foot', hardrugby: 'Hardcore Rugby',
                 hardbasket: 'Hardcore Basket', hardtennis: 'Hardcore Tennis', hardf1: 'Hardcore Sport auto', hardvelo: 'Hardcore Cyclisme', adv: 'Aventure' };
 // Aventure : 10 étapes par sport (2 par niveau), 5 questions, 4 bonnes réponses pour passer
-const ADV_SPORTS = ['foot', 'rugby', 'basket', 'f1', 'tennis', 'boxe'], STAGES = 10, PER_STAGE = 5, NEED = 4;
-const stageLevel = k => Math.ceil(k / 2);
+// Aventure Ligue 1 : 10 étapes par club (clubs.js), de la période la plus récente (1) aux années 1990 (10) ;
+// 5 questions par étape, 4 bonnes réponses pour passer.
+const STAGES = 10, PER_STAGE = 5, NEED = 4;
+const ERAS = ['', '2024-2026', '2021-2023', '2018-2020', '2015-2017', '2012-2014', '2009-2011', '2006-2008', '2003-2005', '2000-2002', '1996-1999'];
+const stageLevel = k => Math.ceil(k / 2); // difficulté (points) : étapes 1-2 → niveau 1 … 9-10 → niveau 5
 const $ = id => document.getElementById(id);
 const shuffle = a => { a = [...a]; for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
-const SCREENS = ['home', 'ranks', 'pick', 'adv', 'quiz', 'end', 'advEnd'];
+const SCREENS = ['home', 'ranks', 'pick', 'clubs', 'adv', 'quiz', 'end', 'advEnd'];
 const show = id => { SCREENS.forEach(s => $(s).classList.toggle('hidden', s !== id)); scrollTo(0, 0); };
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
 const store = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} };
 const load = (k, d) => { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch { return d; } };
 
-let mode, deck, idx, score, good, lives, timer, next, t0, saved, advSport, stage;
+let mode, deck, idx, score, good, lives, timer, next, t0, saved, advClub, stage, cityFilter;
 
 // Dans l'app iOS, le classement passe par Game Center : pas de pseudo, le score part tout seul.
 const GC = !!window.__quizGC;
@@ -263,7 +285,8 @@ function buildDeck(m) {
     return shuffle(fresh).concat(shuffle(pool.filter(x => !fresh.includes(x))));
   }
   if (m === 'adv') {
-    pick(QUESTIONS[advSport].filter(q => q[0] === stageLevel(stage)), PER_STAGE).forEach(q => out.push([advSport, q]));
+    pick(CLUBS[advClub].q.filter(q => q[0] === stage), PER_STAGE)
+      .forEach(q => out.push([advClub, [stageLevel(stage), ...q.slice(1)]]));
   } else {
     for (let lvl = 1; lvl <= 5; lvl++) {
       if (m === 'foot') {
@@ -302,9 +325,9 @@ function ask() {
       : `Question ${idx + 1} / ${deck.length} · ${'❤️'.repeat(lives)}`;
     $('progress').style.width = (idx / deck.length * 100) + '%';
   }
-  $('level').textContent = `Niveau ${lvl} · ${LEVELS[lvl]}`;
+  $('level').textContent = mode === 'adv' ? `Étape ${stage} · ${ERAS[stage]}` : `Niveau ${lvl} · ${LEVELS[lvl]}`;
   $('level').style.background = LEVEL_COLORS[lvl]; $('level').style.color = '#111';
-  $('sport').textContent = SPORTS[sport];
+  $('sport').textContent = SPORTS[sport] || `⚽ ${CLUBS[sport].court}`;
   $('question').textContent = q.replace(/ ([?!:;»])/g, '\u00a0$1').replace(/« /g, '«\u00a0');
   $('feedback').textContent = ''; $('stake').textContent = '';
   $('answers').innerHTML = '';
@@ -380,42 +403,76 @@ function finish() {
   loadBoard(mode, $('endBoard'));
 }
 
-/* ---------- Choix du sport (Hardcore / Aventure) ---------- */
-function openPick(kind) {
-  const hc = kind === 'hard';
-  $('pickTitle').textContent = hc ? '💀 Hardcore' : '🗺️ Aventure';
-  $('pickInfo').textContent = hc ? '1 seule vie, que des questions Expert et Légende. Choisis ton sport :'
-                                 : 'Choisis ton sport, puis réussis chaque étape pour débloquer la suivante.';
-  const items = hc
-    ? [['hard', 'all', '💀', 'Tous les sports'], ['hardfoot', 'foot', '⚽', 'Foot'], ['hardrugby', 'rugby', '🏉', 'Rugby'], ['hardbasket', 'basket', '🏀', 'Basket'],
-       ['hardtennis', 'tennis', '🎾', 'Tennis'], ['hardf1', 'f1', '🏎️', 'Sport auto'], ['hardvelo', 'velo', '🚴', 'Cyclisme']]
-    : ADV_SPORTS.map(s => [s, s, SPORTS[s].split(' ')[0], SPORTS[s].split(' ').slice(1).join(' ')]);
+/* ---------- Choix du sport (Hardcore) ---------- */
+function openPick() {
+  $('pickTitle').textContent = '💀 Hardcore';
+  $('pickInfo').textContent = '1 seule vie, que des questions Expert et Légende. Choisis ton sport :';
+  const items = [['hard', 'all', '💀', 'Tous les sports'], ['hardfoot', 'foot', '⚽', 'Foot'], ['hardrugby', 'rugby', '🏉', 'Rugby'],
+    ['hardbasket', 'basket', '🏀', 'Basket'], ['hardtennis', 'tennis', '🎾', 'Tennis'], ['hardf1', 'f1', '🏎️', 'Sport auto'], ['hardvelo', 'velo', '🚴', 'Cyclisme']];
   $('pickList').innerHTML = items.map(([id, s, icon, name], i) => {
-    const n = hc ? (s === 'all' ? Object.values(QUESTIONS).flat() : QUESTIONS[s]).filter(q => q[0] >= 4).length : 0;
-    const d = advDone[s] || 0;
-    const info = hc ? `${n} questions` : d >= STAGES ? '🏆 Terminé !' : `Étape ${d + 1} / ${STAGES}`;
+    const n = (s === 'all' ? Object.values(QUESTIONS).flat() : QUESTIONS[s]).filter(q => q[0] >= 4).length;
     const wide = i === items.length - 1 && items.length % 2 ? ' wide' : ''; // dernière tuile seule : pleine largeur
-    return `<button class="sport${wide}" data-id="${id}" style="--c:${SPORT_COLORS[s]}"><b>${icon}</b><strong>${name}</strong><small>${info}</small>` +
-           (hc ? '' : `<div class="meter"><i style="width:${d / STAGES * 100}%"></i></div>`) + '</button>';
+    return `<button class="sport${wide}" data-id="${id}" style="--c:${SPORT_COLORS[s]}"><b>${icon}</b><strong>${name}</strong><small>${n} questions</small></button>`;
   }).join('');
-  $('pickList').querySelectorAll('.sport').forEach(b => b.onclick = () => hc ? start(b.dataset.id) : openAdv(b.dataset.id));
-  $('pickList').dataset.kind = kind;
+  $('pickList').querySelectorAll('.sport').forEach(b => b.onclick = () => start(b.dataset.id));
   show('pick');
 }
 
-/* ---------- Aventure ---------- */
-function openAdv(s) {
-  advSport = s;
-  const d = advDone[s] || 0;
-  $('advTitle').textContent = `${SPORTS[s]} · Aventure`;
+/* ---------- Aventure Ligue 1 ---------- */
+// Contour simplifié de la France métropolitaine (longitude, latitude), projeté sur la carte de 300 × 290
+const FR = [[2.37,51.05],[2.55,51.09],[3.0,50.77],[3.67,50.32],[4.15,50.0],[4.83,50.15],[4.87,49.8],[5.47,49.5],[6.37,49.46],
+  [7.0,49.12],[7.63,49.05],[8.2,48.97],[7.8,48.5],[7.58,48.1],[7.55,47.6],[6.95,47.45],[6.45,46.95],[6.1,46.4],[6.8,46.4],
+  [6.95,45.85],[7.13,45.25],[6.63,45.1],[6.95,44.85],[6.85,44.5],[7.0,44.25],[7.66,44.17],[7.5,43.78],[7.27,43.7],[6.9,43.42],
+  [6.4,43.15],[5.93,43.1],[5.35,43.27],[4.85,43.35],[4.2,43.47],[3.5,43.27],[3.08,42.95],[3.17,42.43],[2.65,42.35],[1.73,42.5],
+  [0.7,42.85],[-0.3,42.8],[-1.45,43.27],[-1.78,43.37],[-1.45,44.0],[-1.25,44.65],[-1.15,45.6],[-1.2,46.15],[-2.0,46.8],
+  [-2.55,47.3],[-3.1,47.55],[-4.35,47.8],[-4.75,48.1],[-4.78,48.4],[-4.0,48.72],[-3.0,48.83],[-2.0,48.6],[-1.6,48.65],
+  [-1.6,49.2],[-1.95,49.72],[-1.25,49.7],[-1.15,49.35],[-0.2,49.3],[0.2,49.45],[0.6,49.85],[1.4,50.1],[1.6,50.4],[1.6,50.95]];
+const proj = ([lon, lat]) => [((lon + 5.2) * 22.22).toFixed(1), ((51.2 - lat) * 32.3).toFixed(1)];
+const LABEL_POS = { Nice: 'left', Strasbourg: 'left', Lens: 'left', Monaco: 'top' }; // évite chevauchements et débordements
+
+function openClubs() {
+  const ids = Object.keys(CLUBS);
+  const cities = {}; // ville → clubs
+  ids.forEach(id => (cities[CLUBS[id].ville] ||= []).push(id));
+  $('frMap').innerHTML = `<polygon class="fr" points="${FR.map(p => proj(p).join(',')).join(' ')}"/>` +
+    Object.entries(cities).map(([ville, cl]) => {
+      const [x, y] = proj([CLUBS[cl[0]].lon, CLUBS[cl[0]].lat]);
+      const done = cl.every(id => (advDone[id] || 0) >= STAGES);
+      const pos = LABEL_POS[ville] || 'right';
+      const [tx, ty, anchor] = pos === 'left' ? [x - 8, +y + 3, 'end'] : pos === 'top' ? [x, y - 8, 'middle'] : [+x + 8, +y + 3, 'start'];
+      const label = ville + (cl.length > 1 ? ` (${cl.length})` : '');
+      return `<g class="city${done ? ' done' : ''}${cityFilter === ville ? ' on' : ''}" data-ville="${esc(ville)}" tabindex="0" role="button" aria-label="${esc(label)}">` +
+        `<circle cx="${x}" cy="${y}" r="5"/><text x="${tx}" y="${ty}" text-anchor="${anchor}">${esc(label)}</text></g>`;
+    }).join('');
+  $('frMap').querySelectorAll('.city').forEach(g => g.onclick = g.onkeydown = e => {
+    if (e.type === 'keydown' && e.key !== 'Enter') return;
+    cityFilter = cityFilter === g.dataset.ville ? null : g.dataset.ville;
+    openClubs();
+  });
+  $('cityChip').classList.toggle('hidden', !cityFilter);
+  $('cityChip').textContent = cityFilter ? `📍 ${cityFilter} ✕` : '';
+  $('clubList').innerHTML = ids.filter(id => !cityFilter || CLUBS[id].ville === cityFilter).map(id => {
+    const c = CLUBS[id], d = advDone[id] || 0;
+    return `<button class="sport" data-id="${id}" style="--c:${c.couleur}"><strong>${esc(c.nom)}</strong><small>📍 ${esc(c.ville)} · ` +
+           `${d >= STAGES ? '🏆 Terminé !' : `Étape ${d + 1} / ${STAGES}`}</small><div class="meter"><i style="width:${d / STAGES * 100}%"></i></div></button>`;
+  }).join('');
+  $('clubList').querySelectorAll('.sport').forEach(b => b.onclick = () => openAdv(b.dataset.id));
+  show('clubs');
+}
+$('cityChip').onclick = () => { cityFilter = null; openClubs(); };
+
+function openAdv(id) {
+  advClub = id;
+  const c = CLUBS[id], d = advDone[id] || 0;
+  $('advTitle').textContent = c.nom;
   $('advInfo').textContent = d >= STAGES ? '🏆 Tu as terminé cette aventure ! Rejoue les étapes pour t\'entraîner.'
                                          : `${d} / ${STAGES} étapes réussies. ${NEED} bonnes réponses sur ${PER_STAGE} pour passer.`;
   $('advPath').innerHTML = Array.from({ length: STAGES }, (_, i) => {
-    const k = i + 1, lvl = stageLevel(k);
+    const k = i + 1;
     const state = k <= d ? 'done' : k === d + 1 ? 'cur' : 'lock';
     const label = state === 'done' ? '✅ Réussie' : state === 'cur' ? '▶ À jouer' : '🔒 Verrouillée';
     return `<li><button class="stage ${state}" data-k="${k}" ${state === 'lock' ? 'disabled' : ''}>` +
-           `<span class="dot">${state === 'done' ? '✓' : k}</span><span><strong>Étape ${k} · ${LEVELS[lvl]}</strong><small>${label}</small></span></button></li>`;
+           `<span class="dot">${state === 'done' ? '✓' : k}</span><span><strong>Étape ${k} · ${ERAS[k]}</strong><small>${label}</small></span></button></li>`;
   }).join('');
   $('advPath').querySelectorAll('.stage:not(:disabled)').forEach(b => b.onclick = () => { stage = +b.dataset.k; start('adv'); });
   show('adv');
@@ -423,17 +480,17 @@ function openAdv(s) {
 
 function advFinish() {
   const passed = lives > 0;
-  const d = advDone[advSport] || 0;
-  if (passed && stage > d) { advDone[advSport] = stage; store('quiz-adv', advDone); }
+  const d = advDone[advClub] || 0;
+  if (passed && stage > d) { advDone[advClub] = stage; store('quiz-adv', advDone); }
   const champion = passed && stage === STAGES;
   $('advEndTitle').textContent = champion ? '🏆 Champion !' : passed ? '✅ Étape réussie !' : '❌ Étape ratée';
   $('advEndScore').textContent = `${good} / ${PER_STAGE}`;
-  $('advEndText').textContent = champion ? `Tu as terminé l'aventure ${SPORTS[advSport]} ! Respect.`
-    : passed ? `L'étape ${stage + 1} (${LEVELS[stageLevel(stage + 1)]}) est débloquée.`
+  $('advEndText').textContent = champion ? `Tu connais l'histoire de ${CLUBS[advClub].nom} sur 30 ans ! Respect.`
+    : passed ? `L'étape ${stage + 1} (${ERAS[stage + 1]}) est débloquée.`
     : `Il faut ${NEED} bonnes réponses sur ${PER_STAGE}. Réessaie, les questions changent !`;
-  $('advNext').textContent = champion ? 'Autre sport' : passed ? 'Étape suivante ▶' : 'Réessayer';
+  $('advNext').textContent = champion ? 'Autre club' : passed ? 'Étape suivante ▶' : 'Réessayer';
   $('advNext').onclick = () => {
-    if (champion) return openPick('adv');
+    if (champion) return openClubs();
     if (passed) stage++;
     start('adv');
   };
@@ -488,7 +545,7 @@ $('goRanks').onclick = () => {
   (document.querySelector(`[data-tab="${mode}"]`) || document.querySelector('[data-tab="foot"]')).click();
 };
 document.querySelectorAll('[data-mode]').forEach(b => b.onclick = () => start(b.dataset.mode));
-$('goHard').onclick = () => openPick('hard');
+$('goHard').onclick = openPick;
 // Règles de chaque mode, affichées par le bouton ⓘ de sa tuile
 const RULES = {
   foot: ['⚽ Spécial Foot', ['100 questions de plus en plus dures : 10 faciles, puis Moyen, Difficile, Expert et 20 en Légende.',
@@ -500,7 +557,8 @@ const RULES = {
   hard: ['💀 Hardcore', ['Questions Expert et Légende sans fin, dans le sport de ton choix.',
     '1 seule vie : la première erreur arrête tout.', '20 secondes par question.',
     'La vitesse paie double : jusqu’à 200 points × le niveau si tu réponds tout de suite, 20 % au dernier moment.']],
-  adv: ['🗺️ Aventure', ['Choisis ton sport et avance sur une carte de 10 étapes, de Facile à Légende.',
+  adv: ['🗺️ Aventure Ligue 1', ['Fais le tour des 18 clubs de Ligue 1 : choisis une ville sur la carte, puis un club.',
+    '10 étapes par club : la 1re porte sur les saisons 2024-2026, la 10e sur les années 1996-1999.',
     '5 questions par étape : il faut au moins 4 bonnes réponses pour débloquer l’étape suivante.',
     '20 secondes par question.', 'Ta progression est gardée sur cet appareil.']],
 };
@@ -512,10 +570,10 @@ document.querySelectorAll('[data-info]').forEach(b => b.onclick = () => {
 });
 $('infoClose').onclick = () => $('infoBox').close();
 $('infoBox').onclick = e => { if (e.target === $('infoBox')) $('infoBox').close(); }; // clic à côté de la fenêtre
-$('goAdv').onclick = () => openPick('adv');
+$('goAdv').onclick = () => { cityFilter = null; openClubs(); };
 document.querySelectorAll('[data-back]').forEach(b => b.onclick = () => show(b.dataset.back));
-$('advBack').onclick = () => openPick('adv');
-$('advMap').onclick = () => openAdv(advSport);
+$('advBack').onclick = openClubs;
+$('advMap').onclick = () => openAdv(advClub);
 document.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => {
   document.querySelectorAll('[data-tab]').forEach(x => x.classList.toggle('on', x === b));
   loadBoard(b.dataset.tab, $('board'));
@@ -532,7 +590,7 @@ $('quit').onclick = () => {
   }
   disarmQuit();
   clearInterval(timer); clearTimeout(next); // on coupe le chrono et la question suivante déjà programmée
-  mode === 'adv' ? openAdv(advSport) : goHome();
+  mode === 'adv' ? openAdv(advClub) : goHome();
 };
 $('toHome').onclick = goHome;
 // App iOS : les questions embarquées (ou celles téléchargées la fois d'avant) servent tout de suite ;

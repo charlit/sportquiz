@@ -10,9 +10,9 @@ DB = os.environ.get('QUIZ_DB', os.path.join(ROOT, 'data', 'scores.json'))
 FILES = {'/': ('index.html', 'text/html; charset=utf-8'),
          '/index.html': ('index.html', 'text/html; charset=utf-8'),
          '/questions.json': ('questions.json', 'application/json; charset=utf-8')}
-# questions.json est la seule source des questions (l'app iOS le télécharge aussi depuis GitHub) ;
-# la page web le reçoit sous forme de script pour rester synchrone au chargement.
-QUESTIONS_JSON = os.path.join(ROOT, 'questions.json')
+# questions.json (questions par sport ; l'app iOS le télécharge aussi depuis GitHub) et clubs.json (Aventure Ligue 1)
+# sont les seules sources ; la page les reçoit sous forme de script pour rester synchrone au chargement.
+DATA_JS = {'/questions.js': ('QUESTIONS', 'questions.json'), '/clubs.js': ('CLUBS', 'clubs.json')}
 MAX_SCORE = {'foot': 30_000, 'multi': 4500, 'hard': 400_000, 'hardfoot': 400_000, 'hardrugby': 400_000, 'hardbasket': 400_000, 'hardtennis': 400_000, 'hardf1': 400_000, 'hardvelo': 400_000}  # foot 100 questions / multi 15, max niveau*100 pts ; hard* = sans fin
 MAX_GOOD = {'foot': 100, 'multi': 15, 'hard': 400, 'hardfoot': 400, 'hardrugby': 400, 'hardbasket': 400, 'hardtennis': 400, 'hardf1': 400, 'hardvelo': 400}
 # ponytail: global lock + whole-file JSON rewrite and client-trusted scores, fine for friends; SQLite + server-side scoring if it goes public
@@ -53,9 +53,10 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         path, _, query = self.path.partition('?')
-        if path == '/questions.js':
-            with open(QUESTIONS_JSON, 'rb') as f:
-                return self.send(200, b'const QUESTIONS = ' + f.read().rstrip() + b';\n', 'text/javascript; charset=utf-8')
+        if path in DATA_JS:
+            var, name = DATA_JS[path]
+            with open(os.path.join(ROOT, name), 'rb') as f:
+                return self.send(200, f'const {var} = '.encode() + f.read().rstrip() + b';\n', 'text/javascript; charset=utf-8')
         if path in FILES:
             name, ctype = FILES[path]
             with open(os.path.join(ROOT, name), 'rb') as f:
