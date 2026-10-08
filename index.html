@@ -137,7 +137,7 @@
   .profbtn:hover { border-color:var(--acc); }
   .avatar { width:34px; height:34px; border-radius:50%; display:grid; place-items:center; flex:none; font-weight:900;
             background:var(--acc); color:#111; }
-  /* encart autour de la lettre : bronze (1-2 badges), argent (3-4), or (5), légende (tous) */
+  /* encart autour de la lettre : bronze (1-2 badges), argent (3-4), or (5-11), platine (12+), légende (tous) */
   .avatar { position:relative; --ring:transparent; }
   .avatar::before { content:''; position:absolute; inset:-5px; padding:3px; border-radius:50%; background:var(--ring);
                     -webkit-mask:linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
@@ -146,6 +146,7 @@
   .avatar[data-tier="bronze"] { --ring:linear-gradient(135deg, #f0b27a, #a0522d); }
   .avatar[data-tier="argent"] { --ring:linear-gradient(135deg, #ffffff, #8e9bb0); }
   .avatar[data-tier="or"] { --ring:linear-gradient(135deg, #fff3a8, #e0a800); box-shadow:0 0 14px #ffd23f88; }
+  .avatar[data-tier="platine"] { --ring:linear-gradient(135deg, #f4fbff, #9fd8ef 45%, #c9b8ff); box-shadow:0 0 16px #9fd8efaa; }
   .avatar[data-tier="legende"] { --ring:conic-gradient(from var(--a, 0deg), #ff5a4f, #ffd23f, #2ecc71, #3fa9ff, #b06bff, #ff5a4f);
                                  box-shadow:0 0 18px #ffd23faa; animation:ringspin 4s linear infinite; }
   @property --a { syntax:'<angle>'; inherits:true; initial-value:0deg; }
@@ -657,7 +658,7 @@ const BADGES = [
 ];
 const earned = load('quiz-badges', {});
 // Encart autour de la lettre du profil, selon le nombre de badges : [minimum, id, nom]
-const TIERS = [[1, 'bronze', 'Bronze'], [3, 'argent', 'Argent'], [5, 'or', 'Or'], [BADGES.length, 'legende', 'Légende']];
+const TIERS = [[1, 'bronze', 'Bronze'], [3, 'argent', 'Argent'], [5, 'or', 'Or'], [12, 'platine', 'Platine'], [BADGES.length, 'legende', 'Légende']];
 const tierOf = n => TIERS.filter(t => n >= t[0]).pop();
 let toastTimer;
 
