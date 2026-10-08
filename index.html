@@ -72,7 +72,7 @@
   .stage strong { display:block; }
   .stage small { color:var(--dim); }
   .advinfo { color:var(--dim); margin:-8px 0 14px; }
-  #frMap { display:block; width:100%; max-width:440px; margin:0 auto 14px; }
+  #frMap { display:block; width:100%; max-width:440px; max-height:58vh; margin:0 auto 14px; }
   #frMap .fr { fill:#16233b; stroke:#3a5288; stroke-width:1.2; stroke-linejoin:round; }
   #frMap .city { cursor:pointer; }
   #frMap .city circle { fill:var(--acc); stroke:#0a1220; stroke-width:1.5; }
@@ -88,6 +88,8 @@
   .tabs { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:10px; }
   .tabs button { flex:1 1 30%; white-space:nowrap; padding:8px; border-radius:10px; border:1px solid var(--line); background:transparent; color:var(--dim); cursor:pointer; }
   .tabs button.on { background:var(--acc); color:#111; border-color:var(--acc); font-weight:700; }
+  #landTabs { flex-wrap:nowrap; }
+  #landTabs button { flex:1 1 0; min-width:0; padding:8px 4px; white-space:normal; line-height:1.2; }
   table { width:100%; border-collapse:collapse; }
   td { padding:7px 6px; border-top:1px solid var(--line); }
   td:first-child { width:2.5em; color:var(--dim); }
@@ -205,7 +207,7 @@
         <button class="info" data-info="multi" aria-label="Règles du Multisport">i</button></div>
       <div class="tw"><button class="tile c-hc" id="goHard"><span class="tag">1 VIE</span><b>💀</b><strong>Hardcore</strong><small>Que du très dur, choisis ton sport</small></button>
         <button class="info" data-info="hard" aria-label="Règles du Hardcore">i</button></div>
-      <div class="tw"><button class="tile c-adv" id="goAdv"><span class="tag">NOUVEAU</span><b>🗺️</b><strong>Aventure</strong><small>Le tour des 18 clubs de Ligue 1</small></button>
+      <div class="tw"><button class="tile c-adv" id="goAdv"><span class="tag">NOUVEAU</span><b>🗺️</b><strong>Aventure</strong><small>Les clubs de France, d’Espagne et du Royaume-Uni</small></button>
         <button class="info" data-info="adv" aria-label="Règles de l'Aventure">i</button></div>
     </div>
     <button class="rankbtn" id="goRanks">🏅 Classement</button>
@@ -258,10 +260,12 @@
   </section>
 
   <section id="clubs" class="hidden">
-    <div class="head"><button class="back" data-back="home">← Accueil</button><h2>🗺️ Aventure Ligue 1</h2></div>
-    <p class="advinfo">Fais le tour des 18 clubs de Ligue 1 : 10 étapes par club, des dernières saisons jusqu'aux années 1990.
-      Touche une ville sur la carte pour voir ses clubs.</p>
-    <svg id="frMap" viewBox="-4 -4 308 298" role="img" aria-label="Carte de France des clubs de Ligue 1"></svg>
+    <div class="head"><button class="back" data-back="home">← Accueil</button><h2>🗺️ Aventure</h2></div>
+    <div class="tabs" id="landTabs">
+      <button data-land="fr">🇫🇷 France</button><button data-land="es">🇪🇸 Espagne</button><button data-land="uk">🇬🇧 Royaume-Uni</button>
+    </div>
+    <p class="advinfo" id="landInfo"></p>
+    <svg id="frMap" role="img"></svg>
     <button class="chip hidden" id="cityChip"></button>
     <div class="sports" id="clubList"></div>
   </section>
@@ -320,7 +324,7 @@ const HARD = { hard: null, hardfoot: 'foot', hardrugby: 'rugby', hardbasket: 'ba
 const NAMES = { foot: 'Spécial Foot', multi: 'Multisport', hard: 'Hardcore Tous sports', hardfoot: 'Hardcore Foot', hardrugby: 'Hardcore Rugby',
                 hardbasket: 'Hardcore Basket', hardtennis: 'Hardcore Tennis', hardf1: 'Hardcore Sport auto', hardvelo: 'Hardcore Cyclisme', adv: 'Aventure' };
 // Aventure : 10 étapes par sport (2 par niveau), 5 questions, 4 bonnes réponses pour passer
-// Aventure Ligue 1 : 10 étapes par club (clubs.js), de la période la plus récente (1) aux années 1990 (10) ;
+// Aventure : 10 étapes par club (clubs.js, France, Espagne, Royaume-Uni), de la période la plus récente (1) aux années 1990 (10) ;
 // 5 questions par étape, 4 bonnes réponses pour passer.
 const STAGES = 10, PER_STAGE = 5, NEED = 4;
 const ERAS = ['', '2024-2026', '2021-2023', '2018-2020', '2015-2017', '2012-2014', '2009-2011', '2006-2008', '2003-2005', '2000-2002', '1996-1999'];
@@ -498,8 +502,8 @@ function openPick() {
   show('pick');
 }
 
-/* ---------- Aventure Ligue 1 ---------- */
-// Contour simplifié de la France métropolitaine (longitude, latitude), projeté sur la carte de 300 × 290
+/* ---------- Aventure ---------- */
+// Contours simplifiés (longitude, latitude) ; chaque pays a sa projection [lon0, lat0, échelle x, échelle y] et son cadre.
 const FR = [[2.37,51.05],[2.55,51.09],[3.0,50.77],[3.67,50.32],[4.15,50.0],[4.83,50.15],[4.87,49.8],[5.47,49.5],[6.37,49.46],
   [7.0,49.12],[7.63,49.05],[8.2,48.97],[7.8,48.5],[7.58,48.1],[7.55,47.6],[6.95,47.45],[6.45,46.95],[6.1,46.4],[6.8,46.4],
   [6.95,45.85],[7.13,45.25],[6.63,45.1],[6.95,44.85],[6.85,44.5],[7.0,44.25],[7.66,44.17],[7.5,43.78],[7.27,43.7],[6.9,43.42],
@@ -507,14 +511,44 @@ const FR = [[2.37,51.05],[2.55,51.09],[3.0,50.77],[3.67,50.32],[4.15,50.0],[4.83
   [0.7,42.85],[-0.3,42.8],[-1.45,43.27],[-1.78,43.37],[-1.45,44.0],[-1.25,44.65],[-1.15,45.6],[-1.2,46.15],[-2.0,46.8],
   [-2.55,47.3],[-3.1,47.55],[-4.35,47.8],[-4.75,48.1],[-4.78,48.4],[-4.0,48.72],[-3.0,48.83],[-2.0,48.6],[-1.6,48.65],
   [-1.6,49.2],[-1.95,49.72],[-1.25,49.7],[-1.15,49.35],[-0.2,49.3],[0.2,49.45],[0.6,49.85],[1.4,50.1],[1.6,50.4],[1.6,50.95]];
-const proj = ([lon, lat]) => [((lon + 5.2) * 22.22).toFixed(1), ((51.2 - lat) * 32.3).toFixed(1)];
-const LABEL_POS = { Nice: 'left', Strasbourg: 'left', Lens: 'left', Monaco: 'top' }; // évite chevauchements et débordements
+// Espagne continentale (sans le Portugal)
+const ES = [[-1.78,43.37],[-2.9,43.45],[-3.8,43.48],[-4.5,43.4],[-5.7,43.58],[-6.5,43.56],[-7.6,43.73],[-8.3,43.55],[-9.25,43.2],
+  [-9.3,42.9],[-8.9,42.6],[-8.87,41.87],[-8.2,42.0],[-6.9,41.95],[-6.2,41.6],[-6.9,41.0],[-6.8,40.3],[-7.0,39.7],[-7.5,39.65],
+  [-7.0,39.0],[-7.3,38.4],[-7.0,38.0],[-7.5,37.5],[-7.4,37.18],[-6.9,37.2],[-6.4,36.8],[-6.25,36.5],[-5.95,36.18],[-5.6,36.0],
+  [-5.35,36.15],[-4.9,36.5],[-4.4,36.72],[-3.5,36.72],[-2.6,36.8],[-2.2,36.72],[-1.85,37.2],[-1.3,37.55],[-0.75,37.6],[-0.7,38.0],
+  [-0.4,38.35],[0.2,38.75],[-0.3,39.3],[-0.32,39.47],[0.0,39.9],[0.5,40.5],[0.9,40.7],[1.2,41.1],[2.1,41.3],[3.2,41.9],[3.3,42.3],
+  [3.15,42.43],[2.0,42.4],[1.4,42.6],[0.7,42.85],[-0.3,42.8],[-1.45,43.05]];
+// Grande-Bretagne (Angleterre, pays de Galles, Écosse)
+const UK = [[1.4,51.15],[0.9,50.95],[0.25,50.75],[-0.8,50.75],[-1.4,50.85],[-2.0,50.6],[-2.95,50.7],[-3.5,50.35],[-4.2,50.35],
+  [-5.05,50.0],[-5.7,50.05],[-5.0,50.45],[-4.2,51.2],[-3.0,51.2],[-2.7,51.5],[-3.2,51.4],[-4.3,51.65],[-5.3,51.75],[-4.6,52.1],
+  [-4.1,52.55],[-4.75,52.8],[-4.6,53.3],[-3.3,53.35],[-3.0,53.75],[-3.4,54.4],[-3.6,54.6],[-3.0,54.95],[-4.4,54.75],[-5.0,54.65],
+  [-5.15,55.0],[-4.65,55.5],[-4.9,55.95],[-5.6,55.3],[-5.7,56.0],[-6.2,56.7],[-5.7,57.0],[-5.8,57.8],[-5.1,58.3],[-5.0,58.6],
+  [-3.4,58.6],[-3.0,58.65],[-3.1,58.3],[-4.0,57.6],[-3.3,57.7],[-1.8,57.6],[-2.1,57.15],[-2.5,56.6],[-2.8,56.3],[-2.6,56.0],
+  [-2.0,55.8],[-1.6,55.3],[-1.4,54.95],[-1.2,54.6],[-0.4,54.3],[-0.05,53.6],[0.35,53.1],[0.0,52.9],[0.5,52.95],[1.7,52.7],
+  [1.75,52.4],[1.3,51.9],[0.95,51.6],[0.4,51.45],[1.4,51.35]];
+const LANDS = {
+  fr: { nom: 'France', de: 'de France', shape: FR, p: [-5.2, 51.2, 22.22, 32.3], box: '-4 -4 308 298' },
+  es: { nom: 'Espagne', de: 'd’Espagne', shape: ES, p: [-9.6, 44.0, 22.5, 29.5], box: '-4 -4 304 248' },
+  uk: { nom: 'Royaume-Uni', de: 'du Royaume-Uni', shape: UK, p: [-6.4, 58.9, 26, 44.8], box: '-4 -4 228 410' },
+};
+const landOf = id => CLUBS[id].pays || 'fr';
+let advLand = load('quiz-land', 'fr');
+if (!LANDS[advLand]) advLand = 'fr';
+const proj = ([lon, lat]) => { const [x0, y0, kx, ky] = LANDS[advLand].p; return [((lon - x0) * kx).toFixed(1), ((y0 - lat) * ky).toFixed(1)]; };
+// évite chevauchements et débordements
+const LABEL_POS = { Nice: 'left', Strasbourg: 'left', Lens: 'left', Monaco: 'top', Barcelone: 'left', Bilbao: 'left', Londres: 'left', Liverpool: 'left' };
 
 function openClubs() {
-  const ids = Object.keys(CLUBS);
+  const L = LANDS[advLand];
+  const ids = Object.keys(CLUBS).filter(id => landOf(id) === advLand);
   const cities = {}; // ville → clubs
   ids.forEach(id => (cities[CLUBS[id].ville] ||= []).push(id));
-  $('frMap').innerHTML = `<polygon class="fr" points="${FR.map(p => proj(p).join(',')).join(' ')}"/>` +
+  document.querySelectorAll('[data-land]').forEach(b => b.classList.toggle('on', b.dataset.land === advLand));
+  $('landInfo').textContent = `Fais le tour des ${ids.length} clubs ${L.de} : 10 étapes par club, des dernières saisons jusqu'aux années 1990. ` +
+    'Touche une ville sur la carte pour voir ses clubs.';
+  $('frMap').setAttribute('viewBox', L.box);
+  $('frMap').setAttribute('aria-label', `Carte des clubs ${L.de}`);
+  $('frMap').innerHTML = `<polygon class="fr" points="${L.shape.map(p => proj(p).join(',')).join(' ')}"/>` +
     Object.entries(cities).map(([ville, cl]) => {
       const [x, y] = proj([CLUBS[cl[0]].lon, CLUBS[cl[0]].lat]);
       const done = cl.every(id => (advDone[id] || 0) >= STAGES);
@@ -543,6 +577,9 @@ function openClubs() {
   show('clubs');
 }
 $('cityChip').onclick = () => { cityFilter = null; openClubs(); };
+document.querySelectorAll('[data-land]').forEach(b => b.onclick = () => {
+  advLand = b.dataset.land; cityFilter = null; store('quiz-land', advLand); openClubs();
+});
 
 function openAdv(id) {
   advClub = id;
@@ -589,7 +626,7 @@ const BADGES = [
   ['reflex', '⚡', 'Réflexe', 'Bonne réponse en moins de 2 secondes'],
   ['streak', '🔥', 'Série', '10 bonnes réponses d’affilée en Hardcore'],
   ['supporter', '📣', 'Supporter', 'Finir les 10 étapes d’un club de l’Aventure'],
-  ['tour', '🇫🇷', 'Tour de France des clubs', 'Finir les 18 clubs de l’Aventure'],
+  ['tour', '🇫🇷', 'Tour de France des clubs', 'Finir les 18 clubs français de l’Aventure'],
 ];
 const earned = load('quiz-badges', {});
 // Encart autour de la lettre du profil, selon le nombre de badges : [minimum, id, nom]
@@ -616,7 +653,8 @@ function reportBadges(ids) {
 function checkAdvBadges() {
   const done = Object.keys(CLUBS).filter(id => (advDone[id] || 0) >= STAGES);
   if (done.length) unlock('supporter');
-  if (done.length === Object.keys(CLUBS).length) unlock('tour');
+  const fr = Object.keys(CLUBS).filter(id => landOf(id) === 'fr');
+  if (fr.every(id => done.includes(id))) unlock('tour');
 }
 // Web : profil = pseudo + code secret, badges sauvegardés sur le serveur (app iOS : Game Center).
 let prof = load('quiz-profile', null), showCode = false;
@@ -745,7 +783,7 @@ const RULES = {
   hard: ['💀 Hardcore', ['Questions Expert et Légende sans fin, dans le sport de ton choix.',
     '1 seule vie : la première erreur arrête tout.', '20 secondes par question.',
     'La vitesse paie double : jusqu’à 200 points × le niveau si tu réponds tout de suite, 20 % au dernier moment.']],
-  adv: ['🗺️ Aventure Ligue 1', ['Fais le tour des 18 clubs de Ligue 1 : choisis une ville sur la carte, puis un club.',
+  adv: ['🗺️ Aventure', ['Choisis un pays (France, Espagne ou Royaume-Uni), une ville sur la carte, puis un club.',
     '10 étapes par club : la 1re porte sur les saisons 2024-2026, la 10e sur les années 1996-1999.',
     '5 questions par étape : il faut au moins 4 bonnes réponses pour débloquer l’étape suivante.',
     '20 secondes par question.', 'Ta progression est gardée sur cet appareil.']],
