@@ -65,12 +65,17 @@ print('ok questions.js')
 with urllib.request.urlopen(URL + '/clubs.js') as r:  # clubs.js fabriqué depuis clubs.json (Aventure : France, Espagne, Royaume-Uni, Allemagne, Italie, Mondial)
     js = r.read().decode()
 clubs = json.loads(js.removeprefix('const CLUBS = ').rstrip().rstrip(';'))
-assert sorted(sum(c['pays'] == p for c in clubs.values()) for p in ('fr', 'es', 'uk', 'de', 'it')) == [10, 10, 10, 10, 18] and all(sum(q[0] == k for q in c['q']) >= 5 for c in clubs.values() if c['pays'] != 'wc' for k in range(1, 11))
+assert sorted(sum(c['pays'] == p for c in clubs.values()) for p in ('fr', 'es', 'uk', 'de', 'it')) == [10, 10, 10, 10, 18] and all(sum(q[0] == k for q in c['q']) >= 5 for c in clubs.values() if c['pays'] not in ('wc', 'can') for k in range(1, 11))
 wc = [c for c in clubs.values() if c['pays'] == 'wc']   # Mondial : 22 éditions (1930-2022), 5 étapes de 5 questions au moins
 assert sorted(c['annee'] for c in wc) == [y for y in range(1930, 2023, 4) if y not in (1942, 1946)] and all(sum(q[0] == k for q in c['q']) >= 5 for c in wc for k in range(1, 6))
 assert all(len(q) == 6 and len(set(q[2:])) == 4 for c in clubs.values() for q in c['q'])                  # 4 réponses distinctes
 texts = [q[1] for c in wc for q in c['q']]
 assert len(texts) == len(set(texts))                                                                      # intitulés uniques (questions vues retenues par leur texte)
+can = [c for c in clubs.values() if c['pays'] == 'can']  # CAN : 14 éditions (2000-2025), 5 étapes de 5 questions
+assert sorted(c['annee'] for c in can) == [2000, 2002, 2004, 2006, 2008, 2010, 2012, 2013, 2015, 2017, 2019, 2021, 2023, 2025]
+assert all(sum(q[0] == k for q in c['q']) == 5 for c in can for k in range(1, 6))
+alltexts = [q[1] for c in clubs.values() for q in c['q']]
+assert len(alltexts) == len(set(alltexts))  # aucune question en double dans l'Aventure
 print('ok clubs.js')
 # profils web : pseudo + code
 st, p = call('/api/profile/create', {'name': 'Zoé', 'badges': {'first': 1700000000, 'triche': 5}})

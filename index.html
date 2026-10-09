@@ -212,7 +212,7 @@
         <button class="info" data-info="foot" aria-label="Règles du Spécial Foot">i</button></div>
       <div class="tw"><button class="tile c-hc" id="goHard"><span class="tag">1 VIE</span><b>💀</b><strong>Hardcore</strong><small>Que du foot très dur : général, par pays ou Mondial</small></button>
         <button class="info" data-info="hard" aria-label="Règles du Hardcore">i</button></div>
-      <div class="tw" style="grid-column:1/-1"><button class="tile c-adv" id="goAdv"><span class="tag">NOUVEAU</span><b>🗺️</b><strong>Aventure</strong><small>Les clubs de cinq grands pays et la Coupe du monde</small></button>
+      <div class="tw" style="grid-column:1/-1"><button class="tile c-adv" id="goAdv"><span class="tag">NOUVEAU</span><b>🗺️</b><strong>Aventure</strong><small>Les clubs de cinq grands pays, la Coupe du monde et la CAN</small></button>
         <button class="info" data-info="adv" aria-label="Règles de l'Aventure">i</button></div>
     </div>
     <button class="rankbtn" id="goRanks">🏅 Classement</button>
@@ -385,9 +385,9 @@ function buildDeck(m) {
   } else {
     // Spécial Foot : chaque niveau mêle à parts égales foot général, clubs de l'Aventure (étapes 1-2 → niveau 1 … 9-10 → niveau 5)
     // et Coupes du monde (étape = niveau)
-    const advQs = (wc, lvlOf) => Object.entries(CLUBS).filter(([, c]) => (c.pays === 'wc') === wc)
+    const advQs = (pays, lvlOf) => Object.entries(CLUBS).filter(([, c]) => pays(c.pays))
       .flatMap(([id, c]) => c.q.map(q => [id, [lvlOf(q[0]), ...q.slice(1)]]));
-    const sources = [QUESTIONS.foot.map(q => ['foot', q]), advQs(false, k => Math.ceil(k / 2)), advQs(true, k => k)];
+    const sources = [QUESTIONS.foot.map(q => ['foot', q]), advQs(l => !LANDS[l].ed, k => Math.ceil(k / 2)), advQs(l => l === 'wc', k => k)];
     for (let lvl = 1; lvl <= 5; lvl++) {
       const n = FOOT_PLAN[lvl], third = Math.round(n / 3), share = [third, n - 2 * third, third]; // général, clubs, Mondial
       out.push(...shuffle(sources.flatMap((src, i) => pick(src.filter(e => e[1][0] === lvl), share[i], e => e[1][1]))));
@@ -638,7 +638,13 @@ const LANDS = {
   it: { flag: 'it', c: '#0b8a3e', nom: 'Italie', de: 'd’Italie', shape: IT, isles: [SICILE, SARDAIGNE], p: [6.5, 47.2, 24, 32.3], box: '-4 -4 300 352' },
   // Mondial : une Coupe du monde par « club », placée sur son pays organisateur ; 5 étapes, de la phase de groupes à la finale
   wc: { flag: '🏆', c: '#ffd23f', nom: 'Coupe du monde', shape: EURASIE, isles: [AMERIQUES, GROENLAND, AFRIQUE, AUSTRALIE, UK, SICILE, SARDAIGNE, ...ILES], p: [-125, 70, 1.3, 1.5],
-        box: '-4 -4 366 200', r: 4.5, icon: '🏆', stages: 5, eras: ['', 'Phase de groupes', 'Huitièmes', 'Quarts', 'Demies', 'Finale'] },
+        box: '-4 -4 366 200', r: 4.5, icon: '🏆', stages: 5, eras: ['', 'Phase de groupes', 'Huitièmes', 'Quarts', 'Demies', 'Finale'], ed: true },
+  // CAN : une Coupe d'Afrique des nations par « club » (2000-2025), placée sur son (ses) pays organisateur(s) ; 5 étapes comme le Mondial
+  can: { flag: '🌍', c: '#2fb36b', nom: 'Coupe d’Afrique', shape: AFRIQUE, p: [-19, 38, 4.2, 4.4], box: '-8 -8 316 340', r: 4.5, icon: '🌍', stages: 5,
+         eras: ['', 'Phase de groupes', 'Huitièmes', 'Quarts', 'Demies', 'Finale'], ed: true,
+         // étiquettes déportées dans le golfe de Guinée, très serré
+         labels: { "Côte d'Ivoire": [-10, 24, 'end'], Ghana: [2, 22, 'middle'], 'Ghana / Nigeria': [0, -10, 'middle'], Cameroun: 'right',
+                   'Guinée équatoriale': [-30, 30, 'end'], 'Gabon / Guinée équatoriale': [-24, 44, 'end'], Gabon: [14, 26, 'start'], Mali: 'right' } },
 };
 const landOf = id => CLUBS[id].pays || 'fr';
 const stagesOf = id => LANDS[landOf(id)].stages || STAGES;
@@ -651,7 +657,7 @@ const LABEL_POS = { Nice: 'left', Strasbourg: 'left', Lens: 'left', Monaco: 'top
   // Mondial : [dx, dy, ancrage] = étiquette déportée avec un trait (Europe trop serrée), ou côté simple
   Angleterre: [-14, -2, 'end'], France: [-18, 8, 'end'], Espagne: [-14, 10, 'end'], Suisse: [-6, 22, 'middle'], Italie: [10, 14, 'start'],
   Allemagne: [-16, -18, 'end'], Suède: 'top', 'Corée / Japon': [-13, 3, 'end'], Argentine: 'top', Chili: 'left' };
-const LABEL_SHORT = { Mönchengladbach: 'Gladbach' }; // nom trop long pour la carte
+const LABEL_SHORT = { Mönchengladbach: 'Gladbach', 'Guinée équatoriale': 'Guinée éq.', 'Gabon / Guinée équatoriale': 'Gabon / Guinée éq.' }; // nom trop long pour la carte
 // Drapeaux dessinés en SVG (30 × 20, simplifiés) : les drapeaux emoji ne s'affichent pas partout (Chrome sous Windows)
 const usStripes = Array.from({ length: 6 }, (_, i) => `<rect y="${(2 * i + 1) * 20 / 13}" width="30" height="${20 / 13}" fill="#fff"/>`).join('');
 const uyStripes = Array.from({ length: 4 }, (_, i) => `<rect y="${(2 * i + 1) * 20 / 9}" width="30" height="${20 / 9}" fill="#0038a8"/>`).join('');
@@ -678,21 +684,37 @@ const FLAG_SVG = {
   cl: '<rect width="30" height="10" fill="#fff"/><rect y="10" width="30" height="10" fill="#d52b1e"/><rect width="10" height="10" fill="#0039a6"/><circle cx="5" cy="5" r="1.8" fill="#fff"/>',
   za: '<rect width="30" height="10" fill="#e03c31"/><rect y="10" width="30" height="10" fill="#001489"/><path d="M0 0L13 10 0 20M13 10H30" fill="none" stroke="#fff" stroke-width="7"/>' +
       '<path d="M0 0L13 10 0 20M13 10H30" fill="none" stroke="#007a4d" stroke-width="4"/><path d="M0 4L8 10 0 16Z" fill="#000" stroke="#ffb612" stroke-width="1.2"/>',
+  // CAN
+  gh: '<rect width="30" height="20" fill="#006b3f"/><rect width="30" height="13.33" fill="#fcd116"/><rect width="30" height="6.67" fill="#ce1126"/><path d="M15.0 7.0L15.7 9.1L17.9 9.1L16.1 10.4L16.8 12.4L15.0 11.1L13.2 12.4L13.9 10.4L12.1 9.1L14.3 9.1Z" fill="#000"/>',
+  ng: '<rect width="30" height="20" fill="#fff"/><rect width="10" height="20" fill="#008751"/><rect x="20" width="10" height="20" fill="#008751"/>',
+  ml: '<rect width="10" height="20" fill="#14b53a"/><rect x="10" width="10" height="20" fill="#fcd116"/><rect x="20" width="10" height="20" fill="#ce1126"/>',
+  tn: '<rect width="30" height="20" fill="#e70013"/><circle cx="15" cy="10" r="5" fill="#fff"/><circle cx="15.6" cy="10" r="3.6" fill="#e70013"/><circle cx="16.6" cy="10" r="3" fill="#fff"/><path d="M16.4 8.1L16.8 9.4L18.2 9.4L17.1 10.2L17.5 11.5L16.4 10.7L15.3 11.5L15.7 10.2L14.6 9.4L16.0 9.4Z" fill="#e70013"/>',
+  eg: '<rect width="30" height="6.67" fill="#ce1126"/><rect y="6.67" width="30" height="6.67" fill="#fff"/><rect y="13.33" width="30" height="6.67" fill="#000"/><rect x="13.5" y="7.6" width="3" height="4.8" rx="1" fill="#c09300"/>',
+  ao: '<rect width="30" height="10" fill="#cc092f"/><rect y="10" width="30" height="10" fill="#000"/><path d="M15.0 7.4L15.6 9.2L17.5 9.2L15.9 10.3L16.5 12.1L15.0 11.0L13.5 12.1L14.1 10.3L12.5 9.2L14.4 9.2Z" fill="#ffcb00"/>',
+  ga: '<rect width="30" height="6.67" fill="#009e60"/><rect y="6.67" width="30" height="6.67" fill="#fcd116"/><rect y="13.33" width="30" height="6.67" fill="#3a75c4"/>',
+  gq: '<rect width="30" height="6.67" fill="#3e9a00"/><rect y="6.67" width="30" height="6.67" fill="#fff"/><rect y="13.33" width="30" height="6.67" fill="#e32118"/><path d="M0 0L8 10 0 20Z" fill="#0073ce"/>',
+  cm: '<rect width="10" height="20" fill="#007a5e"/><rect x="10" width="10" height="20" fill="#ce1126"/><rect x="20" width="10" height="20" fill="#fcd116"/><path d="M15.0 7.2L15.6 9.1L17.7 9.1L16.0 10.3L16.6 12.3L15.0 11.1L13.4 12.3L14.0 10.3L12.3 9.1L14.4 9.1Z" fill="#fcd116"/>',
+  ci: '<rect width="10" height="20" fill="#f77f00"/><rect x="10" width="10" height="20" fill="#fff"/><rect x="20" width="10" height="20" fill="#009e60"/>',
+  ma: '<rect width="30" height="20" fill="#c1272d"/><path d="M15.0 5.8L16.0 8.9L19.3 8.9L16.7 10.8L17.6 13.9L15.0 12.1L12.4 13.9L13.3 10.8L10.7 8.9L14.0 8.9Z" fill="none" stroke="#006233" stroke-width="1"/>'
 };
 // Mondial : drapeau(x) de chaque pays organisateur
 const HOST_FLAGS = { Qatar: ['qa'], Russie: ['ru'], Brésil: ['br'], 'Afrique du Sud': ['za'], Allemagne: ['de'], 'Corée / Japon': ['kr', 'jp'],
   France: ['fr'], 'États-Unis': ['us'], Italie: ['it'], Mexique: ['mx'], Espagne: ['es'], Argentine: ['ar'], Angleterre: ['en'], Chili: ['cl'],
-  Suède: ['se'], Suisse: ['ch'], Uruguay: ['uy'] };
+  Suède: ['se'], Suisse: ['ch'], Uruguay: ['uy'],
+  // CAN
+  'Ghana / Nigeria': ['gh', 'ng'], Mali: ['ml'], Tunisie: ['tn'], Égypte: ['eg'], Ghana: ['gh'], Angola: ['ao'],
+  'Gabon / Guinée équatoriale': ['ga', 'gq'], 'Guinée équatoriale': ['gq'], Gabon: ['ga'], Cameroun: ['cm'], "Côte d'Ivoire": ['ci'], Maroc: ['ma'] };
 const flag = c => FLAG_SVG[c] ? `<svg class="flag" viewBox="0 0 30 20" aria-hidden="true">${FLAG_SVG[c]}</svg>` : esc(c); // c : code ou emoji (🏆)
-const place = (ville, l) => (l === 'wc' ? (HOST_FLAGS[ville] || []).map(flag).join('') : '📍 ') + ' ' + esc(ville);           // HTML
+const place = (ville, l) => (LANDS[l].ed ? (HOST_FLAGS[ville] || []).map(flag).join('') : '📍 ') + ' ' + esc(ville);           // HTML
 
 // Menu de l'Aventure : un pays (ou le Mondial) par carte, avec la progression
 function openLands() {
-  $('landList').innerHTML = Object.entries(LANDS).map(([l, L]) => {
+  const n = Object.keys(LANDS).length;
+  $('landList').innerHTML = Object.entries(LANDS).map(([l, L], i) => {
     const ids = Object.keys(CLUBS).filter(id => landOf(id) === l);
     const done = ids.filter(id => (advDone[id] || 0) >= stagesOf(id)).length;
-    return `<button class="sport" data-land="${l}" style="--c:${L.c}"><strong>${flag(L.flag)} ${esc(L.nom)}</strong>` +
-           `<small>${ids.length} ${l === 'wc' ? 'éditions' : 'clubs'} · ${done} terminé${done > 1 ? 's' : ''}</small>` +
+    return `<button class="sport${i === n - 1 && n % 2 ? ' wide' : ''}" data-land="${l}" style="--c:${L.c}"><strong>${flag(L.flag)} ${esc(L.nom)}</strong>` +
+           `<small>${ids.length} ${L.ed ? 'éditions' : 'clubs'} · ${done} terminé${done > 1 ? 's' : ''}</small>` +
            `<div class="meter"><i style="width:${done / ids.length * 100}%"></i></div></button>`;
   }).join('');
   $('landList').querySelectorAll('[data-land]').forEach(b => b.onclick = () => { advLand = b.dataset.land; cityFilter = null; openClubs(); });
@@ -705,22 +727,24 @@ function openClubs() {
   const cities = {}; // ville → clubs
   ids.forEach(id => (cities[CLUBS[id].ville] ||= []).push(id));
   $('landTitle').innerHTML = `${flag(L.flag)} ${esc(L.nom)}`;
-  $('landInfo').textContent = advLand === 'wc'
+  $('landInfo').textContent = advLand === 'can'
+    ? `Revis les ${ids.length} Coupes d’Afrique des nations, de 2000 à 2025 : 5 étapes par édition, de la phase de groupes à la finale. Toutes les éditions sont listées sous la carte ; touche un pays organisateur pour ne garder que les siennes.`
+    : advLand === 'wc'
     ? `Revis les ${ids.length} Coupes du monde, de 1930 à 2022 : 5 étapes par édition, de la phase de groupes à la finale. Toutes les éditions sont listées sous la carte ; touche un pays organisateur pour ne garder que les siennes.`
     : `Fais le tour des ${ids.length} clubs ${L.de} : 10 étapes par club, des dernières saisons jusqu'aux années 1990. Tous les clubs sont listés sous la carte ; touche une ville pour ne garder que les siens.`;
   $('frMap').setAttribute('viewBox', L.box);
   $('frMap').classList.toggle('world', advLand === 'wc');
-  $('frMap').setAttribute('aria-label', advLand === 'wc' ? 'Carte des pays organisateurs de la Coupe du monde' : `Carte des clubs ${L.de}`);
+  $('frMap').setAttribute('aria-label', L.ed ? `Carte des pays organisateurs de la ${L.nom}` : `Carte des clubs ${L.de}`);
   $('frMap').innerHTML = [L.shape, ...(L.isles || [])].map(s => `<polygon class="fr" points="${s.map(p => proj(p).join(',')).join(' ')}"/>`).join('') +
     Object.entries(cities).map(([ville, cl]) => {
       const [x, y] = proj([CLUBS[cl[0]].lon, CLUBS[cl[0]].lat]);
       const done = cl.every(id => (advDone[id] || 0) >= stagesOf(id));
-      const pos = LABEL_POS[ville] || 'right', r = L.r || 5, o = r + 3;
+      const pos = (L.labels || {})[ville] || LABEL_POS[ville] || 'right', r = L.r || 5, o = r + 3;
       const [tx, ty, anchor] = Array.isArray(pos) ? [+x + pos[0], +y + pos[1], pos[2]] : pos === 'left' ? [x - o, +y + 3, 'end'] :
         pos === 'top' ? [x, y - o, 'middle'] : pos === 'bottom' ? [x, +y + o + 7, 'middle'] : [+x + o, +y + 3, 'start'];
       const label = (LABEL_SHORT[ville] || ville) + (cl.length > 1 ? ` (${cl.length})` : '');
       // Mondial : le point est remplacé par le(s) drapeau(x) du pays organisateur
-      const fl = advLand === 'wc' && HOST_FLAGS[ville], fw = 9, fh = 6;
+      const fl = L.ed && HOST_FLAGS[ville], fw = 9, fh = 6;
       const mark = fl ? fl.map((c, i) => `<svg class="fl" x="${x - fl.length * fw / 2 + i * fw}" y="${y - fh / 2}" width="${fw}" height="${fh}" viewBox="0 0 30 20">${FLAG_SVG[c]}</svg>`).join('') +
                         `<rect class="frame" x="${x - fl.length * fw / 2}" y="${y - fh / 2}" width="${fl.length * fw}" height="${fh}"/>`
                       : `<circle cx="${x}" cy="${y}" r="${r}"/>`;
@@ -754,7 +778,7 @@ function openAdv(id) {
   advClub = id;
   const c = CLUBS[id], d = advDone[id] || 0, n = stagesOf(id);
   $('advTitle').textContent = c.nom;
-  $('advBack').textContent = landOf(id) === 'wc' ? '← Éditions' : '← Clubs';
+  $('advBack').textContent = LANDS[landOf(id)].ed ? '← Éditions' : '← Clubs';
   $('advInfo').textContent = d >= n ? '🏆 Tu as terminé cette aventure ! Rejoue les étapes pour t\'entraîner.'
                                     : `${d} / ${n} étapes réussies. ${NEED} bonnes réponses sur ${PER_STAGE} pour passer.`;
   $('advPath').innerHTML = Array.from({ length: n }, (_, i) => {
@@ -776,11 +800,11 @@ function advFinish() {
   const champion = passed && stage === stagesOf(advClub);
   $('advEndTitle').textContent = champion ? '🏆 Champion !' : passed ? '✅ Étape réussie !' : '❌ Étape ratée';
   $('advEndScore').textContent = `${good} / ${PER_STAGE}`;
-  $('advEndText').textContent = champion ? (landOf(advClub) === 'wc' ? `Tu connais la ${CLUBS[advClub].nom} sur le bout des doigts ! Respect.`
+  $('advEndText').textContent = champion ? (LANDS[landOf(advClub)].ed ? `Tu connais la ${CLUBS[advClub].nom} sur le bout des doigts ! Respect.`
                                                                      : `Tu connais l'histoire de ${CLUBS[advClub].nom} sur 30 ans ! Respect.`)
     : passed ? `L'étape ${stage + 1} (${eraOf(advClub, stage + 1)}) est débloquée.`
     : `Il faut ${NEED} bonnes réponses sur ${PER_STAGE}. Réessaie, tu connais maintenant certaines réponses !`;
-  $('advNext').textContent = champion ? (landOf(advClub) === 'wc' ? 'Autre édition' : 'Autre club') : passed ? 'Étape suivante ▶' : 'Réessayer';
+  $('advNext').textContent = champion ? (LANDS[landOf(advClub)].ed ? 'Autre édition' : 'Autre club') : passed ? 'Étape suivante ▶' : 'Réessayer';
   $('advNext').onclick = () => {
     if (champion) return openClubs();
     if (passed) stage++;
@@ -805,6 +829,8 @@ const BADGES = [
   ['globe', '🌍', 'Globe-trotter', 'Finir un club dans chacun des cinq pays de l’Aventure'],
   ['mondial', '🏆', 'Champion du monde', 'Finir les 5 étapes d’une Coupe du monde de l’Aventure'],
   ['memoire', '📚', 'Mémoire du Mondial', 'Finir les 22 Coupes du monde de l’Aventure'],
+  ['can', '🦁', 'Lion d’Afrique', 'Finir les 5 étapes d’une CAN de l’Aventure'],
+  ['canall', '📜', 'Mémoire de la CAN', 'Finir les 14 CAN de l’Aventure'],
   ['marathon', '🏃', 'Marathon', 'Aller au bout des 100 questions du Spécial Foot'],
   ['beast', '💀', 'Increvable', '25 bonnes réponses d’affilée en Hardcore'],
   ['allround', '🎽', 'Touche-à-tout', 'Jouer une partie Hardcore dans chacun des 6 sports'],
@@ -851,7 +877,7 @@ function reportBadges(ids) {
 function checkAdvBadges() {
   const done = Object.keys(CLUBS).filter(id => (advDone[id] || 0) >= stagesOf(id));
   const land = l => Object.keys(CLUBS).filter(id => landOf(id) === l);
-  if (done.some(id => landOf(id) !== 'wc')) unlock('supporter');
+  if (done.some(id => !LANDS[landOf(id)].ed)) unlock('supporter');
   if (land('fr').every(id => done.includes(id))) unlock('tour');
   if (land('es').every(id => done.includes(id))) unlock('liga');
   if (land('uk').every(id => done.includes(id))) unlock('albion');
@@ -860,6 +886,8 @@ function checkAdvBadges() {
   if (['fr', 'es', 'uk', 'de', 'it'].every(l => land(l).some(id => done.includes(id)))) unlock('globe');
   if (land('wc').some(id => done.includes(id))) unlock('mondial');
   if (land('wc').every(id => done.includes(id))) unlock('memoire');
+  if (land('can').some(id => done.includes(id))) unlock('can');
+  if (land('can').every(id => done.includes(id))) unlock('canall');
 }
 // Web : profil = pseudo + code secret, badges sauvegardés sur le serveur (app iOS : Game Center).
 let prof = load('quiz-profile', null), showCode = false;
@@ -992,6 +1020,7 @@ const RULES = {
   adv: ['🗺️ Aventure', ['Choisis un pays (France, Espagne, Royaume-Uni, Allemagne ou Italie), touche une ville sur sa carte, puis choisis un club.',
     '10 étapes par club : la 1re porte sur les saisons 2024-2026, la 10e sur les années 1996-1999.',
     'Mondial : les 22 Coupes du monde de 1930 à 2022, 5 étapes chacune, de la phase de groupes à la finale (de plus en plus dur).',
+    'Coupe d’Afrique : les 14 CAN de 2000 à 2025, 5 étapes chacune, sur le même principe.',
     '5 questions par étape : il faut au moins 4 bonnes réponses pour débloquer l’étape suivante.',
     '20 secondes par question.', 'Ta progression est gardée sur cet appareil.']],
 };

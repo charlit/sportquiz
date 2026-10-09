@@ -22,7 +22,7 @@ MAX_GOOD = {'foot': 100, 'multi': 15, 'hard': 400, 'hardfoot': 400, 'hardrugby':
 PROFILES = os.environ.get('QUIZ_PROFILES', os.path.join(os.path.dirname(DB), 'profiles.json'))
 CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'  # sans 0/O ni 1/I, faciles à confondre
 BADGES = {'first', 'perfect', 'reflex', 'streak', 'supporter', 'tour', 'liga', 'albion', 'bundes', 'calcio', 'globe', 'marathon', 'multi', 'beast', 'allround',
-          'footscore', 'multiscore', 'hard', 'hardfoot', 'hardrugby', 'hardbasket', 'hardtennis', 'hardf1', 'hardvelo', 'mondial', 'memoire', 'hardfr', 'hardes', 'harduk', 'hardde', 'hardit', 'hardwc'}
+          'footscore', 'multiscore', 'hard', 'hardfoot', 'hardrugby', 'hardbasket', 'hardtennis', 'hardf1', 'hardvelo', 'mondial', 'memoire', 'hardfr', 'hardes', 'harduk', 'hardde', 'hardit', 'hardwc', 'can', 'canall'}
 MAX_FAILS, LOCK_SECONDS = 8, 15 * 60          # 8 codes faux d'affilée → pseudo bloqué 15 min
 fails = {}                                    # pseudo → (codes faux d'affilée, bloqué jusqu'à)
 # ponytail: global lock + whole-file JSON rewrite and client-trusted scores, fine for friends; SQLite + server-side scoring if it goes public
