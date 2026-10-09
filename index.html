@@ -375,12 +375,21 @@ function pick(pool, n, text = q => q[1]) {
   return out;
 }
 
+// Toutes les questions de foot, en trois lots au niveau 1-5 : foot général, clubs de l'Aventure (étapes 1-2 → niveau 1 … 9-10 → niveau 5)
+// et compétitions internationales (Coupes du monde et CAN, étape = niveau). Servent au Spécial Foot et au Hardcore Foot.
+function footSources() {
+  const advQs = (pays, lvlOf) => Object.entries(CLUBS).filter(([, c]) => pays(c.pays))
+    .flatMap(([id, c]) => c.q.map(q => [id, [lvlOf(q[0]), ...q.slice(1)]]));
+  return [QUESTIONS.foot.map(q => ['foot', q]), advQs(l => !LANDS[l].ed, k => Math.ceil(k / 2)), advQs(l => LANDS[l].ed, k => k)];
+}
+
 function buildDeck(m) {
   const out = [];
   if (m in HARD) { // questions niveau 4-5, jamais vues d'abord ; marquées vues quand posées
     const pool = HARD_PAYS.includes(HARD[m])
       ? Object.entries(CLUBS).filter(([, c]) => c.pays === HARD[m]).flatMap(([id, c]) => c.q.map(q => [id, [LANDS[HARD[m]].ed ? q[0] : Math.ceil(q[0] / 2), ...q.slice(1)]]))
           .filter(e => e[1][0] >= 4)
+      : HARD[m] === 'foot' ? footSources().flat().filter(e => e[1][0] >= 4)   // tout le foot : général, clubs, Mondial et CAN
       : Object.entries(QUESTIONS).filter(([s]) => !HARD[m] || s === HARD[m]).flatMap(([s, qs]) => qs.filter(q => q[0] >= 4).map(q => [s, q]));
     let fresh = pool.filter(x => !seen.has(x[1][1]));
     if (fresh.length < 20) { pool.forEach(x => seen.delete(x[1][1])); fresh = pool; }
@@ -390,13 +399,10 @@ function buildDeck(m) {
     pick(CLUBS[advClub].q.filter(q => q[0] === stage), PER_STAGE)
       .forEach(q => out.push([advClub, [stageLevel(stage), ...q.slice(1)]]));
   } else {
-    // Spécial Foot : chaque niveau mêle à parts égales foot général, clubs de l'Aventure (étapes 1-2 → niveau 1 … 9-10 → niveau 5)
-    // et Coupes du monde (étape = niveau)
-    const advQs = (pays, lvlOf) => Object.entries(CLUBS).filter(([, c]) => pays(c.pays))
-      .flatMap(([id, c]) => c.q.map(q => [id, [lvlOf(q[0]), ...q.slice(1)]]));
-    const sources = [QUESTIONS.foot.map(q => ['foot', q]), advQs(l => !LANDS[l].ed, k => Math.ceil(k / 2)), advQs(l => l === 'wc', k => k)];
+    // Spécial Foot : chaque niveau mêle à parts égales foot général, clubs et compétitions internationales (Mondial + CAN)
+    const sources = footSources();
     for (let lvl = 1; lvl <= 5; lvl++) {
-      const n = FOOT_PLAN[lvl], third = Math.round(n / 3), share = [third, n - 2 * third, third]; // général, clubs, Mondial
+      const n = FOOT_PLAN[lvl], third = Math.round(n / 3), share = [third, n - 2 * third, third]; // général, clubs, Mondial + CAN
       out.push(...shuffle(sources.flatMap((src, i) => pick(src.filter(e => e[1][0] === lvl), share[i], e => e[1][1]))));
     }
   }
