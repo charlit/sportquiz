@@ -58,10 +58,13 @@ print('ok foot 100')
 for m in ('hardtennis', 'hardf1', 'hardvelo'):
     assert call('/api/scores', {'name': 'Max', 'mode': m, 'score': 1500, 'good': 3})[0] == 200
 print('ok tennis f1 velo')
-with urllib.request.urlopen(URL + '/questions.js') as r:  # questions.js fabriqué depuis questions.json
+with urllib.request.urlopen(URL + '/questions.js') as r:  # questions.js fabriqué depuis questions/<sport>.json
     js = r.read().decode()
 assert js.startswith('const QUESTIONS = {') and js.rstrip().endswith('};')
-assert json.loads(js.removeprefix('const QUESTIONS = ').rstrip().rstrip(';')) == json.load(open(os.path.join(os.path.dirname(server.__file__), 'questions.json'), encoding='utf-8'))
+qdir = os.path.join(os.path.dirname(server.__file__), 'questions')
+assert json.loads(js.removeprefix('const QUESTIONS = ').rstrip().rstrip(';')) == {
+    n.removesuffix('.json'): json.load(open(os.path.join(qdir, n), encoding='utf-8')) for n in os.listdir(qdir) if n.endswith('.json')}
+assert {'foot', 'tennis', 'rugby', 'basket', 'f1', 'velo', 'boxe'} <= set(n.removesuffix('.json') for n in os.listdir(qdir))
 print('ok questions.js')
 with urllib.request.urlopen(URL + '/clubs.js') as r:  # clubs.js fabriqué depuis clubs.json (Aventure : France, Espagne, Royaume-Uni, Allemagne, Italie, Mondial)
     js = r.read().decode()

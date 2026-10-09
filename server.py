@@ -11,11 +11,11 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 ROOT = os.path.dirname(os.path.abspath(__file__))
 DB = os.environ.get('QUIZ_DB', os.path.join(ROOT, 'data', 'scores.json'))
 FILES = {'/': ('index.html', 'text/html; charset=utf-8'),
-         '/index.html': ('index.html', 'text/html; charset=utf-8'),
-         '/questions.json': ('questions.json', 'application/json; charset=utf-8')}
-# questions.json (questions par sport ; l'app iOS le télécharge aussi depuis GitHub) et clubs.json (Aventure : clubs de cinq pays et Coupes du monde)
+         '/index.html': ('index.html', 'text/html; charset=utf-8')}
+# questions/<sport>.json (un fichier par sport ; l'app iOS les télécharge aussi depuis GitHub) et clubs.json (Aventure : clubs de cinq pays et Coupes du monde)
 # sont les seules sources ; la page les reçoit sous forme de script pour rester synchrone au chargement.
-DATA_JS = {'/questions.js': ('QUESTIONS', 'questions.json'), '/clubs.js': ('CLUBS', 'clubs.json')}
+QUESTIONS_DIR = os.path.join(ROOT, 'questions')
+DATA_JS = {'/questions.js': ('QUESTIONS', None), '/clubs.js': ('CLUBS', 'clubs.json')}
 MAX_SCORE = {'foot': 32_500, 'multi': 4500, 'hard': 400_000, 'hardfoot': 400_000, 'hardrugby': 400_000, 'hardbasket': 400_000, 'hardtennis': 400_000, 'hardf1': 400_000, 'hardvelo': 400_000, 'hardfr': 400_000, 'hardes': 400_000, 'harduk': 400_000, 'hardde': 400_000, 'hardit': 400_000, 'hardwc': 400_000, 'hardcan': 400_000}  # foot 100 questions (FOOT_PLAN : 100 × (10×1 + 20×2 + 25×3 + 25×4 + 20×5)) / multi 15, max niveau*100 pts ; hard* = sans fin
 MAX_GOOD = {'foot': 100, 'multi': 15, 'hard': 400, 'hardfoot': 400, 'hardrugby': 400, 'hardbasket': 400, 'hardtennis': 400, 'hardf1': 400, 'hardvelo': 400, 'hardfr': 400, 'hardes': 400, 'harduk': 400, 'hardde': 400, 'hardit': 400, 'hardwc': 400, 'hardcan': 400}
 # Profils web : pseudo + code secret pour retrouver ses badges sur un autre appareil (l'app iOS utilise Game Center).
@@ -27,6 +27,17 @@ MAX_FAILS, LOCK_SECONDS = 8, 15 * 60          # 8 codes faux d'affilée → pseu
 fails = {}                                    # pseudo → (codes faux d'affilée, bloqué jusqu'à)
 # ponytail: global lock + whole-file JSON rewrite and client-trusted scores, fine for friends; SQLite + server-side scoring if it goes public
 lock = threading.Lock()
+
+
+def read_data(name):
+    with open(os.path.join(ROOT, name), 'rb') as f:
+        return f.read().rstrip()
+
+
+def questions_json():
+    """Les questions de tous les sports en un objet { sport: [...] }, le sport étant le nom du fichier."""
+    sports = sorted(n.removesuffix('.json') for n in os.listdir(QUESTIONS_DIR) if n.endswith('.json'))
+    return b'{' + b','.join(json.dumps(s).encode() + b':' + read_data(os.path.join('questions', s + '.json')) for s in sports) + b'}'
 
 
 def load(path=DB):
@@ -115,8 +126,7 @@ class Handler(BaseHTTPRequestHandler):
         path, _, query = self.path.partition('?')
         if path in DATA_JS:
             var, name = DATA_JS[path]
-            with open(os.path.join(ROOT, name), 'rb') as f:
-                return self.send(200, f'const {var} = '.encode() + f.read().rstrip() + b';\n', 'text/javascript; charset=utf-8')
+            return self.send(200, f'const {var} = '.encode() + (read_data(name) if name else questions_json()) + b';\n', 'text/javascript; charset=utf-8')
         if path in FILES:
             name, ctype = FILES[path]
             with open(os.path.join(ROOT, name), 'rb') as f:

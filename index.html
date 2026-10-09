@@ -1021,7 +1021,7 @@ $('goRanks').onclick = () => {
   (document.querySelector(`[data-tab="${mode}"]`) || document.querySelector('[data-tab="foot"]')).click();
 };
 document.querySelectorAll('[data-mode]').forEach(b => b.onclick = () => start(b.dataset.mode));
-$('goHard').onclick = openPick; // Hardcore : foot ou pays (les questions des autres sports restent dans questions.json)
+$('goHard').onclick = openPick; // Hardcore : foot ou pays (les questions des autres sports restent dans questions/<sport>.json)
 document.querySelectorAll('[data-flag]').forEach(b => b.innerHTML = flag(b.dataset.flag) + ' ' + esc(b.textContent));
 // Règles de chaque mode, affichées par le bouton ⓘ de sa tuile
 const RULES = {
@@ -1073,7 +1073,7 @@ $('toHome').onclick = goHome;
 // App iOS : les questions embarquées (ou celles téléchargées la fois d'avant) servent tout de suite ;
 // la dernière version est téléchargée en arrière-plan depuis GitHub (données JSON, jamais bloquant)
 // et sert dès la partie suivante. Hors ligne ou fichier invalide : on garde ce qu'on a.
-const QUESTIONS_URL = 'https://raw.githubusercontent.com/charlit/sportquiz/main/questions.json';
+const QUESTIONS_URL = s => `https://raw.githubusercontent.com/charlit/sportquiz/main/questions/${s}.json`;  // un fichier par sport
 const countQ = q => Object.values(q).reduce((n, a) => n + a.length, 0);
 // Renvoie les questions utilisables (sports connus de cette version), ou null si le fichier est invalide.
 // Un sport inconnu (ajouté dans une version plus récente de l'app) est ignoré, pas bloquant.
@@ -1090,7 +1090,9 @@ function validQuestions(q) {
 if (GC) {
   const cached = validQuestions(load('quiz-questions', null)); // pas si l'app vient d'être mise à jour avec plus de questions
   if (cached && countQ(cached) >= countQ(QUESTIONS)) Object.assign(QUESTIONS, cached);
-  fetch(QUESTIONS_URL, { cache: 'no-store' }).then(r => r.ok ? r.json() : null)
+  // Tous les sports de cette version, ou rien : un fichier manquant (hors ligne, 404) annule la mise à jour.
+  Promise.all(Object.keys(SPORTS).map(s => fetch(QUESTIONS_URL(s), { cache: 'no-store' }).then(r => r.ok ? r.json() : null).then(qs => [s, qs])))
+    .then(all => Object.fromEntries(all.filter(([, qs]) => qs)))
     .then(q => { const ok = validQuestions(q); if (ok) { Object.assign(QUESTIONS, ok); store('quiz-questions', ok); } })
     .catch(() => {});
 }
