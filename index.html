@@ -360,11 +360,11 @@ const seen = new Set(load('quiz-seen', []));
 // Aventure : nombre d'étapes réussies par sport (sur cet appareil)
 const advDone = load('quiz-adv', {});
 
-function pick(pool, n) {
-  let fresh = pool.filter(q => !seen.has(q[1]));
-  if (fresh.length < n) { pool.forEach(q => seen.delete(q[1])); fresh = pool; } // lot épuisé : on recommence
+function pick(pool, n, text = q => q[1]) {
+  let fresh = pool.filter(q => !seen.has(text(q)));
+  if (fresh.length < n) { pool.forEach(q => seen.delete(text(q))); fresh = pool; } // lot épuisé : on recommence
   const out = shuffle(fresh).slice(0, n);
-  out.forEach(q => seen.add(q[1]));
+  out.forEach(q => seen.add(text(q)));
   return out;
 }
 
@@ -382,8 +382,12 @@ function buildDeck(m) {
     pick(CLUBS[advClub].q.filter(q => q[0] === stage), PER_STAGE)
       .forEach(q => out.push([advClub, [stageLevel(stage), ...q.slice(1)]]));
   } else {
+    // Spécial Foot : foot général + questions des clubs de l'Aventure (hors Mondial), étapes 1-2 → niveau 1 … 9-10 → niveau 5
+    const clubQs = Object.entries(CLUBS).filter(([, c]) => c.pays !== 'wc')
+      .flatMap(([id, c]) => c.q.map(q => [id, [Math.ceil(q[0] / 2), ...q.slice(1)]]));
     for (let lvl = 1; lvl <= 5; lvl++)
-      pick(QUESTIONS.foot.filter(q => q[0] === lvl), FOOT_PLAN[lvl]).forEach(q => out.push(['foot', q]));
+      out.push(...pick([...QUESTIONS.foot.filter(q => q[0] === lvl).map(q => ['foot', q]), ...clubQs.filter(e => e[1][0] === lvl)],
+                       FOOT_PLAN[lvl], e => e[1][1]));
   }
   store('quiz-seen', [...seen]);
   return out;
@@ -974,6 +978,7 @@ document.querySelectorAll('[data-flag]').forEach(b => b.innerHTML = flag(b.datas
 // Règles de chaque mode, affichées par le bouton ⓘ de sa tuile
 const RULES = {
   foot: ['⚽ Spécial Foot', ['100 questions de plus en plus dures : 10 faciles, puis Moyen, Difficile, Expert et 20 en Légende.',
+    'Les questions sont tirées parmi plus de 3 300 : foot général et clubs des cinq pays de l’Aventure.',
     '3 vies : une erreur coûte une vie et 50 points × le niveau.', '20 secondes par question.',
     'Une bonne réponse rapporte jusqu’à 100 points × le niveau (la moitié si tu réponds au dernier moment).']],
   hard: ['💀 Hardcore', ['Questions de foot Expert et Légende sans fin : tout le foot, ou les clubs d’un pays (France, Espagne, Royaume-Uni, Allemagne, Italie).',
