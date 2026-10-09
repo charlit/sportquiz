@@ -210,7 +210,7 @@
     <div class="tiles">
       <div class="tw"><button class="tile c-foot" data-mode="foot"><b>⚽</b><strong>Spécial Foot</strong><small>100 questions, 3 vies</small></button>
         <button class="info" data-info="foot" aria-label="Règles du Spécial Foot">i</button></div>
-      <div class="tw"><button class="tile c-hc" id="goHard"><span class="tag">1 VIE</span><b>💀</b><strong>Hardcore</strong><small>Que du très dur, choisis ton sport</small></button>
+      <div class="tw"><button class="tile c-hc" id="goHard"><span class="tag">1 VIE</span><b>💀</b><strong>Hardcore</strong><small>Que du foot très dur, sans fin</small></button>
         <button class="info" data-info="hard" aria-label="Règles du Hardcore">i</button></div>
       <div class="tw" style="grid-column:1/-1"><button class="tile c-adv" id="goAdv"><span class="tag">NOUVEAU</span><b>🗺️</b><strong>Aventure</strong><small>Les clubs de cinq grands pays et la Coupe du monde</small></button>
         <button class="info" data-info="adv" aria-label="Règles de l'Aventure">i</button></div>
@@ -251,17 +251,10 @@
     <div class="head"><button class="back" data-back="home">← Accueil</button><h2>🏅 Classement</h2></div>
     <div class="card" style="margin-top:0">
       <div class="tabs">
-        <button data-tab="foot" class="on">⚽ Foot</button><button data-tab="hard">💀 HC Tous</button>
-        <button data-tab="hardfoot">💀⚽ HC Foot</button><button data-tab="hardrugby">💀🏉 HC Rugby</button><button data-tab="hardbasket">💀🏀 HC Basket</button><button data-tab="hardtennis">💀🎾 HC Tennis</button><button data-tab="hardf1">💀🏎️ HC Auto</button><button data-tab="hardvelo">💀🚴 HC Vélo</button>
+        <button data-tab="foot" class="on">⚽ Foot</button><button data-tab="hardfoot">💀 Hardcore</button>
       </div>
       <table id="board"></table>
     </div>
-  </section>
-
-  <section id="pick" class="hidden">
-    <div class="head"><button class="back" data-back="home">← Accueil</button><h2 id="pickTitle"></h2></div>
-    <p class="advinfo" id="pickInfo"></p>
-    <div class="sports" id="pickList"></div>
   </section>
 
   <section id="lands" class="hidden">
@@ -340,7 +333,7 @@ const ERAS = ['', '2024-2026', '2021-2023', '2018-2020', '2015-2017', '2012-2014
 const stageLevel = k => Math.ceil(k * 5 / stagesOf(advClub)); // difficulté (points) : clubs, étapes 1-2 → niveau 1 … 9-10 → niveau 5 ; Mondial, étape = niveau
 const $ = id => document.getElementById(id);
 const shuffle = a => { a = [...a]; for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
-const SCREENS = ['home', 'profile', 'ranks', 'pick', 'lands', 'clubs', 'adv', 'quiz', 'end', 'advEnd'];
+const SCREENS = ['home', 'profile', 'ranks', 'lands', 'clubs', 'adv', 'quiz', 'end', 'advEnd'];
 const show = id => { SCREENS.forEach(s => $(s).classList.toggle('hidden', s !== id)); scrollTo(0, 0); };
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
 const store = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} };
@@ -497,20 +490,6 @@ function finish() {
   $('pseudo').value = prof?.name || load('quiz-pseudo', '');
   show('end');
   loadBoard(mode, $('endBoard'));
-}
-
-/* ---------- Choix du sport (Hardcore) ---------- */
-function openPick() {
-  $('pickTitle').textContent = '💀 Hardcore';
-  $('pickInfo').textContent = '1 seule vie, que des questions Expert et Légende. Choisis ton sport :';
-  const items = [['hard', 'all', '💀', 'Tous les sports'], ['hardfoot', 'foot', '⚽', 'Foot'], ['hardrugby', 'rugby', '🏉', 'Rugby'],
-    ['hardbasket', 'basket', '🏀', 'Basket'], ['hardtennis', 'tennis', '🎾', 'Tennis'], ['hardf1', 'f1', '🏎️', 'Sport auto'], ['hardvelo', 'velo', '🚴', 'Cyclisme']];
-  $('pickList').innerHTML = items.map(([id, s, icon, name], i) => {
-    const wide = i === items.length - 1 && items.length % 2 ? ' wide' : ''; // dernière tuile seule : pleine largeur
-    return `<button class="sport${wide}" data-id="${id}" style="--c:${SPORT_COLORS[s]}"><b>${icon}</b><strong>${name}</strong></button>`;
-  }).join('');
-  $('pickList').querySelectorAll('.sport').forEach(b => b.onclick = () => start(b.dataset.id));
-  show('pick');
 }
 
 /* ---------- Aventure ---------- */
@@ -809,9 +788,12 @@ const BADGES = [
   ['hardf1', '🏎️', 'Pole position', '15 bonnes réponses d’affilée en Hardcore Sport auto'],
   ['hardvelo', '🚴', 'Roi de la montagne', '15 bonnes réponses d’affilée en Hardcore Cyclisme'],
 ];
+// Badges des Hardcore retirés de l'accueil (autres sports) : gardés pour unlock() mais plus affichés ni comptés
+const HIDDEN = new Set(['hard', 'hardrugby', 'hardbasket', 'hardtennis', 'hardf1', 'hardvelo', 'allround']);
+const SHOWN = BADGES.filter(b => !HIDDEN.has(b[0]));
 const earned = load('quiz-badges', {});
 // Encart autour de la lettre du profil, selon le nombre de badges : [minimum, id, nom]
-const TIERS = [[1, 'bronze', 'Bronze'], [3, 'argent', 'Argent'], [5, 'or', 'Or'], [12, 'platine', 'Platine'], [BADGES.length, 'legende', 'Légende']];
+const TIERS = [[1, 'bronze', 'Bronze'], [3, 'argent', 'Argent'], [5, 'or', 'Or'], [12, 'platine', 'Platine'], [SHOWN.length, 'legende', 'Légende']];
 const tierOf = n => TIERS.filter(t => n >= t[0]).pop();
 let toastTimer;
 
@@ -886,7 +868,7 @@ $('logout').onclick = () => {
   prof = null; showCode = false; store('quiz-profile', null); refreshProfile();
 };
 function refreshProfile() {
-  const n = BADGES.filter(b => earned[b[0]]).length, name = playerName();
+  const n = SHOWN.filter(b => earned[b[0]]).length, name = playerName();
   $('profAvatar').textContent = $('whoAvatar').textContent = name ? name[0].toUpperCase() : '👤';
   $('profCount').textContent = `🏅 ${n}`;
   $('whoName').textContent = name || 'Joueur anonyme';
@@ -900,9 +882,9 @@ function refreshProfile() {
   }
   const tier = tierOf(n), next = TIERS.find(t => n < t[0]);
   $('profAvatar').dataset.tier = $('whoAvatar').dataset.tier = tier ? tier[1] : '';
-  $('whoCount').textContent = `${n} badge${n > 1 ? 's' : ''} sur ${BADGES.length}` + (tier ? ` · encart ${tier[2]}` : '') +
+  $('whoCount').textContent = `${n} badge${n > 1 ? 's' : ''} sur ${SHOWN.length}` + (tier ? ` · encart ${tier[2]}` : '') +
     (next ? ` · encore ${next[0] - n} pour l’encart ${next[2]}` : '') + (!name && GC ? ' · connecte-toi à Game Center' : '');
-  $('trophies').innerHTML = BADGES.map(([id, icon, title, how]) => {
+  $('trophies').innerHTML = SHOWN.map(([id, icon, title, how]) => {
     const d = earned[id];
     return `<div class="trophy${d ? '' : ' lock'}"><b>${flag(icon)}</b><strong>${esc(title)}</strong><small>${esc(how)}</small>` +
            `<em>${d ? 'Gagné le ' + new Date(d).toLocaleDateString('fr-FR') : '🔒 À débloquer'}</em></div>`;
@@ -959,13 +941,13 @@ $('goRanks').onclick = () => {
   (document.querySelector(`[data-tab="${mode}"]`) || document.querySelector('[data-tab="foot"]')).click();
 };
 document.querySelectorAll('[data-mode]').forEach(b => b.onclick = () => start(b.dataset.mode));
-$('goHard').onclick = openPick;
+$('goHard').onclick = () => start('hardfoot'); // Hardcore : foot seulement (les questions des autres sports restent dans questions.json)
 // Règles de chaque mode, affichées par le bouton ⓘ de sa tuile
 const RULES = {
   foot: ['⚽ Spécial Foot', ['100 questions de plus en plus dures : 10 faciles, puis Moyen, Difficile, Expert et 20 en Légende.',
     '3 vies : une erreur coûte une vie et 50 points × le niveau.', '20 secondes par question.',
     'Une bonne réponse rapporte jusqu’à 100 points × le niveau (la moitié si tu réponds au dernier moment).']],
-  hard: ['💀 Hardcore', ['Questions Expert et Légende sans fin, dans le sport de ton choix.',
+  hard: ['💀 Hardcore', ['Questions de foot Expert et Légende sans fin.',
     '1 seule vie : la première erreur arrête tout.', '20 secondes par question.',
     'La vitesse paie double : jusqu’à 200 points × le niveau si tu réponds tout de suite, 20 % au dernier moment.']],
   adv: ['🗺️ Aventure', ['Choisis un pays (France, Espagne, Royaume-Uni, Allemagne ou Italie), touche une ville sur sa carte, puis choisis un club.',
