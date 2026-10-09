@@ -58,6 +58,12 @@ print('ok foot 100')
 for m in ('hardtennis', 'hardf1', 'hardvelo'):
     assert call('/api/scores', {'name': 'Max', 'mode': m, 'score': 1500, 'good': 3})[0] == 200
 print('ok tennis f1 velo')
+assert call('/api/scores', {'name': 'Médaillé', 'mode': 'hardvelo', 'score': 900, 'good': 2, 'badges': 3})[0] == 200
+s, rows = call('/api/scores', {'name': 'Médaillé', 'mode': 'hardvelo', 'score': 100, 'good': 1, 'badges': 5})  # score moins bon : badges quand même à jour
+assert next(r for r in rows if r['name'] == 'Médaillé') ['badges'] == 5 and next(r for r in rows if r['name'] == 'Médaillé')['score'] == 900
+s, rows = call('/api/scores', {'name': 'Tricheur', 'mode': 'hardvelo', 'score': 100, 'good': 1, 'badges': 9999})
+assert next(r for r in rows if r['name'] == 'Tricheur')['badges'] == len(server.BADGES)
+print('ok badges au classement')
 with urllib.request.urlopen(URL + '/questions.js') as r:  # questions.js fabriqué depuis questions/<sport>.json
     js = r.read().decode()
 assert js.startswith('const QUESTIONS = {') and js.rstrip().endswith('};')

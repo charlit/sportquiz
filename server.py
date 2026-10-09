@@ -157,6 +157,7 @@ class Handler(BaseHTTPRequestHandler):
             name = clean_name(d.get('name'))
             score = int(d.get('score', -1))
             good = int(d.get('good', 0))
+            badges = min(max(int(d.get('badges', 0)), 0), len(BADGES))  # nombre de badges du joueur, affiché au classement
             mode = d.get('mode')
             if not name_key(name) or mode not in MAX_SCORE or not 0 <= score <= MAX_SCORE[mode] or not 0 <= good <= MAX_GOOD[mode]:
                 raise ValueError
@@ -173,7 +174,10 @@ class Handler(BaseHTTPRequestHandler):
             board = db.setdefault(mode, {})
             p = board.get(key)
             if not p or score > p['score']:  # on garde le meilleur score par pseudo
-                board[key] = {'name': name, 'score': score, 'good': good, 'date': int(time.time())}
+                board[key] = {'name': name, 'score': score, 'good': good, 'badges': badges, 'date': int(time.time())}
+                save(db)
+            elif p.get('badges', 0) != badges:  # score pas battu, mais le nombre de badges est mis à jour
+                p['badges'] = badges
                 save(db)
             rows = top(db, mode)
         self.send(200, rows)

@@ -972,8 +972,9 @@ $('logout').onclick = () => {
   if (!showCode) { showCode = true; refreshProfile(); $('codeHint').textContent = 'Note bien ton code avant de te déconnecter :'; $('logout').textContent = 'Je l’ai noté, me déconnecter'; return; }
   prof = null; showCode = false; store('quiz-profile', null); refreshProfile();
 };
+const badgeCount = () => SHOWN.filter(b => earned[b[0]]).length;   // affiché au profil et à côté du nom dans les classements
 function refreshProfile() {
-  const n = SHOWN.filter(b => earned[b[0]]).length, name = playerName();
+  const n = badgeCount(), name = playerName();
   $('profAvatar').textContent = $('whoAvatar').textContent = name ? name[0].toUpperCase() : '👤';
   $('profCount').textContent = `🏅 ${n}`;
   $('whoName').textContent = name || 'Joueur anonyme';
@@ -1010,7 +1011,7 @@ const nameKey = s => s.normalize('NFKD').toLowerCase().replace(/[^\p{L}\p{N}]/gu
 function renderBoard(rows, table, me, m) {
   table.innerHTML = rows.length ? rows.map((r, i) =>
     `<tr class="${me && nameKey(r.name) === nameKey(me) ? 'me' : ''}"><td>${['🥇', '🥈', '🥉'][i] || i + 1}</td>` +
-    `<td>${esc(r.name)} <small style="color:var(--dim)">${r.good} ✔</small></td><td>${r.score}</td></tr>`).join('')
+    `<td>${esc(r.name)} <small style="color:var(--dim)">🏅 ${r.badges || 0} · ${r.good} ✔</small></td><td>${r.score}</td></tr>`).join('')
     : '<tr><td colspan="3" class="empty">Personne pour l\'instant… à toi de jouer !</td></tr>';
 }
 
@@ -1031,7 +1032,7 @@ async function sendScore(name) {
   saved = true; // bloque les clics répétés pendant l'envoi
   try {
     const r = await fetch('api/scores', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, mode, score, good, code: prof && nameKey(name) === nameKey(prof.name) ? prof.code : undefined }) });
+      body: JSON.stringify({ name, mode, score, good, badges: badgeCount(), code: prof && nameKey(name) === nameKey(prof.name) ? prof.code : undefined }) });
     if (r.status === 403 || r.status === 429) { saved = false; $('saveMsg').textContent = 'Ce pseudo est protégé par un code : retrouve ton profil (en haut à droite de l’accueil) ou choisis un autre pseudo.'; return; }
     if (!r.ok) throw 0;
     if (!GC) store('quiz-pseudo', name);
