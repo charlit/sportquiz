@@ -382,12 +382,15 @@ function buildDeck(m) {
     pick(CLUBS[advClub].q.filter(q => q[0] === stage), PER_STAGE)
       .forEach(q => out.push([advClub, [stageLevel(stage), ...q.slice(1)]]));
   } else {
-    // Spécial Foot : foot général + questions des clubs de l'Aventure (hors Mondial), étapes 1-2 → niveau 1 … 9-10 → niveau 5
-    const clubQs = Object.entries(CLUBS).filter(([, c]) => c.pays !== 'wc')
-      .flatMap(([id, c]) => c.q.map(q => [id, [Math.ceil(q[0] / 2), ...q.slice(1)]]));
-    for (let lvl = 1; lvl <= 5; lvl++)
-      out.push(...pick([...QUESTIONS.foot.filter(q => q[0] === lvl).map(q => ['foot', q]), ...clubQs.filter(e => e[1][0] === lvl)],
-                       FOOT_PLAN[lvl], e => e[1][1]));
+    // Spécial Foot : chaque niveau mêle à parts égales foot général, clubs de l'Aventure (étapes 1-2 → niveau 1 … 9-10 → niveau 5)
+    // et Coupes du monde (étape = niveau)
+    const advQs = (wc, lvlOf) => Object.entries(CLUBS).filter(([, c]) => (c.pays === 'wc') === wc)
+      .flatMap(([id, c]) => c.q.map(q => [id, [lvlOf(q[0]), ...q.slice(1)]]));
+    const sources = [QUESTIONS.foot.map(q => ['foot', q]), advQs(false, k => Math.ceil(k / 2)), advQs(true, k => k)];
+    for (let lvl = 1; lvl <= 5; lvl++) {
+      const n = FOOT_PLAN[lvl], third = Math.round(n / 3), share = [third, n - 2 * third, third]; // général, clubs, Mondial
+      out.push(...shuffle(sources.flatMap((src, i) => pick(src.filter(e => e[1][0] === lvl), share[i], e => e[1][1]))));
+    }
   }
   store('quiz-seen', [...seen]);
   return out;
@@ -978,7 +981,7 @@ document.querySelectorAll('[data-flag]').forEach(b => b.innerHTML = flag(b.datas
 // Règles de chaque mode, affichées par le bouton ⓘ de sa tuile
 const RULES = {
   foot: ['⚽ Spécial Foot', ['100 questions de plus en plus dures : 10 faciles, puis Moyen, Difficile, Expert et 20 en Légende.',
-    'Les questions sont tirées parmi plus de 3 300 : foot général et clubs des cinq pays de l’Aventure.',
+    'À chaque niveau, un tiers de foot général, un tiers de questions sur les clubs des cinq pays de l’Aventure et un tiers sur les Coupes du monde.',
     '3 vies : une erreur coûte une vie et 50 points × le niveau.', '20 secondes par question.',
     'Une bonne réponse rapporte jusqu’à 100 points × le niveau (la moitié si tu réponds au dernier moment).']],
   hard: ['💀 Hardcore', ['Questions de foot Expert et Légende sans fin : tout le foot, ou les clubs d’un pays (France, Espagne, Royaume-Uni, Allemagne, Italie).',
