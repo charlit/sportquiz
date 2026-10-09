@@ -54,6 +54,9 @@
   .sport strong { display:block; margin:8px 0 2px; font-size:1.1rem; overflow-wrap:anywhere; hyphens:auto; }
   .sport small { color:var(--dim); }
   .sport.wide { grid-column:1/-1; }
+  .sport.locked { filter:grayscale(1); opacity:.45; }
+  .sport.locked:hover { transform:none; border-color:var(--line); }
+  .sport.unlockable { border-color:var(--acc); animation:pulse 1.6s infinite; }
   .meter { height:6px; border-radius:3px; background:#0006; margin-top:10px; overflow:hidden; }
   .meter i { display:block; height:100%; background:var(--c); }
 
@@ -273,7 +276,7 @@
 
   <section id="lands" class="hidden">
     <div class="head"><button class="back" data-back="home">← Accueil</button><h2>🗺️ Aventure</h2></div>
-    <p class="advinfo">Choisis un pays, puis une ville sur sa carte.</p>
+    <p class="advinfo" id="landsInfo"></p>
     <div class="sports" id="landList"></div>
   </section>
 
@@ -720,17 +723,39 @@ const HOST_FLAGS = { Qatar: ['qa'], Russie: ['ru'], Brésil: ['br'], 'Afrique du
 const flag = c => FLAG_SVG[c] ? `<svg class="flag" viewBox="0 0 30 20" aria-hidden="true">${FLAG_SVG[c]}</svg>` : esc(c); // c : code ou emoji (🏆)
 const place = (ville, l) => (LANDS[l].ed ? (HOST_FLAGS[ville] || []).map(flag).join('') : '📍 ') + ' ' + esc(ville);           // HTML
 
+// Pays ouverts de l'Aventure : la France au départ ; chaque pays ouvert terminé (tous ses clubs ou éditions) permet
+// d'en choisir un nouveau. Un pays déjà commencé avant l'arrivée des cadenas reste ouvert.
+const landIds = l => Object.keys(CLUBS).filter(id => landOf(id) === l);
+const landDone = l => landIds(l).filter(id => (advDone[id] || 0) >= stagesOf(id)).length;
+const landFinished = l => landDone(l) === landIds(l).length;
+const advOpen = load('quiz-adv-open', null) || Object.keys(LANDS).filter(l => l === 'fr' || landIds(l).some(id => advDone[id]));
+store('quiz-adv-open', advOpen);
+const unlocksLeft = () => advOpen.filter(landFinished).length - (advOpen.length - 1);
+
 // Menu de l'Aventure : un pays (ou le Mondial) par carte, avec la progression
 function openLands() {
-  const n = Object.keys(LANDS).length;
+  const n = Object.keys(LANDS).length, free = unlocksLeft() > 0, all = advOpen.length === n;
+  $('landsInfo').textContent = free ? '🔓 Bravo ! Choisis le prochain pays à débloquer.'
+    : all ? 'Choisis un pays, puis une ville sur sa carte.'
+    : !landFinished('fr') ? 'Termine tous les clubs de France pour débloquer un nouveau pays.'
+    : 'Termine tous les clubs (ou éditions) de tes pays ouverts pour en débloquer un nouveau.';
   $('landList').innerHTML = Object.entries(LANDS).map(([l, L], i) => {
-    const ids = Object.keys(CLUBS).filter(id => landOf(id) === l);
-    const done = ids.filter(id => (advDone[id] || 0) >= stagesOf(id)).length;
-    return `<button class="sport${i === n - 1 && n % 2 ? ' wide' : ''}" data-land="${l}" style="--c:${L.c}"><strong>${flag(L.flag)} ${esc(L.nom)}</strong>` +
-           `<small>${ids.length} ${L.ed ? 'éditions' : 'clubs'} · ${done} terminé${done > 1 ? 's' : ''}</small>` +
+    const ids = landIds(l), done = landDone(l), open = advOpen.includes(l);
+    const state = open ? '' : free ? ' unlockable' : ' locked';
+    return `<button class="sport${i === n - 1 && n % 2 ? ' wide' : ''}${state}" data-land="${l}" style="--c:${L.c}"><strong>${open ? '' : '🔒 '}${flag(L.flag)} ${esc(L.nom)}</strong>` +
+           `<small>${ids.length} ${L.ed ? 'éditions' : 'clubs'}${open ? ` · ${done} terminé${done > 1 ? 's' : ''}` : free ? ' · à débloquer' : ''}</small>` +
            `<div class="meter"><i style="width:${done / ids.length * 100}%"></i></div></button>`;
   }).join('');
-  $('landList').querySelectorAll('[data-land]').forEach(b => b.onclick = () => { advLand = b.dataset.land; cityFilter = null; openClubs(); });
+  $('landList').querySelectorAll('[data-land]').forEach(b => b.onclick = () => {
+    const l = b.dataset.land;
+    if (!advOpen.includes(l)) {
+      if (unlocksLeft() <= 0) return alert(landFinished('fr') ? 'Termine d’abord tous les clubs (ou éditions) de tes pays ouverts.'
+                                                              : 'Termine d’abord tous les clubs de France.');
+      if (!confirm(`Débloquer ${LANDS[l].nom} ?`)) return;
+      advOpen.push(l); store('quiz-adv-open', advOpen);
+    }
+    advLand = l; cityFilter = null; openClubs();
+  });
   show('lands');
 }
 
@@ -817,8 +842,11 @@ function advFinish() {
                                                                      : `Tu connais l'histoire de ${CLUBS[advClub].nom} sur 30 ans ! Respect.`)
     : passed ? `L'étape ${stage + 1} (${eraOf(advClub, stage + 1)}) est débloquée.`
     : `Il faut ${NEED} bonnes réponses sur ${PER_STAGE}. Réessaie, tu connais maintenant certaines réponses !`;
-  $('advNext').textContent = champion ? (LANDS[landOf(advClub)].ed ? 'Autre édition' : 'Autre club') : passed ? 'Étape suivante ▶' : 'Réessayer';
+  const unlock = champion && unlocksLeft() > 0 && advOpen.length < Object.keys(LANDS).length;   // pays terminé : un nouveau pays à choisir
+  if (unlock) $('advEndText').textContent += (LANDS[landOf(advClub)].ed ? ' Toutes les éditions sont terminées' : ' Tous les clubs du pays sont terminés') + ' : choisis le prochain pays à débloquer !';
+  $('advNext').textContent = unlock ? '🔓 Choisir le prochain pays' : champion ? (LANDS[landOf(advClub)].ed ? 'Autre édition' : 'Autre club') : passed ? 'Étape suivante ▶' : 'Réessayer';
   $('advNext').onclick = () => {
+    if (unlock) return openLands();
     if (champion) return openClubs();
     if (passed) stage++;
     start('adv');
