@@ -54,10 +54,15 @@ with urllib.request.urlopen(URL + '/questions.js') as r:  # questions.js fabriqu
 assert js.startswith('const QUESTIONS = {') and js.rstrip().endswith('};')
 assert json.loads(js.removeprefix('const QUESTIONS = ').rstrip().rstrip(';')) == json.load(open(os.path.join(os.path.dirname(server.__file__), 'questions.json'), encoding='utf-8'))
 print('ok questions.js')
-with urllib.request.urlopen(URL + '/clubs.js') as r:  # clubs.js fabriqué depuis clubs.json (Aventure : France, Espagne, Royaume-Uni, Allemagne, Italie)
+with urllib.request.urlopen(URL + '/clubs.js') as r:  # clubs.js fabriqué depuis clubs.json (Aventure : France, Espagne, Royaume-Uni, Allemagne, Italie, Mondial)
     js = r.read().decode()
 clubs = json.loads(js.removeprefix('const CLUBS = ').rstrip().rstrip(';'))
-assert sorted(sum(c['pays'] == p for c in clubs.values()) for p in ('fr', 'es', 'uk', 'de', 'it')) == [10, 10, 10, 10, 18] and all(sum(q[0] == k for q in c['q']) >= 5 for c in clubs.values() for k in range(1, 11))
+assert sorted(sum(c['pays'] == p for c in clubs.values()) for p in ('fr', 'es', 'uk', 'de', 'it')) == [10, 10, 10, 10, 18] and all(sum(q[0] == k for q in c['q']) >= 5 for c in clubs.values() if c['pays'] != 'wc' for k in range(1, 11))
+wc = [c for c in clubs.values() if c['pays'] == 'wc']   # Mondial : 22 éditions (1930-2022), 5 étapes de 5 questions au moins
+assert sorted(c['annee'] for c in wc) == [y for y in range(1930, 2023, 4) if y not in (1942, 1946)] and all(sum(q[0] == k for q in c['q']) >= 5 for c in wc for k in range(1, 6))
+assert all(len(q) == 6 and len(set(q[2:])) == 4 for c in clubs.values() for q in c['q'])                  # 4 réponses distinctes
+texts = [q[1] for c in wc for q in c['q']]
+assert len(texts) == len(set(texts))                                                                      # intitulés uniques (questions vues retenues par leur texte)
 print('ok clubs.js')
 # profils web : pseudo + code
 st, p = call('/api/profile/create', {'name': 'Zoé', 'badges': {'first': 1700000000, 'triche': 5}})
