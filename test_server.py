@@ -47,6 +47,7 @@ assert [(r['name'], r['score']) for r in rows] == [('EVE LU', 1200)]            
 assert call('/api/scores', {'name': '!!!', 'mode': 'hardes', 'score': 1, 'good': 0})[0] == 400
 assert server.dedupe(d := {'foot': {'léa': {'name': 'Léa', 'score': 5, 'date': 1}, 'lea': {'name': 'lea', 'score': 9, 'date': 2}}}) and list(d['foot'].values())[0]['score'] == 9
 assert call('/api/scores', {'name': 'Max', 'mode': 'hardwc', 'score': 2500, 'good': 4})[0] == 200  # Hardcore Coupe du monde
+assert call('/api/scores', {'name': 'Max', 'mode': 'hardcan', 'score': 2500, 'good': 4})[0] == 200  # Hardcore CAN
 print('ok hardcore')
 assert call('/api/scores', {'name': 'Max', 'mode': 'hardbasket', 'score': 3000, 'good': 6})[0] == 200
 assert call('/api/scores?mode=hardbasket')[1][0]['name'] == 'Max'

@@ -210,7 +210,7 @@
     <div class="tiles">
       <div class="tw"><button class="tile c-foot" data-mode="foot"><b>⚽</b><strong>Spécial Foot</strong><small>100 questions, 3 vies</small></button>
         <button class="info" data-info="foot" aria-label="Règles du Spécial Foot">i</button></div>
-      <div class="tw"><button class="tile c-hc" id="goHard"><span class="tag">1 VIE</span><b>💀</b><strong>Hardcore</strong><small>Que du foot très dur : général, par pays ou Mondial</small></button>
+      <div class="tw"><button class="tile c-hc" id="goHard"><span class="tag">1 VIE</span><b>💀</b><strong>Hardcore</strong><small>Que du foot très dur : général, par pays, Mondial ou CAN</small></button>
         <button class="info" data-info="hard" aria-label="Règles du Hardcore">i</button></div>
       <div class="tw" style="grid-column:1/-1"><button class="tile c-adv" id="goAdv"><span class="tag">NOUVEAU</span><b>🗺️</b><strong>Aventure</strong><small>Les clubs de cinq grands pays, la Coupe du monde et la CAN</small></button>
         <button class="info" data-info="adv" aria-label="Règles de l'Aventure">i</button></div>
@@ -252,7 +252,7 @@
     <div class="card" style="margin-top:0">
       <div class="tabs">
         <button data-tab="foot" class="on">⚽ Foot</button><button data-tab="hardfoot">💀 HC Foot</button>
-        <button data-tab="hardfr" data-flag="fr">France</button><button data-tab="hardes" data-flag="es">Espagne</button><button data-tab="harduk" data-flag="uk">R.-Uni</button><button data-tab="hardde" data-flag="de">Allemagne</button><button data-tab="hardit" data-flag="it">Italie</button><button data-tab="hardwc">💀🏆 Mondial</button>
+        <button data-tab="hardfr" data-flag="fr">France</button><button data-tab="hardes" data-flag="es">Espagne</button><button data-tab="harduk" data-flag="uk">R.-Uni</button><button data-tab="hardde" data-flag="de">Allemagne</button><button data-tab="hardit" data-flag="it">Italie</button><button data-tab="hardwc">💀🏆 Mondial</button><button data-tab="hardcan">💀🌍 CAN</button>
       </div>
       <table id="board"></table>
     </div>
@@ -260,7 +260,7 @@
 
   <section id="pick" class="hidden">
     <div class="head"><button class="back" data-back="home">← Accueil</button><h2>💀 Hardcore</h2></div>
-    <p class="advinfo">1 seule vie, que des questions Expert et Légende. Tout le foot, les clubs d’un pays ou la Coupe du monde :</p>
+    <p class="advinfo">1 seule vie, que des questions Expert et Légende. Tout le foot, les clubs d’un pays, la Coupe du monde ou la CAN :</p>
     <div class="sports" id="pickList"></div>
   </section>
 
@@ -329,10 +329,10 @@ const SPORT_COLORS = { foot: '#2ecc71', rugby: '#ff8a3d', basket: '#ff6b1a', f1:
 const TIME = 20;
 const FOOT_PLAN = [0, 10, 20, 25, 25, 20]; // Spécial Foot : questions par niveau 1→5 (100)
 const HARD = { hard: null, hardfoot: 'foot', hardrugby: 'rugby', hardbasket: 'basket', hardtennis: 'tennis', hardf1: 'f1', hardvelo: 'velo',
-               hardfr: 'fr', hardes: 'es', harduk: 'uk', hardde: 'de', hardit: 'it', hardwc: 'wc' }; // modes 1 vie, niveaux 4-5, sans fin (null = tous les sports)
-const HARD_PAYS = ['fr', 'es', 'uk', 'de', 'it', 'wc']; // Hardcore par pays (et Mondial) : questions de l'Aventure de niveau 4-5 (clubs : étapes 7-10, Mondial : demies et finale)
+               hardfr: 'fr', hardes: 'es', harduk: 'uk', hardde: 'de', hardit: 'it', hardwc: 'wc', hardcan: 'can' }; // modes 1 vie, niveaux 4-5, sans fin (null = tous les sports)
+const HARD_PAYS = ['fr', 'es', 'uk', 'de', 'it', 'wc', 'can']; // Hardcore par pays, Mondial et CAN : questions de l'Aventure de niveau 4-5 (clubs : étapes 7-10, éditions : étapes 4-5)
 const NAMES = { foot: 'Spécial Foot', hardfr: 'Hardcore France', hardes: 'Hardcore Espagne', harduk: 'Hardcore Royaume-Uni',
-                hardde: 'Hardcore Allemagne', hardit: 'Hardcore Italie', hardwc: 'Hardcore Coupe du monde', hard: 'Hardcore Tous sports', hardfoot: 'Hardcore Foot', hardrugby: 'Hardcore Rugby',
+                hardde: 'Hardcore Allemagne', hardit: 'Hardcore Italie', hardwc: 'Hardcore Coupe du monde', hardcan: 'Hardcore CAN', hard: 'Hardcore Tous sports', hardfoot: 'Hardcore Foot', hardrugby: 'Hardcore Rugby',
                 hardbasket: 'Hardcore Basket', hardtennis: 'Hardcore Tennis', hardf1: 'Hardcore Sport auto', hardvelo: 'Hardcore Cyclisme', adv: 'Aventure' };
 // Aventure : 10 étapes par sport (2 par niveau), 5 questions, 4 bonnes réponses pour passer
 // Aventure : 10 étapes par club (clubs.js, France, Espagne, Royaume-Uni, Allemagne, Italie), de la période la plus récente (1) aux années 1990 (10) ;
@@ -372,7 +372,7 @@ function buildDeck(m) {
   const out = [];
   if (m in HARD) { // questions niveau 4-5, jamais vues d'abord ; marquées vues quand posées
     const pool = HARD_PAYS.includes(HARD[m])
-      ? Object.entries(CLUBS).filter(([, c]) => c.pays === HARD[m]).flatMap(([id, c]) => c.q.map(q => [id, [HARD[m] === 'wc' ? q[0] : Math.ceil(q[0] / 2), ...q.slice(1)]]))
+      ? Object.entries(CLUBS).filter(([, c]) => c.pays === HARD[m]).flatMap(([id, c]) => c.q.map(q => [id, [LANDS[HARD[m]].ed ? q[0] : Math.ceil(q[0] / 2), ...q.slice(1)]]))
           .filter(e => e[1][0] >= 4)
       : Object.entries(QUESTIONS).filter(([s]) => !HARD[m] || s === HARD[m]).flatMap(([s, qs]) => qs.filter(q => q[0] >= 4).map(q => [s, q]));
     let fresh = pool.filter(x => !seen.has(x[1][1]));
@@ -848,6 +848,7 @@ const BADGES = [
   ['hardde', 'de', 'Kaiser', '15 bonnes réponses d’affilée en Hardcore Allemagne'],
   ['hardit', 'it', 'Capitano', '15 bonnes réponses d’affilée en Hardcore Italie'],
   ['hardwc', '🏆', 'Roi du Mondial', '15 bonnes réponses d’affilée en Hardcore Coupe du monde'],
+  ['hardcan', '⭐', 'Étoile d’Afrique', '15 bonnes réponses d’affilée en Hardcore CAN'],
 ];
 // Badges des Hardcore retirés de l'accueil (autres sports) : gardés pour unlock() mais plus affichés ni comptés
 const HIDDEN = new Set(['hard', 'hardrugby', 'hardbasket', 'hardtennis', 'hardf1', 'hardvelo', 'allround']);
@@ -1014,7 +1015,7 @@ const RULES = {
     'À chaque niveau, un tiers de foot général, un tiers de questions sur les clubs des cinq pays de l’Aventure et un tiers sur les Coupes du monde.',
     '3 vies : une erreur coûte une vie et 50 points × le niveau.', '20 secondes par question.',
     'Une bonne réponse rapporte jusqu’à 100 points × le niveau (la moitié si tu réponds au dernier moment).']],
-  hard: ['💀 Hardcore', ['Questions de foot Expert et Légende sans fin : tout le foot, les clubs d’un pays (France, Espagne, Royaume-Uni, Allemagne, Italie) ou la Coupe du monde.',
+  hard: ['💀 Hardcore', ['Questions de foot Expert et Légende sans fin : tout le foot, les clubs d’un pays (France, Espagne, Royaume-Uni, Allemagne, Italie), la Coupe du monde ou la CAN.',
     '1 seule vie : la première erreur arrête tout.', '20 secondes par question.',
     'La vitesse paie double : jusqu’à 200 points × le niveau si tu réponds tout de suite, 20 % au dernier moment.']],
   adv: ['🗺️ Aventure', ['Choisis un pays (France, Espagne, Royaume-Uni, Allemagne ou Italie), touche une ville sur sa carte, puis choisis un club.',
