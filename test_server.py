@@ -40,6 +40,12 @@ print('ok hard')
 assert call('/api/scores', {'name': 'Max', 'mode': 'hardrugby', 'score': 2000, 'good': 5})[0] == 200
 assert call('/api/scores?mode=hardfoot') == (200, [])
 assert call('/api/scores', {'name': 'Max', 'mode': 'hardit', 'score': 2500, 'good': 4})[0] == 200  # Hardcore par pays
+assert call('/api/scores', {'name': 'Ève Lu', 'mode': 'hardes', 'score': 900, 'good': 3})[0] == 200
+assert call('/api/scores', {'name': 'eve-lu', 'mode': 'hardes', 'score': 500, 'good': 2})[0] == 200   # même pseudo, moins bien : gardé
+rows = call('/api/scores', {'name': 'EVE LU', 'mode': 'hardes', 'score': 1200, 'good': 4})[1]     # même pseudo, mieux : remplace
+assert [(r['name'], r['score']) for r in rows] == [('EVE LU', 1200)]                           # une seule ligne par pseudo
+assert call('/api/scores', {'name': '!!!', 'mode': 'hardes', 'score': 1, 'good': 0})[0] == 400
+assert server.dedupe(d := {'foot': {'léa': {'name': 'Léa', 'score': 5, 'date': 1}, 'lea': {'name': 'lea', 'score': 9, 'date': 2}}}) and list(d['foot'].values())[0]['score'] == 9
 print('ok hardcore')
 assert call('/api/scores', {'name': 'Max', 'mode': 'hardbasket', 'score': 3000, 'good': 6})[0] == 200
 assert call('/api/scores?mode=hardbasket')[1][0]['name'] == 'Max'

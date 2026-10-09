@@ -808,6 +808,11 @@ const BADGES = [
   ['hardtennis', '🎾', 'Grand Chelem', '15 bonnes réponses d’affilée en Hardcore Tennis'],
   ['hardf1', '🏎️', 'Pole position', '15 bonnes réponses d’affilée en Hardcore Sport auto'],
   ['hardvelo', '🚴', 'Roi de la montagne', '15 bonnes réponses d’affilée en Hardcore Cyclisme'],
+  ['hardfr', 'fr', 'Coq d’or', '15 bonnes réponses d’affilée en Hardcore France'],
+  ['hardes', 'es', 'Pichichi', '15 bonnes réponses d’affilée en Hardcore Espagne'],
+  ['harduk', 'uk', 'Roi d’Albion', '15 bonnes réponses d’affilée en Hardcore Royaume-Uni'],
+  ['hardde', 'de', 'Kaiser', '15 bonnes réponses d’affilée en Hardcore Allemagne'],
+  ['hardit', 'it', 'Capitano', '15 bonnes réponses d’affilée en Hardcore Italie'],
 ];
 // Badges des Hardcore retirés de l'accueil (autres sports) : gardés pour unlock() mais plus affichés ni comptés
 const HIDDEN = new Set(['hard', 'hardrugby', 'hardbasket', 'hardtennis', 'hardf1', 'hardvelo', 'allround']);
@@ -914,9 +919,11 @@ function refreshProfile() {
 $('goProfile').onclick = () => { refreshProfile(); show('profile'); };
 
 /* ---------- Classements ---------- */
+// Même clé que name_key() côté serveur : « Léa » et « lea » sont le même pseudo
+const nameKey = s => s.normalize('NFKD').toLowerCase().replace(/[^\p{L}\p{N}]/gu, '');
 function renderBoard(rows, table, me, m) {
   table.innerHTML = rows.length ? rows.map((r, i) =>
-    `<tr class="${me && r.name.toLowerCase() === me.toLowerCase() ? 'me' : ''}"><td>${['🥇', '🥈', '🥉'][i] || i + 1}</td>` +
+    `<tr class="${me && nameKey(r.name) === nameKey(me) ? 'me' : ''}"><td>${['🥇', '🥈', '🥉'][i] || i + 1}</td>` +
     `<td>${esc(r.name)} <small style="color:var(--dim)">${r.good} ✔</small></td><td>${r.score}</td></tr>`).join('')
     : '<tr><td colspan="3" class="empty">Personne pour l\'instant… à toi de jouer !</td></tr>';
 }
@@ -938,12 +945,12 @@ async function sendScore(name) {
   saved = true; // bloque les clics répétés pendant l'envoi
   try {
     const r = await fetch('api/scores', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, mode, score, good, code: prof && name.toLowerCase() === prof.name.toLowerCase() ? prof.code : undefined }) });
+      body: JSON.stringify({ name, mode, score, good, code: prof && nameKey(name) === nameKey(prof.name) ? prof.code : undefined }) });
     if (r.status === 403 || r.status === 429) { saved = false; $('saveMsg').textContent = 'Ce pseudo est protégé par un code : retrouve ton profil (en haut à droite de l’accueil) ou choisis un autre pseudo.'; return; }
     if (!r.ok) throw 0;
     if (!GC) store('quiz-pseudo', name);
     const rows = await r.json();
-    const rank = rows.findIndex(x => x.name.toLowerCase() === name.toLowerCase()) + 1;
+    const rank = rows.findIndex(x => nameKey(x.name) === nameKey(name)) + 1;
     $('saveMsg').textContent = rank ? `Enregistré ! Tu es ${rank === 1 ? '1er 🏆' : rank + 'e'} au classement.` : 'Enregistré ! (ton meilleur score est gardé)';
     $('saveForm').classList.add('hidden');
     renderBoard(rows, $('endBoard'), name, mode);

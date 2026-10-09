@@ -5,6 +5,7 @@ import os
 import secrets
 import threading
 import time
+import unicodedata
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
@@ -21,7 +22,7 @@ MAX_GOOD = {'foot': 100, 'multi': 15, 'hard': 400, 'hardfoot': 400, 'hardrugby':
 PROFILES = os.environ.get('QUIZ_PROFILES', os.path.join(os.path.dirname(DB), 'profiles.json'))
 CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'  # sans 0/O ni 1/I, faciles à confondre
 BADGES = {'first', 'perfect', 'reflex', 'streak', 'supporter', 'tour', 'liga', 'albion', 'bundes', 'calcio', 'globe', 'marathon', 'multi', 'beast', 'allround',
-          'footscore', 'multiscore', 'hard', 'hardfoot', 'hardrugby', 'hardbasket', 'hardtennis', 'hardf1', 'hardvelo', 'mondial', 'memoire'}
+          'footscore', 'multiscore', 'hard', 'hardfoot', 'hardrugby', 'hardbasket', 'hardtennis', 'hardf1', 'hardvelo', 'mondial', 'memoire', 'hardfr', 'hardes', 'harduk', 'hardde', 'hardit'}
 MAX_FAILS, LOCK_SECONDS = 8, 15 * 60          # 8 codes faux d'affilée → pseudo bloqué 15 min
 fails = {}                                    # pseudo → (codes faux d'affilée, bloqué jusqu'à)
 # ponytail: global lock + whole-file JSON rewrite and client-trusted scores, fine for friends; SQLite + server-side scoring if it goes public
@@ -46,6 +47,27 @@ def save(db, path=DB):
 
 def clean_name(v):
     return ' '.join(str(v or '').split())[:16]
+
+
+def name_key(name):
+    """Clé unique d'un pseudo : sans casse, accents, espaces ni ponctuation (« Léa », « lea » et « L.E.A » = une seule place)."""
+    s = unicodedata.normalize('NFKD', name).casefold()
+    return ''.join(c for c in s if c.isalnum())
+
+
+def dedupe(db):
+    """Fusionne les entrées d'un même pseudo (clés d'avant name_key), en gardant le meilleur score. Renvoie True si modifié."""
+    changed = False
+    for mode, board in db.items():
+        merged = {}
+        for p in board.values():
+            k = name_key(p['name'])
+            if k not in merged or p['score'] > merged[k]['score']:
+                merged[k] = p
+        if merged.keys() != board.keys():
+            db[mode] = merged
+            changed = True
+    return changed
 
 
 def hash_code(salt, code):
@@ -126,11 +148,11 @@ class Handler(BaseHTTPRequestHandler):
             score = int(d.get('score', -1))
             good = int(d.get('good', 0))
             mode = d.get('mode')
-            if not name or mode not in MAX_SCORE or not 0 <= score <= MAX_SCORE[mode] or not 0 <= good <= MAX_GOOD[mode]:
+            if not name_key(name) or mode not in MAX_SCORE or not 0 <= score <= MAX_SCORE[mode] or not 0 <= good <= MAX_GOOD[mode]:
                 raise ValueError
         except (ValueError, TypeError, AttributeError):
             return self.send(400, {'error': 'requête invalide'})
-        key = name.lower()
+        key = name_key(name)
         with lock:
             profile = load(PROFILES).get(key)
             if profile:  # pseudo protégé : il faut son code
@@ -151,11 +173,11 @@ class Handler(BaseHTTPRequestHandler):
         try:
             d = self.body()
             name = clean_name(d.get('name'))
-            if not name:
+            if not name_key(name):
                 raise ValueError
         except (ValueError, TypeError, AttributeError):
             return self.send(400, {'error': 'requête invalide'})
-        key = name.lower()
+        key = name_key(name)
         with lock:
             profiles = load(PROFILES)
             p = profiles.get(key)
@@ -182,4 +204,9 @@ class Handler(BaseHTTPRequestHandler):
 
 
 if __name__ == '__main__':
+    db, profiles = load(), load(PROFILES)  # anciennes clés (minuscules seulement) → name_key
+    if dedupe(db):
+        save(db)
+    if any(k != name_key(p['name']) for k, p in profiles.items()):
+        save({name_key(p['name']): p for p in profiles.values()}, PROFILES)
     ThreadingHTTPServer(('', int(os.environ.get('PORT', 8000))), Handler).serve_forever()
