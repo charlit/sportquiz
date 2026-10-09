@@ -227,6 +227,7 @@
     <div class="head"><button class="back" data-back="home">← Accueil</button><h2>Mon profil</h2></div>
     <div class="who"><span class="avatar" id="whoAvatar">👤</span><span><strong id="whoName"></strong><small id="whoCount"></small></span></div>
     <button class="rankbtn" id="goBadges">🏅 Mes badges <small id="badgesCount"></small></button>
+    <a class="rankbtn" id="contact" style="font-size:1rem;text-align:center;text-decoration:none;color:inherit">✉️ Signaler un bug ou proposer une idée</a>
     <div class="card hidden" id="account">
       <div id="accNew">
         <h2>💾 Garde tes badges</h2>
@@ -964,6 +965,10 @@ function refreshProfile() {
 }
 $('goProfile').onclick = () => { refreshProfile(); show('profile'); };
 $('goBadges').onclick = () => { refreshProfile(); show('badges'); };
+// Contact : ouvre l'app mail avec l'objet et l'appareil pré-remplis
+const CONTACT = 'sportquiz64@gmail.com';
+$('contact').href = `mailto:${CONTACT}?subject=${encodeURIComponent('Sport Quiz : bug / suggestion')}&body=${encodeURIComponent(
+  `Bonjour,\n\n(Décris le bug ou ton idée ici)\n\n---\nAppareil : ${navigator.userAgent}\nVersion : ${GC ? 'app iOS' : 'site web'}`)}`;
 
 /* ---------- Classements ---------- */
 // Même clé que name_key() côté serveur : « Léa » et « lea » sont le même pseudo
