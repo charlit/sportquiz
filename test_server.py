@@ -39,6 +39,7 @@ assert call('/api/scores', {'name': 'Max', 'mode': 'hard', 'score': 9999999, 'go
 print('ok hard')
 assert call('/api/scores', {'name': 'Max', 'mode': 'hardrugby', 'score': 2000, 'good': 5})[0] == 200
 assert call('/api/scores?mode=hardfoot') == (200, [])
+assert call('/api/scores', {'name': 'Max', 'mode': 'hardit', 'score': 2500, 'good': 4})[0] == 200  # Hardcore par pays
 print('ok hardcore')
 assert call('/api/scores', {'name': 'Max', 'mode': 'hardbasket', 'score': 3000, 'good': 6})[0] == 200
 assert call('/api/scores?mode=hardbasket')[1][0]['name'] == 'Max'
@@ -74,6 +75,11 @@ st, p = call('/api/profile/sync', {'name': 'ZOÉ', 'code': code.lower().replace(
 assert st == 200 and p['name'] == 'Zoé' and p['badges'] == {'first': 1700000000, 'reflex': 1750000000, 'globe': 1760000000}  # fusion, date la plus ancienne
 assert call('/api/profile/sync', {'name': 'Personne', 'code': code})[0] == 404
 # pseudo protégé au classement
+for i in range(105):
+    call('/api/scores', {'name': f'J{i}', 'mode': 'hardfoot', 'score': 10 + i, 'good': 1})
+rows = call('/api/scores?mode=hardfoot')[1]
+assert len(rows) == 100 and rows[0]['name'] == 'J104'   # classement : les 100 premiers
+print('ok top 100')
 assert call('/api/scores', {'name': 'Zoé', 'mode': 'foot', 'score': 100, 'good': 1})[0] == 403
 assert call('/api/scores', {'name': 'Zoé', 'mode': 'foot', 'score': 100, 'good': 1, 'code': code})[0] == 200
 # trop de codes faux : bloqué, même avec le bon code
