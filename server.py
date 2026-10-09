@@ -12,7 +12,7 @@ DB = os.environ.get('QUIZ_DB', os.path.join(ROOT, 'data', 'scores.json'))
 FILES = {'/': ('index.html', 'text/html; charset=utf-8'),
          '/index.html': ('index.html', 'text/html; charset=utf-8'),
          '/questions.json': ('questions.json', 'application/json; charset=utf-8')}
-# questions.json (questions par sport ; l'app iOS le télécharge aussi depuis GitHub) et clubs.json (Aventure Ligue 1)
+# questions.json (questions par sport ; l'app iOS le télécharge aussi depuis GitHub) et clubs.json (Aventure, clubs de cinq pays)
 # sont les seules sources ; la page les reçoit sous forme de script pour rester synchrone au chargement.
 DATA_JS = {'/questions.js': ('QUESTIONS', 'questions.json'), '/clubs.js': ('CLUBS', 'clubs.json')}
 MAX_SCORE = {'foot': 32_500, 'multi': 4500, 'hard': 400_000, 'hardfoot': 400_000, 'hardrugby': 400_000, 'hardbasket': 400_000, 'hardtennis': 400_000, 'hardf1': 400_000, 'hardvelo': 400_000}  # foot 100 questions (FOOT_PLAN : 100 × (10×1 + 20×2 + 25×3 + 25×4 + 20×5)) / multi 15, max niveau*100 pts ; hard* = sans fin
@@ -20,7 +20,7 @@ MAX_GOOD = {'foot': 100, 'multi': 15, 'hard': 400, 'hardfoot': 400, 'hardrugby':
 # Profils web : pseudo + code secret pour retrouver ses badges sur un autre appareil (l'app iOS utilise Game Center).
 PROFILES = os.environ.get('QUIZ_PROFILES', os.path.join(os.path.dirname(DB), 'profiles.json'))
 CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'  # sans 0/O ni 1/I, faciles à confondre
-BADGES = {'first', 'perfect', 'reflex', 'streak', 'supporter', 'tour', 'liga', 'albion', 'globe', 'marathon', 'multi', 'beast', 'allround',
+BADGES = {'first', 'perfect', 'reflex', 'streak', 'supporter', 'tour', 'liga', 'albion', 'bundes', 'calcio', 'globe', 'marathon', 'multi', 'beast', 'allround',
           'footscore', 'multiscore', 'hard', 'hardfoot', 'hardrugby', 'hardbasket', 'hardtennis', 'hardf1', 'hardvelo'}
 MAX_FAILS, LOCK_SECONDS = 8, 15 * 60          # 8 codes faux d'affilée → pseudo bloqué 15 min
 fails = {}                                    # pseudo → (codes faux d'affilée, bloqué jusqu'à)
