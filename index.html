@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Sport Quiz</title>
+<title>Football Quiz</title>
 <style>
   :root { --bg:#0a1220; --card:#131d30; --card2:#1a2740; --line:#26365a; --txt:#eef2fb; --dim:#97a6c4;
           --acc:#ffd23f; --ok:#2ecc71; --ko:#ff5a4f; }
@@ -200,7 +200,7 @@
 <main>
   <section id="home">
     <div class="topbar"><button class="profbtn" id="goProfile" aria-label="Mon profil et mes badges"><span class="avatar" id="profAvatar">👤</span><small id="profCount"></small></button></div>
-    <div class="logo">Sport <span>Quiz</span></div>
+    <div class="logo">Football <span>Quiz</span></div>
     <p class="sub">Des questions de plus en plus dures. Réponds vite pour gagner plus !</p>
     <div class="tiles">
       <div class="tw"><button class="tile c-foot" data-mode="foot"><b>⚽</b><strong>Spécial Foot</strong><small>100 questions, 3 vies</small></button>
@@ -637,8 +637,13 @@ const LABEL_POS = { Nice: 'left', Strasbourg: 'left', Lens: 'left', Monaco: 'top
   Gelsenkirchen: 'top', Mönchengladbach: 'left', Milan: 'left', Turin: 'bottom',
   // Mondial : [dx, dy, ancrage] = étiquette déportée avec un trait (Europe trop serrée), ou côté simple
   Angleterre: [-14, -2, 'end'], France: [-18, 8, 'end'], Espagne: [-14, 10, 'end'], Suisse: [-6, 22, 'middle'], Italie: [10, 14, 'start'],
-  Allemagne: [-8, -18, 'end'], Suède: 'top', 'Corée / Japon': 'left', Argentine: 'top', Chili: 'left' };
+  Allemagne: [-16, -18, 'end'], Suède: 'top', 'Corée / Japon': 'left', Argentine: 'top', Chili: 'left' };
 const LABEL_SHORT = { Mönchengladbach: 'Gladbach' }; // nom trop long pour la carte
+// Mondial : drapeau des pays organisateurs (carte et liste des éditions)
+const FLAGS = { Qatar: '🇶🇦', Russie: '🇷🇺', Brésil: '🇧🇷', 'Afrique du Sud': '🇿🇦', Allemagne: '🇩🇪', 'Corée / Japon': '🇰🇷🇯🇵', France: '🇫🇷',
+  'États-Unis': '🇺🇸', Italie: '🇮🇹', Mexique: '🇲🇽', Espagne: '🇪🇸', Argentine: '🇦🇷', Angleterre: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', Chili: '🇨🇱', Suède: '🇸🇪', Suisse: '🇨🇭',
+  Uruguay: '🇺🇾' };
+const place = (ville, l) => l === 'wc' && FLAGS[ville] ? `${FLAGS[ville]} ${ville}` : ville;
 
 // Menu de l'Aventure : un pays (ou le Mondial) par carte, avec la progression
 function openLands() {
@@ -672,7 +677,7 @@ function openClubs() {
       const pos = LABEL_POS[ville] || 'right', r = L.r || 5, o = r + 3;
       const [tx, ty, anchor] = Array.isArray(pos) ? [+x + pos[0], +y + pos[1], pos[2]] : pos === 'left' ? [x - o, +y + 3, 'end'] :
         pos === 'top' ? [x, y - o, 'middle'] : pos === 'bottom' ? [x, +y + o + 7, 'middle'] : [+x + o, +y + 3, 'start'];
-      const label = (LABEL_SHORT[ville] || ville) + (cl.length > 1 ? ` (${cl.length})` : '');
+      const label = place(LABEL_SHORT[ville] || ville, advLand) + (cl.length > 1 ? ` (${cl.length})` : '');
       return `<g class="city${done ? ' done' : ''}${cityFilter === ville ? ' on' : ''}" data-ville="${esc(ville)}" tabindex="0" role="button" aria-pressed="${cityFilter === ville}" aria-label="${esc(label)}">` +
         (Array.isArray(pos) ? `<line x1="${x}" y1="${y}" x2="${tx}" y2="${ty - 3}"/>` : '') +
         `<circle cx="${x}" cy="${y}" r="${r}"/><text x="${tx}" y="${ty}" text-anchor="${anchor}">${esc(label)}</text></g>`;
@@ -687,10 +692,10 @@ function openClubs() {
     if (cityFilter) $('clubList').scrollIntoView({ behavior: 'smooth', block: 'nearest' }); // sur téléphone, la liste est sous la carte
   });
   $('cityChip').classList.toggle('hidden', !cityFilter);
-  $('cityChip').textContent = cityFilter ? `📍 ${cityFilter} ✕` : '';
+  $('cityChip').textContent = cityFilter ? `${advLand === 'wc' ? '' : '📍 '}${place(cityFilter, advLand)} ✕` : '';
   $('clubList').innerHTML = ids.filter(id => CLUBS[id].ville === cityFilter).map(id => {   // rien tant qu'aucune ville n'est touchée
     const c = CLUBS[id], d = advDone[id] || 0, n = stagesOf(id);
-    return `<button class="sport" data-id="${id}" style="--c:${c.couleur}"><strong>${esc(c.nom)}</strong><small>📍 ${esc(c.ville)} · ` +
+    return `<button class="sport" data-id="${id}" style="--c:${c.couleur}"><strong>${esc(c.nom)}</strong><small>${advLand === 'wc' ? '' : '📍 '}${esc(place(c.ville, advLand))} · ` +
            `${d >= n ? '🏆 Terminé !' : `Étape ${d + 1} / ${n}`}</small><div class="meter"><i style="width:${d / n * 100}%"></i></div></button>`;
   }).join('');
   $('clubList').querySelectorAll('.sport').forEach(b => b.onclick = () => openAdv(b.dataset.id));
