@@ -185,7 +185,7 @@
              border-radius:12px; border:2px dashed var(--acc); color:var(--acc); }
   .linkbtn { border:0; background:none; color:var(--acc); text-decoration:underline; cursor:pointer; padding:4px 0; }
   .accmsg { color:var(--ko) !important; min-height:1.2em; }
-  #toast { position:fixed; left:50%; top:max(16px, env(safe-area-inset-top)); z-index:50; transform:translate(-50%, -150%);
+  #toast { position:fixed; left:50%; top:max(16px, env(safe-area-inset-top)); z-index:50; transform:translate(-50%, calc(-100% - 120px)); /* caché bien au-dessus de l'écran, même sous l'encoche */
            display:flex; align-items:center; gap:10px; padding:10px 16px; border-radius:999px; pointer-events:none; white-space:nowrap;
            background:var(--acc); color:#111; font-weight:800; box-shadow:0 10px 30px -8px #000; transition:transform .35s; }
   #toast.on { transform:translate(-50%, 0); }
@@ -1061,7 +1061,7 @@ document.querySelectorAll('[data-flag]').forEach(b => b.innerHTML = flag(b.datas
 // Règles de chaque mode, affichées par le bouton ⓘ de sa tuile
 const RULES = {
   foot: ['⚽ Spécial Foot', ['100 questions de plus en plus dures : 10 faciles, puis Moyen, Difficile, Expert et 20 en Légende.',
-    'À chaque niveau, un tiers de foot général, un tiers de questions sur les clubs des cinq pays de l’Aventure et un tiers sur les Coupes du monde.',
+    'À chaque niveau, un tiers de foot général, un tiers de questions sur les clubs des cinq pays de l’Aventure et un tiers sur les Coupes du monde et la CAN.',
     '3 vies : une erreur coûte une vie et 50 points × le niveau.', '20 secondes par question.',
     'Une bonne réponse rapporte jusqu’à 100 points × le niveau (la moitié si tu réponds au dernier moment).']],
   hard: ['💀 Hardcore', ['Questions de foot Expert et Légende sans fin : tout le foot, les clubs d’un pays (France, Espagne, Royaume-Uni, Allemagne, Italie), la Coupe du monde ou la CAN.',
