@@ -336,7 +336,7 @@ const NAMES = { foot: 'Spécial Foot', hardfr: 'Hardcore France', hardes: 'Hardc
                 hardbasket: 'Hardcore Basket', hardtennis: 'Hardcore Tennis', hardf1: 'Hardcore Sport auto', hardvelo: 'Hardcore Cyclisme', adv: 'Aventure' };
 // Aventure : 10 étapes par sport (2 par niveau), 5 questions, 4 bonnes réponses pour passer
 // Aventure : 10 étapes par club (clubs.js, France, Espagne, Royaume-Uni, Allemagne, Italie), de la période la plus récente (1) aux années 1990 (10) ;
-// onglet Mondial : une Coupe du monde par « club » (1930-2022), 5 étapes de la phase de groupes à la finale (voir LANDS.wc).
+// onglet Mondial : une Coupe du monde par « club » (1978-2022), 5 étapes de la phase de groupes à la finale (voir LANDS.wc).
 // 5 questions par étape, 4 bonnes réponses pour passer.
 const STAGES = 10, PER_STAGE = 5, NEED = 4;
 const ERAS = ['', '2024-2026', '2021-2023', '2018-2020', '2015-2017', '2012-2014', '2009-2011', '2006-2008', '2003-2005', '2000-2002', '1996-1999'];
@@ -730,7 +730,7 @@ function openClubs() {
   $('landInfo').textContent = advLand === 'can'
     ? `Revis les ${ids.length} Coupes d’Afrique des nations, de 2000 à 2025 : 5 étapes par édition, de la phase de groupes à la finale. Toutes les éditions sont listées sous la carte ; touche un pays organisateur pour ne garder que les siennes.`
     : advLand === 'wc'
-    ? `Revis les ${ids.length} Coupes du monde, de 1930 à 2022 : 5 étapes par édition, de la phase de groupes à la finale. Toutes les éditions sont listées sous la carte ; touche un pays organisateur pour ne garder que les siennes.`
+    ? `Revis les ${ids.length} Coupes du monde, de 1978 à 2022 : 5 étapes par édition, de la phase de groupes à la finale. Toutes les éditions sont listées sous la carte ; touche un pays organisateur pour ne garder que les siennes.`
     : `Fais le tour des ${ids.length} clubs ${L.de} : 10 étapes par club, des dernières saisons jusqu'aux années 1990. Tous les clubs sont listés sous la carte ; touche une ville pour ne garder que les siens.`;
   $('frMap').setAttribute('viewBox', L.box);
   $('frMap').classList.toggle('world', advLand === 'wc');
@@ -828,7 +828,7 @@ const BADGES = [
   ['calcio', 'it', 'Giro des clubs', 'Finir les 10 clubs italiens de l’Aventure'],
   ['globe', '🌍', 'Globe-trotter', 'Finir un club dans chacun des cinq pays de l’Aventure'],
   ['mondial', '🏆', 'Champion du monde', 'Finir les 5 étapes d’une Coupe du monde de l’Aventure'],
-  ['memoire', '📚', 'Mémoire du Mondial', 'Finir les 22 Coupes du monde de l’Aventure'],
+  ['memoire', '📚', 'Mémoire du Mondial', 'Finir les 12 Coupes du monde de l’Aventure'],
   ['can', '🦁', 'Lion d’Afrique', 'Finir les 5 étapes d’une CAN de l’Aventure'],
   ['canall', '📜', 'Mémoire de la CAN', 'Finir les 14 CAN de l’Aventure'],
   ['marathon', '🏃', 'Marathon', 'Aller au bout des 100 questions du Spécial Foot'],
@@ -1019,7 +1019,7 @@ const RULES = {
     'La vitesse paie double : jusqu’à 200 points × le niveau si tu réponds tout de suite, 20 % au dernier moment.']],
   adv: ['🗺️ Aventure', ['Choisis un pays (France, Espagne, Royaume-Uni, Allemagne ou Italie), touche une ville sur sa carte, puis choisis un club.',
     '10 étapes par club : la 1re porte sur les saisons 2024-2026, la 10e sur les années 1996-1999.',
-    'Mondial : les 22 Coupes du monde de 1930 à 2022, 5 étapes chacune, de la phase de groupes à la finale (de plus en plus dur).',
+    'Mondial : les 12 Coupes du monde de 1978 à 2022, 5 étapes chacune, de la phase de groupes à la finale (de plus en plus dur).',
     'Coupe d’Afrique : les 14 CAN de 2000 à 2025, 5 étapes chacune, sur le même principe.',
     '5 questions par étape : il faut au moins 4 bonnes réponses pour débloquer l’étape suivante.',
     '20 secondes par question.', 'Ta progression est gardée sur cet appareil.']],
