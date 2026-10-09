@@ -226,7 +226,7 @@
   <section id="profile" class="hidden">
     <div class="head"><button class="back" data-back="home">← Accueil</button><h2>Mon profil</h2></div>
     <div class="who"><span class="avatar" id="whoAvatar">👤</span><span><strong id="whoName"></strong><small id="whoCount"></small></span></div>
-    <div class="trophies" id="trophies"></div>
+    <button class="rankbtn" id="goBadges">🏅 Mes badges <small id="badgesCount"></small></button>
     <div class="card hidden" id="account">
       <div id="accNew">
         <h2>💾 Garde tes badges</h2>
@@ -245,6 +245,12 @@
         <button class="linkbtn" id="logout" type="button">Se déconnecter de cet appareil</button>
       </div>
     </div>
+  </section>
+
+  <section id="badges" class="hidden">
+    <div class="head"><button class="back" data-back="profile">← Profil</button><h2>🏅 Mes badges</h2></div>
+    <p class="advinfo" id="badgesInfo"></p>
+    <div class="trophies" id="trophies"></div>
   </section>
 
   <section id="ranks" class="hidden">
@@ -343,7 +349,7 @@ const ERAS = ['', '2024-2026', '2021-2023', '2018-2020', '2015-2017', '2012-2014
 const stageLevel = k => Math.ceil(k * 5 / stagesOf(advClub)); // difficulté (points) : clubs, étapes 1-2 → niveau 1 … 9-10 → niveau 5 ; Mondial, étape = niveau
 const $ = id => document.getElementById(id);
 const shuffle = a => { a = [...a]; for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
-const SCREENS = ['home', 'profile', 'ranks', 'pick', 'lands', 'clubs', 'adv', 'quiz', 'end', 'advEnd'];
+const SCREENS = ['home', 'profile', 'badges', 'ranks', 'pick', 'lands', 'clubs', 'adv', 'quiz', 'end', 'advEnd'];
 const show = id => { SCREENS.forEach(s => $(s).classList.toggle('hidden', s !== id)); scrollTo(0, 0); };
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
 const store = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} };
@@ -948,6 +954,8 @@ function refreshProfile() {
   $('profAvatar').dataset.tier = $('whoAvatar').dataset.tier = tier ? tier[1] : '';
   $('whoCount').textContent = `${n} badge${n > 1 ? 's' : ''} sur ${SHOWN.length}` + (tier ? ` · encart ${tier[2]}` : '') +
     (next ? ` · encore ${next[0] - n} pour l’encart ${next[2]}` : '') + (!name && GC ? ' · connecte-toi à Game Center' : '');
+  $('badgesCount').textContent = `· ${n} / ${SHOWN.length}`;
+  $('badgesInfo').textContent = `${n} badge${n > 1 ? 's' : ''} gagné${n > 1 ? 's' : ''} sur ${SHOWN.length}` + (next ? ` · encore ${next[0] - n} pour l’encart ${next[2]}` : '');
   $('trophies').innerHTML = SHOWN.map(([id, icon, title, how]) => {
     const d = earned[id];
     return `<div class="trophy${d ? '' : ' lock'}"><b>${flag(icon)}</b><strong>${esc(title)}</strong><small>${esc(how)}</small>` +
@@ -955,6 +963,7 @@ function refreshProfile() {
   }).join('');
 }
 $('goProfile').onclick = () => { refreshProfile(); show('profile'); };
+$('goBadges').onclick = () => { refreshProfile(); show('badges'); };
 
 /* ---------- Classements ---------- */
 // Même clé que name_key() côté serveur : « Léa » et « lea » sont le même pseudo
