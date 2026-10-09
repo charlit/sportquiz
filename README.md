@@ -15,6 +15,8 @@ QCM de sport : 15 questions de plus en plus difficiles (5 niveaux), 20 s par que
   les embarque et télécharge en arrière-plan la dernière version depuis GitHub (`main`) : **une question poussée sur `main` arrive
   dans l'app sans republier sur l'App Store** (à la partie suivante, ou au lancement suivant).
 - `server.py` (Python, stdlib) sert le jeu + `api/scores` ; scores dans `data/scores.json`
+- Page **`/admin`** (joueurs du site, dernière partie, badges, meilleurs scores, joueurs par mode) : identifiant `admin`,
+  mot de passe dans la variable d'environnement `QUIZ_ADMIN_PASSWORD` (sans elle, la page n'existe pas).
 
 ## Local
 
@@ -26,6 +28,6 @@ python test_server.py   # self-check
 ## Mac mini
 
 ```bash
-docker run -d --name sportquiz --restart unless-stopped -p 8089:8000 -v ~/sportquiz:/app -w /app python:3.12-alpine python server.py
+docker run -d --name sportquiz --restart unless-stopped -p 8089:8000 -e QUIZ_ADMIN_PASSWORD='…' -v ~/sportquiz:/app -w /app python:3.12-alpine python server.py
 ```
 Caddy : `handle_path /quiz/* { reverse_proxy host.docker.internal:8089 }`

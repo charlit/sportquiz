@@ -6,6 +6,7 @@ import urllib.error
 import urllib.request
 
 os.environ['QUIZ_DB'] = os.path.join(tempfile.mkdtemp(), 'scores.json')
+os.environ['QUIZ_ADMIN_PASSWORD'] = 'secret-test'
 import server  # noqa: E402
 
 srv = server.ThreadingHTTPServer(('127.0.0.1', 0), server.Handler)
@@ -110,3 +111,26 @@ for _ in range(server.MAX_FAILS):
 assert call('/api/profile/sync', {'name': 'Zoé', 'code': code})[0] == 429
 print('ok profils')
 
+# Page admin : HTTP Basic (admin + QUIZ_ADMIN_PASSWORD), échappe les pseudos, se bloque après trop d'erreurs
+import base64  # noqa: E402
+
+
+def admin(pw=None):
+    h = {'Authorization': 'Basic ' + base64.b64encode(f'admin:{pw}'.encode()).decode()} if pw is not None else {}
+    try:
+        with urllib.request.urlopen(urllib.request.Request(URL + '/admin', headers=h)) as r:
+            return r.status, r.read().decode()
+    except urllib.error.HTTPError as e:
+        return e.code, e.headers.get('WWW-Authenticate', '')
+
+
+assert call('/api/scores', {'name': '<b>Xss</b>', 'mode': 'foot', 'score': 10, 'good': 1, 'badges': 2})[0] == 200
+code, auth = admin()
+assert code == 401 and auth.startswith('Basic')
+assert admin('faux')[0] == 401
+code, page = admin('secret-test')
+assert code == 200 and 'Médaillé' in page and '&lt;b&gt;Xss&lt;/b&gt;' in page and '<b>Xss</b>' not in page and 'Actifs 7 j' in page
+for _ in range(server.MAX_FAILS):
+    admin('faux')
+assert admin('secret-test')[0] == 429  # bloqué, même avec le bon mot de passe
+print('ok admin')

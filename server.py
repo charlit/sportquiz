@@ -1,5 +1,7 @@
 """Sport Quiz : sert le jeu + classement partagé (stdlib uniquement)."""
+import base64
 import hashlib
+import html
 import json
 import os
 import secrets
@@ -23,6 +25,11 @@ PROFILES = os.environ.get('QUIZ_PROFILES', os.path.join(os.path.dirname(DB), 'pr
 CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'  # sans 0/O ni 1/I, faciles à confondre
 BADGES = {'first', 'perfect', 'reflex', 'streak', 'supporter', 'tour', 'liga', 'albion', 'bundes', 'calcio', 'globe', 'marathon', 'multi', 'beast', 'allround',
           'footscore', 'multiscore', 'hard', 'hardfoot', 'hardrugby', 'hardbasket', 'hardtennis', 'hardf1', 'hardvelo', 'mondial', 'memoire', 'hardfr', 'hardes', 'harduk', 'hardde', 'hardit', 'hardwc', 'can', 'canall', 'hardcan'}
+# Page /admin (joueurs, scores, badges) : désactivée tant que QUIZ_ADMIN_PASSWORD n'est pas défini. Identifiant : admin.
+ADMIN_PASSWORD = os.environ.get('QUIZ_ADMIN_PASSWORD', '')
+MODE_NAMES = {'foot': 'Spécial Foot', 'multi': 'Multisport', 'hard': 'HC Tous sports', 'hardfoot': 'HC Foot', 'hardrugby': 'HC Rugby',
+              'hardbasket': 'HC Basket', 'hardtennis': 'HC Tennis', 'hardf1': 'HC Sport auto', 'hardvelo': 'HC Cyclisme', 'hardfr': 'HC France',
+              'hardes': 'HC Espagne', 'harduk': 'HC Royaume-Uni', 'hardde': 'HC Allemagne', 'hardit': 'HC Italie', 'hardwc': 'HC Mondial', 'hardcan': 'HC CAN'}
 MAX_FAILS, LOCK_SECONDS = 8, 15 * 60          # 8 codes faux d'affilée → pseudo bloqué 15 min
 fails = {}                                    # pseudo → (codes faux d'affilée, bloqué jusqu'à)
 # ponytail: global lock + whole-file JSON rewrite and client-trusted scores, fine for friends; SQLite + server-side scoring if it goes public
@@ -111,6 +118,66 @@ def top(db, mode, n=100):  # 100 premiers affichés au classement
     return rows[:n]
 
 
+def admin_page(db, profiles):
+    """Tableau de bord : chiffres clés, joueurs (dernière partie d'abord) et nombre de joueurs par mode."""
+    now, players = time.time(), {}
+    for mode, board in db.items():
+        for key, e in board.items():
+            p = players.setdefault(key, {'name': e['name'], 'last': 0, 'badges': 0, 'best': {}, 'profile': key in profiles})
+            p['last'] = max(p['last'], e.get('date', 0))
+            p['badges'] = max(p['badges'], e.get('badges', 0))
+            p['best'][mode] = e['score']
+    for key, pr in profiles.items():  # profils créés sans score enregistré
+        p = players.setdefault(key, {'name': pr['name'], 'last': pr.get('date', 0), 'badges': 0, 'best': {}, 'profile': True})
+        p['badges'] = max(p['badges'], len(pr.get('badges', {})))
+    rows = sorted(players.values(), key=lambda p: -p['last'])
+    active = lambda days: sum(now - p['last'] < days * 86400 for p in rows)
+    day = lambda t: time.strftime('%d/%m/%Y %H:%M', time.localtime(t)) if t else '—'
+    e = html.escape
+    stats = [('Joueurs', len(rows)), ('Actifs 24 h', active(1)), ('Actifs 7 j', active(7)), ('Actifs 30 j', active(30)), ('Profils protégés', len(profiles))]
+    modes = sorted(((MODE_NAMES.get(m, m), len(b), max((x['score'] for x in b.values()), default=0)) for m, b in db.items() if b), key=lambda x: -x[1])
+    body = ''.join(f'<tr><td>{e(p["name"])}{" 🔒" if p["profile"] else ""}</td><td>{day(p["last"])}</td><td>🏅 {p["badges"]}</td>'
+                   f'<td>{len(p["best"])}</td><td class="m">{e(", ".join(f"{MODE_NAMES.get(m, m)} {v}" for m, v in sorted(p["best"].items(), key=lambda x: -x[1])))}</td></tr>'
+                   for p in rows) or '<tr><td colspan="5">Aucun joueur pour l’instant.</td></tr>'
+    return f'''<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex"><title>Sport Quiz · Admin</title><style>
+body {{ margin:0; padding:16px; font:15px system-ui, sans-serif; background:#0a1220; color:#e8eef7; }}
+h1 {{ font-size:1.4rem; }} h2 {{ font-size:1.1rem; margin-top:28px; }} small {{ color:#8ea0b8; }}
+.stats {{ display:grid; grid-template-columns:repeat(auto-fit, minmax(120px, 1fr)); gap:10px; }}
+.stats div {{ background:#14213a; border-radius:12px; padding:12px; }} .stats b {{ display:block; font-size:1.6rem; color:#ffd23f; }}
+.wrap {{ overflow-x:auto; }} table {{ border-collapse:collapse; width:100%; min-width:560px; }}
+th, td {{ text-align:left; padding:8px; border-bottom:1px solid #22314f; vertical-align:top; }} th {{ color:#8ea0b8; font-weight:600; }}
+td.m {{ color:#8ea0b8; font-size:.85rem; }}
+</style></head><body><h1>⚽ Sport Quiz · Admin</h1>
+<small>Joueurs du site web (pseudo enregistré au classement ou profil créé). Les joueurs de l’app iOS passent par Game Center et n’apparaissent pas ici.</small>
+<div class="stats" style="margin-top:16px">{''.join(f'<div><b>{v}</b>{k}</div>' for k, v in stats)}</div>
+<h2>Joueurs</h2><div class="wrap"><table><tr><th>Pseudo</th><th>Dernière partie</th><th>Badges</th><th>Modes</th><th>Meilleurs scores</th></tr>{body}</table></div>
+<h2>Par mode</h2><div class="wrap"><table><tr><th>Mode</th><th>Joueurs</th><th>Record</th></tr>
+{''.join(f'<tr><td>{e(n)}</td><td>{c}</td><td>{r}</td></tr>' for n, c, r in modes) or '<tr><td colspan="3">—</td></tr>'}</table></div>
+<p><small>🔒 = pseudo protégé par un code. Mis à jour le {day(now)}.</small></p></body></html>'''.encode()
+
+
+admin_fails = [0, 0]  # mots de passe admin faux d'affilée, bloqué jusqu'à
+
+
+def admin_ok(header):
+    """Vérifie l'authentification HTTP Basic (admin + QUIZ_ADMIN_PASSWORD). Renvoie True, False ou 'bloqué'."""
+    if admin_fails[1] > time.time():
+        return 'bloqué'
+    try:
+        user, _, pw = base64.b64decode(header.removeprefix('Basic ')).decode().partition(':')
+    except ValueError:
+        user = pw = ''
+    if secrets.compare_digest(user.encode(), b'admin') & secrets.compare_digest(pw.encode(), ADMIN_PASSWORD.encode()):
+        admin_fails[0] = 0
+        return True
+    if header:  # le premier appel sans identifiants n'est pas une erreur
+        admin_fails[0] += 1
+        if admin_fails[0] >= MAX_FAILS:
+            admin_fails[:] = [0, time.time() + LOCK_SECONDS]
+    return False
+
+
 class Handler(BaseHTTPRequestHandler):
     def send(self, code, body, ctype='application/json'):
         if not isinstance(body, bytes):
@@ -136,6 +203,17 @@ class Handler(BaseHTTPRequestHandler):
             if mode not in MAX_SCORE:
                 return self.send(400, {'error': 'mode inconnu'})
             return self.send(200, top(load(), mode))
+        if path in ('/admin', '/admin/') and ADMIN_PASSWORD:
+            with lock:
+                ok = admin_ok(self.headers.get('Authorization', ''))
+            if ok == 'bloqué':
+                return self.send(429, {'error': 'trop d’essais, réessaie dans 15 minutes'})
+            if not ok:
+                self.send_response(401)
+                self.send_header('WWW-Authenticate', 'Basic realm="Sport Quiz admin", charset="UTF-8"')
+                self.send_header('Content-Length', '0')
+                return self.end_headers()
+            return self.send(200, admin_page(load(), load(PROFILES)), 'text/html; charset=utf-8')
         self.send(404, {'error': 'introuvable'})
 
     def body(self):
