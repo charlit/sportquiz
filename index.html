@@ -210,7 +210,7 @@
     <div class="tiles">
       <div class="tw"><button class="tile c-foot" data-mode="foot"><b>⚽</b><strong>Spécial Foot</strong><small>100 questions, 3 vies</small></button>
         <button class="info" data-info="foot" aria-label="Règles du Spécial Foot">i</button></div>
-      <div class="tw"><button class="tile c-hc" id="goHard"><span class="tag">1 VIE</span><b>💀</b><strong>Hardcore</strong><small>Que du foot très dur, sans fin</small></button>
+      <div class="tw"><button class="tile c-hc" id="goHard"><span class="tag">1 VIE</span><b>💀</b><strong>Hardcore</strong><small>Que du foot très dur : général ou par pays</small></button>
         <button class="info" data-info="hard" aria-label="Règles du Hardcore">i</button></div>
       <div class="tw" style="grid-column:1/-1"><button class="tile c-adv" id="goAdv"><span class="tag">NOUVEAU</span><b>🗺️</b><strong>Aventure</strong><small>Les clubs de cinq grands pays et la Coupe du monde</small></button>
         <button class="info" data-info="adv" aria-label="Règles de l'Aventure">i</button></div>
@@ -251,10 +251,17 @@
     <div class="head"><button class="back" data-back="home">← Accueil</button><h2>🏅 Classement</h2></div>
     <div class="card" style="margin-top:0">
       <div class="tabs">
-        <button data-tab="foot" class="on">⚽ Foot</button><button data-tab="hardfoot">💀 Hardcore</button>
+        <button data-tab="foot" class="on">⚽ Foot</button><button data-tab="hardfoot">💀 HC Foot</button>
+        <button data-tab="hardfr" data-flag="fr">France</button><button data-tab="hardes" data-flag="es">Espagne</button><button data-tab="harduk" data-flag="uk">R.-Uni</button><button data-tab="hardde" data-flag="de">Allemagne</button><button data-tab="hardit" data-flag="it">Italie</button>
       </div>
       <table id="board"></table>
     </div>
+  </section>
+
+  <section id="pick" class="hidden">
+    <div class="head"><button class="back" data-back="home">← Accueil</button><h2>💀 Hardcore</h2></div>
+    <p class="advinfo">1 seule vie, que des questions Expert et Légende. Tout le foot, ou les clubs d’un pays :</p>
+    <div class="sports" id="pickList"></div>
   </section>
 
   <section id="lands" class="hidden">
@@ -321,8 +328,11 @@ const SPORTS = { foot: '⚽ Foot', tennis: '🎾 Tennis', rugby: '🏉 Rugby', b
 const SPORT_COLORS = { foot: '#2ecc71', rugby: '#ff8a3d', basket: '#ff6b1a', f1: '#ff3b3b', tennis: '#d4f53c', velo: '#ffd23f', boxe: '#ff4d6d', all: '#ff5a4f' };
 const TIME = 20;
 const FOOT_PLAN = [0, 10, 20, 25, 25, 20]; // Spécial Foot : questions par niveau 1→5 (100)
-const HARD = { hard: null, hardfoot: 'foot', hardrugby: 'rugby', hardbasket: 'basket', hardtennis: 'tennis', hardf1: 'f1', hardvelo: 'velo' }; // modes 1 vie, niveaux 4-5, sans fin (null = tous les sports)
-const NAMES = { foot: 'Spécial Foot', hard: 'Hardcore Tous sports', hardfoot: 'Hardcore Foot', hardrugby: 'Hardcore Rugby',
+const HARD = { hard: null, hardfoot: 'foot', hardrugby: 'rugby', hardbasket: 'basket', hardtennis: 'tennis', hardf1: 'f1', hardvelo: 'velo',
+               hardfr: 'fr', hardes: 'es', harduk: 'uk', hardde: 'de', hardit: 'it' }; // modes 1 vie, niveaux 4-5, sans fin (null = tous les sports)
+const HARD_PAYS = ['fr', 'es', 'uk', 'de', 'it']; // Hardcore par pays : questions des clubs de l'Aventure, étapes 7-10 (niveaux 4-5)
+const NAMES = { foot: 'Spécial Foot', hardfr: 'Hardcore France', hardes: 'Hardcore Espagne', harduk: 'Hardcore Royaume-Uni',
+                hardde: 'Hardcore Allemagne', hardit: 'Hardcore Italie', hard: 'Hardcore Tous sports', hardfoot: 'Hardcore Foot', hardrugby: 'Hardcore Rugby',
                 hardbasket: 'Hardcore Basket', hardtennis: 'Hardcore Tennis', hardf1: 'Hardcore Sport auto', hardvelo: 'Hardcore Cyclisme', adv: 'Aventure' };
 // Aventure : 10 étapes par sport (2 par niveau), 5 questions, 4 bonnes réponses pour passer
 // Aventure : 10 étapes par club (clubs.js, France, Espagne, Royaume-Uni, Allemagne, Italie), de la période la plus récente (1) aux années 1990 (10) ;
@@ -333,7 +343,7 @@ const ERAS = ['', '2024-2026', '2021-2023', '2018-2020', '2015-2017', '2012-2014
 const stageLevel = k => Math.ceil(k * 5 / stagesOf(advClub)); // difficulté (points) : clubs, étapes 1-2 → niveau 1 … 9-10 → niveau 5 ; Mondial, étape = niveau
 const $ = id => document.getElementById(id);
 const shuffle = a => { a = [...a]; for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
-const SCREENS = ['home', 'profile', 'ranks', 'lands', 'clubs', 'adv', 'quiz', 'end', 'advEnd'];
+const SCREENS = ['home', 'profile', 'ranks', 'pick', 'lands', 'clubs', 'adv', 'quiz', 'end', 'advEnd'];
 const show = id => { SCREENS.forEach(s => $(s).classList.toggle('hidden', s !== id)); scrollTo(0, 0); };
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
 const store = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} };
@@ -361,7 +371,9 @@ function pick(pool, n) {
 function buildDeck(m) {
   const out = [];
   if (m in HARD) { // questions niveau 4-5, jamais vues d'abord ; marquées vues quand posées
-    const pool = Object.entries(QUESTIONS).filter(([s]) => !HARD[m] || s === HARD[m]).flatMap(([s, qs]) => qs.filter(q => q[0] >= 4).map(q => [s, q]));
+    const pool = HARD_PAYS.includes(HARD[m])
+      ? Object.entries(CLUBS).filter(([, c]) => c.pays === HARD[m]).flatMap(([id, c]) => c.q.filter(q => q[0] >= 7).map(q => [id, [Math.ceil(q[0] / 2), ...q.slice(1)]]))
+      : Object.entries(QUESTIONS).filter(([s]) => !HARD[m] || s === HARD[m]).flatMap(([s, qs]) => qs.filter(q => q[0] >= 4).map(q => [s, q]));
     let fresh = pool.filter(x => !seen.has(x[1][1]));
     if (fresh.length < 20) { pool.forEach(x => seen.delete(x[1][1])); fresh = pool; }
     return shuffle(fresh).concat(shuffle(pool.filter(x => !fresh.includes(x))));
@@ -433,7 +445,7 @@ function answer(btn, ok, lvl) {
     if (TIME - left < 2) unlock('reflex');
     if (mode in HARD && good + 1 >= 10) unlock('streak');   // en Hardcore, une erreur arrête tout : good = série en cours
     if (mode in HARD && good + 1 >= 25) unlock('beast');
-    if (mode in HARD && good + 1 >= 15) unlock(mode);         // badge du Hardcore joué (même id que le mode)
+    if (mode in HARD && good + 1 >= 15 && BADGES.some(b => b[0] === mode)) unlock(mode);         // badge du Hardcore joué (même id que le mode)
     const pts = points(lvl, left);
     score += pts; good++;
     $('score').textContent = score;
@@ -467,7 +479,7 @@ function finish() {
   if (HARD[mode]) { // Hardcore par sport : on retient les sports joués
     const hc = new Set(load('quiz-hc', [])).add(mode);
     store('quiz-hc', [...hc]);
-    if (Object.keys(HARD).every(m => !HARD[m] || hc.has(m))) unlock('allround');
+    if (Object.keys(HARD).every(m => !SPORTS[HARD[m]] || hc.has(m))) unlock('allround');
   }
   if (mode === 'adv') return advFinish();
   $('final').textContent = score + ' pts';
@@ -490,6 +502,15 @@ function finish() {
   $('pseudo').value = prof?.name || load('quiz-pseudo', '');
   show('end');
   loadBoard(mode, $('endBoard'));
+}
+
+/* ---------- Choix du Hardcore ---------- */
+function openPick() {
+  const items = [['hardfoot', '#2ecc71', '⚽', 'Tout le foot'], ...HARD_PAYS.map(c => ['hard' + c, LANDS[c].c, flag(c), LANDS[c].nom])];
+  $('pickList').innerHTML = items.map(([id, c, icon, name]) =>
+    `<button class="sport" data-id="${id}" style="--c:${c}"><b>${icon}</b><strong>${name}</strong></button>`).join('');
+  $('pickList').querySelectorAll('.sport').forEach(b => b.onclick = () => start(b.dataset.id));
+  show('pick');
 }
 
 /* ---------- Aventure ---------- */
@@ -677,8 +698,8 @@ function openClubs() {
   ids.forEach(id => (cities[CLUBS[id].ville] ||= []).push(id));
   $('landTitle').innerHTML = `${flag(L.flag)} ${esc(L.nom)}`;
   $('landInfo').textContent = advLand === 'wc'
-    ? `Revis les ${ids.length} Coupes du monde, de 1930 à 2022 : 5 étapes par édition, de la phase de groupes à la finale. Touche un pays organisateur sur la carte pour voir ses éditions.`
-    : `Fais le tour des ${ids.length} clubs ${L.de} : 10 étapes par club, des dernières saisons jusqu'aux années 1990. Touche une ville sur la carte pour voir ses clubs.`;
+    ? `Revis les ${ids.length} Coupes du monde, de 1930 à 2022 : 5 étapes par édition, de la phase de groupes à la finale. Toutes les éditions sont listées sous la carte ; touche un pays organisateur pour ne garder que les siennes.`
+    : `Fais le tour des ${ids.length} clubs ${L.de} : 10 étapes par club, des dernières saisons jusqu'aux années 1990. Tous les clubs sont listés sous la carte ; touche une ville pour ne garder que les siens.`;
   $('frMap').setAttribute('viewBox', L.box);
   $('frMap').classList.toggle('world', advLand === 'wc');
   $('frMap').setAttribute('aria-label', advLand === 'wc' ? 'Carte des pays organisateurs de la Coupe du monde' : `Carte des clubs ${L.de}`);
@@ -710,7 +731,7 @@ function openClubs() {
   });
   $('cityChip').classList.toggle('hidden', !cityFilter);
   $('cityChip').innerHTML = cityFilter ? `${place(cityFilter, advLand)} ✕` : '';
-  $('clubList').innerHTML = ids.filter(id => CLUBS[id].ville === cityFilter).map(id => {   // rien tant qu'aucune ville n'est touchée
+  $('clubList').innerHTML = ids.filter(id => !cityFilter || CLUBS[id].ville === cityFilter).map(id => {   // tous les clubs, ou ceux de la ville touchée
     const c = CLUBS[id], d = advDone[id] || 0, n = stagesOf(id);
     return `<button class="sport" data-id="${id}" style="--c:${c.couleur}"><strong>${esc(c.nom)}</strong><small>${place(c.ville, advLand)} · ` +
            `${d >= n ? '🏆 Terminé !' : `Étape ${d + 1} / ${n}`}</small><div class="meter"><i style="width:${d / n * 100}%"></i></div></button>`;
@@ -941,13 +962,14 @@ $('goRanks').onclick = () => {
   (document.querySelector(`[data-tab="${mode}"]`) || document.querySelector('[data-tab="foot"]')).click();
 };
 document.querySelectorAll('[data-mode]').forEach(b => b.onclick = () => start(b.dataset.mode));
-$('goHard').onclick = () => start('hardfoot'); // Hardcore : foot seulement (les questions des autres sports restent dans questions.json)
+$('goHard').onclick = openPick; // Hardcore : foot ou pays (les questions des autres sports restent dans questions.json)
+document.querySelectorAll('[data-flag]').forEach(b => b.innerHTML = flag(b.dataset.flag) + ' ' + esc(b.textContent));
 // Règles de chaque mode, affichées par le bouton ⓘ de sa tuile
 const RULES = {
   foot: ['⚽ Spécial Foot', ['100 questions de plus en plus dures : 10 faciles, puis Moyen, Difficile, Expert et 20 en Légende.',
     '3 vies : une erreur coûte une vie et 50 points × le niveau.', '20 secondes par question.',
     'Une bonne réponse rapporte jusqu’à 100 points × le niveau (la moitié si tu réponds au dernier moment).']],
-  hard: ['💀 Hardcore', ['Questions de foot Expert et Légende sans fin.',
+  hard: ['💀 Hardcore', ['Questions de foot Expert et Légende sans fin : tout le foot, ou les clubs d’un pays (France, Espagne, Royaume-Uni, Allemagne, Italie).',
     '1 seule vie : la première erreur arrête tout.', '20 secondes par question.',
     'La vitesse paie double : jusqu’à 200 points × le niveau si tu réponds tout de suite, 20 % au dernier moment.']],
   adv: ['🗺️ Aventure', ['Choisis un pays (France, Espagne, Royaume-Uni, Allemagne ou Italie), touche une ville sur sa carte, puis choisis un club.',
