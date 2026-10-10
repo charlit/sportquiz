@@ -96,9 +96,33 @@
   /* classement */
   .card { background:var(--card); border:1px solid var(--line); border-radius:18px; padding:16px; margin-top:20px; }
   .card h2 { margin:0 0 10px; font-size:1.2rem; }
-  .tabs { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:10px; }
-  .tabs button { flex:1 1 30%; white-space:nowrap; padding:8px; border-radius:10px; border:1px solid var(--line); background:transparent; color:var(--dim); cursor:pointer; }
-  .tabs button.on { background:var(--acc); color:#111; border-color:var(--acc); font-weight:700; }
+  /* Classement : Spécial Foot / Hardcore, puis une ligne de pays qui défile, podium, liste et ta place toujours visible */
+  .seg { display:grid; grid-template-columns:1fr 1fr; gap:4px; padding:4px; border-radius:14px; background:var(--card); border:1px solid var(--line); }
+  .seg button { padding:10px; border:0; border-radius:10px; background:transparent; color:var(--dim); font-size:1rem; font-weight:700; cursor:pointer; }
+  .seg button.on { background:var(--acc); color:#111; }
+  .chips { display:flex; gap:8px; overflow-x:auto; padding:10px 2px 2px; scrollbar-width:none;
+           -webkit-mask-image:linear-gradient(90deg, #000 85%, transparent); mask-image:linear-gradient(90deg, #000 85%, transparent); }
+  .chips::-webkit-scrollbar { display:none; }
+  .chips button { flex:0 0 auto; display:flex; align-items:center; gap:6px; padding:8px 14px; border-radius:999px; border:1px solid var(--line);
+                  background:var(--card); color:var(--txt); white-space:nowrap; cursor:pointer; }
+  .chips button.on { background:var(--acc); color:#111; border-color:var(--acc); font-weight:700; }
+  .chips button:last-child { margin-right:40px; }   /* le dernier pays reste lisible malgré le fondu */
+  .podium { display:grid; grid-template-columns:1fr 1.15fr 1fr; align-items:end; gap:8px; margin:18px 0 0; }
+  .pod { min-width:0; text-align:center; }
+  .pod b { display:block; font-size:2rem; line-height:1.1; }
+  .pod strong { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .pod .pts { color:var(--acc); font-weight:800; }
+  .pod small { display:block; color:var(--dim); font-size:.75rem; }
+  .pod .step { margin-top:8px; border-radius:12px 12px 0 0; border:1px solid var(--line); border-bottom:0; background:var(--card2);
+               display:grid; place-items:center; color:var(--dim); font-size:1.4rem; font-weight:800; }
+  .pod.p1 .step { height:92px; border-color:#ffd23f88; background:linear-gradient(#ffd23f2e, var(--card2)); color:var(--acc); }
+  .pod.p2 .step { height:66px; }
+  .pod.p3 .step { height:48px; }
+  .pod.me strong { color:var(--acc); }
+  #ranks .card { margin-top:0; border-top-left-radius:0; border-top-right-radius:0; }
+  #myRank { position:sticky; bottom:max(12px, env(safe-area-inset-bottom)); display:flex; align-items:center; gap:10px; margin-top:12px;
+            padding:12px 14px; border-radius:14px; background:#2a3d63; border:1px solid var(--acc); box-shadow:0 10px 30px -10px #000; font-weight:700; }
+  #myRank .pts { margin-left:auto; color:var(--acc); }
   table { width:100%; border-collapse:collapse; }
   td { padding:7px 6px; border-top:1px solid var(--line); }
   td:first-child { width:2.5em; color:var(--dim); }
@@ -190,6 +214,16 @@
            background:var(--acc); color:#111; font-weight:800; box-shadow:0 10px 30px -8px #000; transition:transform .35s; }
   #toast.on { transform:translate(-50%, 0); }
   #toast b { font-size:1.4rem; }
+  .setting { display:flex; align-items:center; justify-content:space-between; gap:12px; cursor:pointer; font-weight:700; }
+  .setting small { display:block; color:var(--dim); font-weight:400; font-size:.85rem; }
+  .toggle { appearance:none; -webkit-appearance:none; flex:0 0 auto; width:51px; height:31px; margin:0; border-radius:999px; background:var(--line);
+            position:relative; cursor:pointer; transition:background .2s; }
+  .toggle::after { content:''; position:absolute; top:2px; left:2px; width:27px; height:27px; border-radius:50%; background:#fff;
+                   box-shadow:0 2px 4px #0006; transition:transform .2s; }
+  .toggle:checked { background:var(--ok); }
+  .toggle:checked::after { transform:translateX(20px); }
+  .app, .app * { -webkit-user-select:none; user-select:none; -webkit-touch-callout:none; }
+  .app input { -webkit-user-select:text; user-select:text; }
   /* téléphone : la partie occupe toute la hauteur — infos en haut, question au centre,
      réponses en bas sous le pouce ; les écrans de fin sont centrés */
   @media (pointer: coarse) {
@@ -231,6 +265,10 @@
     <div class="who"><span class="avatar" id="whoAvatar">👤</span><span><strong id="whoName"></strong><small id="whoCount"></small></span></div>
     <button class="rankbtn" id="goBadges">🏅 Mes badges <small id="badgesCount"></small></button>
     <a class="rankbtn" id="contact" style="font-size:1rem;text-align:center;text-decoration:none;color:inherit">✉️ Signaler un bug ou proposer une idée</a>
+    <div class="card hidden" id="settings">
+      <h2>⚙️ Réglages</h2>
+      <label class="setting"><span>📳 Vibrations<small>Bonne réponse, erreur, badge débloqué</small></span><input type="checkbox" class="toggle" id="hapticsOn"></label>
+    </div>
     <div class="card hidden" id="account">
       <div id="accNew">
         <h2>💾 Garde tes badges</h2>
@@ -259,13 +297,14 @@
 
   <section id="ranks" class="hidden">
     <div class="head"><button class="back" data-back="home">← Accueil</button><h2>🏅 Classement</h2></div>
-    <div class="card" style="margin-top:0">
-      <div class="tabs">
-        <button data-tab="foot" class="on">⚽ Foot</button><button data-tab="hardfoot">💀 HC Foot</button>
-        <button data-tab="hardfr" data-flag="fr">France</button><button data-tab="hardes" data-flag="es">Espagne</button><button data-tab="harduk" data-flag="uk">R.-Uni</button><button data-tab="hardde" data-flag="de">Allemagne</button><button data-tab="hardit" data-flag="it">Italie</button><button data-tab="hardwc">💀🏆 Mondial</button><button data-tab="hardcan">💀🌍 CAN</button>
-      </div>
-      <table id="board"></table>
+    <div class="seg"><button data-kind="foot" class="on">⚽ Spécial Foot</button><button data-kind="hard">💀 Hardcore</button></div>
+    <div class="chips hidden" id="hardChips">
+      <button data-board="hardfoot">⚽ Tout le foot</button><button data-board="hardfr" data-flag="fr">France</button><button data-board="hardes" data-flag="es">Espagne</button><button data-board="harduk" data-flag="uk">Royaume-Uni</button><button data-board="hardde" data-flag="de">Allemagne</button><button data-board="hardit" data-flag="it">Italie</button><button data-board="hardwc">🏆 Mondial</button><button data-board="hardcan">🌍 CAN</button>
     </div>
+    <div class="podium" id="podium"></div>
+    <div class="card"><table id="board"></table></div>
+    <div id="myRank" class="hidden"></div>
+    <button class="btn alt hidden" id="gcBoard" style="width:100%;margin-top:12px">🎮 Ouvrir dans Game Center</button>
   </section>
 
   <section id="pick" class="hidden">
@@ -317,6 +356,7 @@
       <p id="saveMsg"></p>
       <table id="endBoard"></table>
     </div>
+    <button class="btn alt" id="share" style="width:100%;margin-top:12px">📤 Partager mon score</button>
     <div class="row"><button class="btn" id="again">Rejouer</button><button class="btn alt" id="toHome">Accueil</button></div>
   </section>
 
@@ -363,6 +403,11 @@ let mode, deck, idx, score, good, lives, timer, next, t0, saved, advClub, stage,
 
 // Dans l'app iOS, le classement passe par Game Center : pas de pseudo, le score part tout seul.
 const GC = !!window.__quizGC;
+// Fonctions natives de l'app iOS (vibrations, partage, Game Center, avis) ; sans effet sur le site web.
+const nativeApp = (type, data = {}) => {
+  if (type === 'haptic' && !load('quiz-haptics', true)) return;   // vibrations coupées dans les réglages du profil
+  try { webkit.messageHandlers.app.postMessage({ type, ...data }); } catch {}
+};
 let gcName = null;
 
 // Questions déjà posées sur ce navigateur : on ne les repose qu'une fois toutes les autres du même lot épuisées.
@@ -473,11 +518,13 @@ function answer(btn, ok, lvl) {
     const pts = points(lvl, left);
     score += pts; good++;
     $('score').textContent = score;
+    nativeApp('haptic', { kind: 'success' });
     $('feedback').textContent = `✅ Bravo ! +${pts} points`;
     $('feedback').style.color = 'var(--ok)';
   } else {
     btn?.classList.add('ko');
     lives--;
+    nativeApp('haptic', { kind: lives ? 'warning' : 'error' });
     let msg = btn ? '❌ Raté !' : '⏱️ Temps écoulé !';
     if (mode === 'foot') { // l'erreur coûte la moitié de la valeur de la question
       const lost = Math.min(score, lvl * 50);
@@ -507,6 +554,9 @@ function finish() {
   }
   if (mode === 'adv') return advFinish();
   $('final').textContent = score + ' pts';
+  // Demande d'avis App Store après une belle partie, à partir de la 3e (iOS décide s'il l'affiche, 3 fois par an au plus)
+  const played = load('quiz-played', 0) + 1; store('quiz-played', played);
+  if (played >= 3 && (mode in HARD ? good >= 10 : good / deck.length >= .6)) setTimeout(() => nativeApp('review'), 1500);
   if (mode in HARD) {
     const msg = good >= 25 ? 'Inhumain ! 🐐' : good >= 12 ? 'Énorme ! 🔥' : good >= 5 ? 'Solide ! 💪' : `Le ${NAMES[mode]} porte bien son nom… 💀`;
     $('summary').textContent = `${good} bonne${good > 1 ? 's' : ''} réponse${good > 1 ? 's' : ''} d'affilée — ${msg} (${NAMES[mode]})`;
@@ -907,6 +957,7 @@ function unlock(id) {
   const [, icon, title] = BADGES.find(b => b[0] === id);
   $('toastIcon').innerHTML = flag(icon); $('toastText').textContent = `Badge débloqué : ${title}`;
   $('toast').classList.add('on');
+  nativeApp('haptic', { kind: 'success' });
   clearTimeout(toastTimer); toastTimer = setTimeout(() => $('toast').classList.remove('on'), 3000);
   reportBadges([id]);
   syncProfile();
@@ -1015,6 +1066,44 @@ function renderBoard(rows, table, me, m) {
     : '<tr><td colspan="3" class="empty">Personne pour l\'instant… à toi de jouer !</td></tr>';
 }
 
+// Page Classement : podium pour le top 3, liste à partir du 4e, et la place du joueur toujours visible en bas
+const fmt = n => Number(n).toLocaleString('fr-FR');
+const BOARDS = ['foot', 'hardfoot', 'hardfr', 'hardes', 'harduk', 'hardde', 'hardit', 'hardwc', 'hardcan'];
+let boardMode = 'foot', lastHard = 'hardfoot', boardReq = 0;
+function renderRanks(rows) {
+  const me = playerName(), mine = rows.findIndex(r => me && nameKey(r.name) === nameKey(me));
+  const sub = r => `🏅 ${r.badges || 0} · ${r.good} ✔`;
+  $('podium').innerHTML = rows.length ? [1, 0, 2].map(i => rows[i] ? `<div class="pod p${i + 1}${i === mine ? ' me' : ''}"><b>${['🥇', '🥈', '🥉'][i]}</b>` +
+    `<strong>${esc(rows[i].name)}</strong><span class="pts">${fmt(rows[i].score)}</span><small>${sub(rows[i])}</small><div class="step">${i + 1}</div></div>` : '<div></div>').join('') : '';
+  $('board').innerHTML = !rows.length ? '<tr><td colspan="3" class="empty">Personne pour l\'instant… à toi de jouer !</td></tr>'
+    : rows.slice(3).map((r, k) => `<tr class="${k + 3 === mine ? 'me' : ''}"><td>${k + 4}</td><td>${esc(r.name)} <small style="color:var(--dim)">${sub(r)}</small></td>` +
+      `<td>${fmt(r.score)}</td></tr>`).join('');
+  $('board').closest('.card').classList.toggle('hidden', rows.length > 0 && rows.length <= 3);
+  $('myRank').classList.toggle('hidden', mine < 0 && !(GC && !me));
+  $('myRank').innerHTML = mine >= 0 ? `<span>Ta place · ${mine + 1}${mine ? 'e' : 'er'}</span><span class="pts">${fmt(rows[mine].score)}</span>`
+    : 'Connecte-toi à Game Center pour apparaître au classement';
+}
+async function openBoard(m) {
+  boardMode = m; if (m !== 'foot') lastHard = m;
+  document.querySelectorAll('[data-kind]').forEach(b => b.classList.toggle('on', (b.dataset.kind === 'foot') === (m === 'foot')));
+  $('hardChips').classList.toggle('hidden', m === 'foot');
+  document.querySelectorAll('[data-board]').forEach(b => {
+    b.classList.toggle('on', b.dataset.board === m);
+    if (b.dataset.board === m) b.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+  });
+  const req = ++boardReq;   // un changement rapide d'onglet ne laisse pas une ancienne réponse écraser la nouvelle
+  $('podium').innerHTML = ''; $('myRank').classList.add('hidden'); $('board').closest('.card').classList.remove('hidden');
+  $('board').innerHTML = '<tr><td class="empty">Chargement…</td></tr>';
+  try {
+    const r = await fetch('api/scores?mode=' + m);
+    if (!r.ok) throw 0;
+    const rows = await r.json();
+    if (req === boardReq) renderRanks(rows);
+  } catch {
+    if (req === boardReq) $('board').innerHTML = `<tr><td class="empty">${GC ? 'Classement Game Center indisponible' : 'Classement indisponible (serveur hors ligne)'}</td></tr>`;
+  }
+}
+
 async function loadBoard(m, table, me) {
   try {
     const r = await fetch('api/scores?mode=' + m);
@@ -1051,10 +1140,7 @@ async function sendScore(name) {
 /* ---------- Navigation ---------- */
 const goHome = () => show('home');
 // Classement : ouvre sur l'onglet du dernier mode joué (Foot par défaut)
-$('goRanks').onclick = () => {
-  show('ranks');
-  (document.querySelector(`[data-tab="${mode}"]`) || document.querySelector('[data-tab="foot"]')).click();
-};
+$('goRanks').onclick = () => { show('ranks'); openBoard(BOARDS.includes(mode) ? mode : 'foot'); };
 document.querySelectorAll('[data-mode]').forEach(b => b.onclick = () => start(b.dataset.mode));
 $('goHard').onclick = openPick; // Hardcore : foot ou pays (les questions des autres sports restent dans questions/<sport>.json)
 document.querySelectorAll('[data-flag]').forEach(b => b.innerHTML = flag(b.dataset.flag) + ' ' + esc(b.textContent));
@@ -1086,11 +1172,26 @@ $('goAdv').onclick = openLands;
 document.querySelectorAll('[data-back]').forEach(b => b.onclick = () => show(b.dataset.back));
 $('advBack').onclick = openClubs;
 $('advMap').onclick = () => openAdv(advClub);
-document.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => {
-  document.querySelectorAll('[data-tab]').forEach(x => x.classList.toggle('on', x === b));
-  loadBoard(b.dataset.tab, $('board'));
-});
+document.querySelectorAll('[data-kind]').forEach(b => b.onclick = () => openBoard(b.dataset.kind === 'foot' ? 'foot' : lastHard));
+document.querySelectorAll('[data-board]').forEach(b => b.onclick = () => openBoard(b.dataset.board));
+$('gcBoard').classList.toggle('hidden', !GC);
+// Réglages du profil (app seulement : les vibrations n'existent pas sur le site)
+$('settings').classList.toggle('hidden', !GC);
+$('hapticsOn').checked = load('quiz-haptics', true);
+$('hapticsOn').onchange = () => { store('quiz-haptics', $('hapticsOn').checked); nativeApp('haptic', { kind: 'light' }); };
+$('gcBoard').onclick = () => nativeApp('gameCenter', { mode: boardMode });
+// Raccourcis de l'icône de l'app (appui long sur l'écran d'accueil de l'iPhone)
+window.__quizShortcut = a => ({ foot: () => start('foot'), hard: openPick, adv: openLands, ranks: () => $('goRanks').click() })[a]?.();
 $('again').onclick = () => start(mode);
+// Partage du score : feuille de partage iOS dans l'app, partage du navigateur (ou copie) sur le web
+const APP_URL = 'https://charlit.github.io/sportquiz/';
+$('share').onclick = () => {
+  const text = mode in HARD ? `💀 ${good} bonne${good > 1 ? 's' : ''} réponse${good > 1 ? 's' : ''} d'affilée en ${NAMES[mode]} (${score} points) sur Football Quiz ! Tu fais mieux ?`
+                            : `⚽ ${score} points au ${NAMES[mode]} sur Football Quiz (${good} bonnes réponses) ! Tu fais mieux ?`;
+  if (GC) return nativeApp('share', { text, url: APP_URL });
+  if (navigator.share) return navigator.share({ text, url: APP_URL }).catch(() => {});
+  navigator.clipboard?.writeText(`${text} ${APP_URL}`).then(() => { $('share').textContent = '✅ Copié !'; setTimeout(() => $('share').textContent = '📤 Partager mon score', 2000); });
+};
 // Abandon en 2 appuis (pas de confirm() : la WebView de l'app iOS ne l'affiche pas et répond « non »)
 let quitTimer;
 const disarmQuit = () => { clearTimeout(quitTimer); $('quit').classList.remove('armed'); $('quit').textContent = '✕'; };
@@ -1131,6 +1232,7 @@ if (GC) {
     .then(q => { const ok = validQuestions(q); if (ok) { Object.assign(QUESTIONS, ok); store('quiz-questions', ok); } })
     .catch(() => {});
 }
+if (GC) document.documentElement.classList.add('app');
 if (GC) {                                        // l'app prévient quand le joueur Game Center change
   $('saveForm').classList.add('hidden');
   document.querySelector('#end h2').textContent = 'Classement';
