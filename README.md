@@ -9,7 +9,8 @@ QCM de sport : 15 questions de plus en plus difficiles (5 niveaux), 20 s par que
   5 questions par étape, 4 bonnes réponses pour débloquer la suivante (progression gardée dans le navigateur).
   **Mondial** : les 12 Coupes du monde (1978-2022) sur une carte du monde (pays organisateurs), 5 étapes par édition
   (phase de groupes → finale, de plus en plus dur).
-  Questions dans `clubs.json` (`pays` : fr / es / uk / de / it / wc ; `[étape, question, bonne réponse, mauvaise ×3]`), servies à la page sous forme de `clubs.js`.
+  Questions dans `clubs.json` (`pays` : fr / es / uk / de / it / wc ; `[étape, question, bonne réponse, mauvaise ×3]`), servies à la page sous forme de `clubs.js` ;
+  l'app iOS télécharge aussi la dernière version de `clubs.json` depuis GitHub (`main`), comme les questions par sport.
 - Questions dans `questions/<sport>.json`, un fichier par sport (foot, tennis, rugby, basket, f1, velo, boxe ; seule source) :
   `[niveau, question, bonne réponse, mauvaise, mauvaise, mauvaise]`. `server.py` les réunit et les sert à la page sous forme de `questions.js` ; l'app iOS ([sportquiz-ios](https://github.com/charlit/sportquiz-ios))
   les embarque et télécharge en arrière-plan la dernière version depuis GitHub (`main`) : **une question poussée sur `main` arrive

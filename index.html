@@ -1232,6 +1232,30 @@ if (GC) {
     .then(q => { const ok = validQuestions(q); if (ok) { Object.assign(QUESTIONS, ok); store('quiz-questions', ok); } })
     .catch(() => {});
 }
+// Clubs, Coupes du monde et CAN (Aventure, Hardcore par pays, Spécial Foot) : même principe avec clubs.json.
+const CLUBS_URL = 'https://raw.githubusercontent.com/charlit/sportquiz/main/clubs.json';
+const countC = c => Object.values(c).reduce((n, x) => n + x.q.length, 0);
+// Renvoie les clubs utilisables, ou null si le fichier est invalide. Aucun club existant ne doit disparaître
+// (progression de l'Aventure, badges) ; un club d'un pays inconnu de cette version est ignoré.
+function validClubs(c) {
+  if (!c || typeof c !== 'object' || Array.isArray(c)) return null;
+  const known = Object.fromEntries(Object.entries(c).filter(([, x]) => x && LANDS[x.pays || 'fr']));
+  const str = v => typeof v === 'string' && v;
+  const ok = Object.keys(CLUBS).every(id => known[id]) && Object.values(known).every(x => {
+    const n = LANDS[x.pays || 'fr'].stages || STAGES;
+    return str(x.nom) && str(x.court) && str(x.ville) && str(x.couleur) && Number.isFinite(x.lat) && Number.isFinite(x.lon) && Array.isArray(x.q) &&
+      x.q.every(q => Array.isArray(q) && q.length === 6 && Number.isInteger(q[0]) && q[0] >= 1 && q[0] <= n && q.slice(1).every(str)) &&
+      Array.from({ length: n }, (_, k) => k + 1).every(k => x.q.filter(q => q[0] === k).length >= PER_STAGE);   // 5 questions par étape au moins
+  });
+  return ok ? known : null;
+}
+if (GC) {
+  const cached = validClubs(load('quiz-clubs', null));
+  if (cached && countC(cached) >= countC(CLUBS)) Object.assign(CLUBS, cached);
+  fetch(CLUBS_URL, { cache: 'no-store' }).then(r => r.ok ? r.json() : null)
+    .then(c => { const ok = validClubs(c); if (ok) { Object.assign(CLUBS, ok); store('quiz-clubs', ok); } })
+    .catch(() => {});
+}
 if (GC) document.documentElement.classList.add('app');
 if (GC) {                                        // l'app prévient quand le joueur Game Center change
   $('saveForm').classList.add('hidden');
