@@ -129,6 +129,9 @@ server.current_week = lambda today=None: None
 assert call('/api/scores', {'name': 'Semaine', 'mode': 'semaine', 'score': 10, 'good': 1})[0] == 400
 server.current_week = real_week
 print('ok défi de la semaine')
+with urllib.request.urlopen(URL + '/matchs.js') as r:  # avant-matchs : liste (éventuellement vide) produite par scripts/matchs.py
+    assert isinstance(json.loads(r.read().decode().removeprefix('const MATCHS = ').rstrip().rstrip(';')), list)
+print('ok matchs.js')
 
 # Page admin : HTTP Basic (admin + QUIZ_ADMIN_PASSWORD), échappe les pseudos, se bloque après trop d'erreurs
 import base64  # noqa: E402

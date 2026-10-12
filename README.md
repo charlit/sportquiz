@@ -19,6 +19,10 @@ QCM de sport : 15 questions de plus en plus difficiles (5 niveaux), 20 s par que
   `titre`, `icone`, `intro`, `q` = 10 × `[niveau, question, bonne réponse, mauvaise ×3]`), une seule tentative, classement remis à zéro chaque lundi
   (serveur : « semaine:<debut> », app : classement Game Center récurrent `sportquiz.semaine`). Sans défi pour la semaine en cours, la tuile l'annonce.
   L'app télécharge aussi `semaine.json` depuis GitHub : **ajouter des semaines à l'avance suffit, sans mise à jour de l'app**.
+- **Avant-match** : 24 h avant une grosse affiche entre deux clubs de l'Aventure (Ligue 1, Liga, Premier League, Bundesliga,
+  Serie A, Ligue des champions), un quiz de 10 questions (5 par équipe, tirées de `clubs.json`) apparaît sur l'accueil, rejouable
+  jusqu'au coup d'envoi, sans classement. `matchs.json` est mis à jour toutes les 6 h par le robot GitHub
+  (`.github/workflows/matchs.yml` → `scripts/matchs.py`, calendrier football-data.org, clé dans le secret `FOOTBALL_DATA_KEY`).
 - `server.py` (Python, stdlib) sert le jeu + `api/scores` ; scores dans `data/scores.json`
 - Page **`/admin`** (joueurs du site, dernière partie, badges, meilleurs scores, joueurs par mode) : identifiant `admin`,
   mot de passe dans la variable d'environnement `QUIZ_ADMIN_PASSWORD` (sans elle, la page n'existe pas).
