@@ -43,7 +43,14 @@
   dialog li { margin:6px 0; }
   dialog .btn { width:100%; }
   .tile .tag { position:absolute; top:46px; right:10px; font-size:.75rem; font-weight:800; padding:2px 8px; border-radius:999px; background:var(--c); color:#111; }
-  .c-foot { --c:#2ecc71; } .c-hc { --c:#ff5a4f; } .c-adv { --c:#ffb02e; }
+  .c-foot { --c:#2ecc71; } .c-hc { --c:#ff5a4f; } .c-adv { --c:#ffb02e; } .c-week { --c:#4fa3ff; }
+  .tile.week { min-height:0; display:flex; align-items:center; gap:14px; }
+  .tile.week b { font-size:2.2rem; }
+  .tile.week strong { margin:0 0 2px; }
+  .tile.week { padding-top:30px; }
+  .tile.week .tag { top:12px; right:48px; }
+  .tile:disabled { cursor:default; opacity:.6; transform:none; box-shadow:none; }
+  #boardInfo { margin:12px 2px 0; color:var(--dim); text-align:center; }
 
   /* choix du sport */
   .sports { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:12px; }
@@ -97,8 +104,8 @@
   .card { background:var(--card); border:1px solid var(--line); border-radius:18px; padding:16px; margin-top:20px; }
   .card h2 { margin:0 0 10px; font-size:1.2rem; }
   /* Classement : Spécial Foot / Hardcore, puis une ligne de pays qui défile, podium, liste et ta place toujours visible */
-  .seg { display:grid; grid-template-columns:1fr 1fr; gap:4px; padding:4px; border-radius:14px; background:var(--card); border:1px solid var(--line); }
-  .seg button { padding:10px; border:0; border-radius:10px; background:transparent; color:var(--dim); font-size:1rem; font-weight:700; cursor:pointer; }
+  .seg { display:grid; grid-template-columns:repeat(3, 1fr); gap:4px; padding:4px; border-radius:14px; background:var(--card); border:1px solid var(--line); }
+  .seg button { padding:10px 4px; border:0; border-radius:10px; background:transparent; color:var(--dim); font-size:.92rem; font-weight:700; cursor:pointer; white-space:nowrap; }
   .seg button.on { background:var(--acc); color:#111; }
   .chips { display:flex; gap:8px; overflow-x:auto; padding:10px 2px 2px; scrollbar-width:none;
            -webkit-mask-image:linear-gradient(90deg, #000 85%, transparent); mask-image:linear-gradient(90deg, #000 85%, transparent); }
@@ -251,6 +258,9 @@
         <button class="info" data-info="hard" aria-label="Règles du Hardcore">i</button></div>
       <div class="tw" style="grid-column:1/-1"><button class="tile c-adv" id="goAdv"><span class="tag">NOUVEAU</span><b>🗺️</b><strong>Aventure</strong><small>Les clubs de cinq grands pays, la Coupe du monde et la CAN</small></button>
         <button class="info" data-info="adv" aria-label="Règles de l'Aventure">i</button></div>
+      <div class="tw" style="grid-column:1/-1"><button class="tile c-week week" id="goWeek"><span class="tag">CHAQUE SEMAINE</span><b id="weekIcon">📅</b>
+        <span><strong>Défi de la semaine</strong><small id="weekText"></small></span></button>
+        <button class="info" data-info="week" aria-label="Règles du défi de la semaine">i</button></div>
     </div>
     <button class="rankbtn" id="goRanks">🏅 Classement</button>
     <dialog id="infoBox" aria-labelledby="infoTitle">
@@ -297,7 +307,8 @@
 
   <section id="ranks" class="hidden">
     <div class="head"><button class="back" data-back="home">← Accueil</button><h2>🏅 Classement</h2></div>
-    <div class="seg"><button data-kind="foot" class="on">⚽ Spécial Foot</button><button data-kind="hard">💀 Hardcore</button></div>
+    <div class="seg"><button data-kind="foot" class="on">⚽ Spécial Foot</button><button data-kind="hard">💀 Hardcore</button><button data-kind="week">📅 Semaine</button></div>
+    <p id="boardInfo" class="hidden"></p>
     <div class="chips hidden" id="hardChips">
       <button data-board="hardfoot">⚽ Tout le foot</button><button data-board="hardfr" data-flag="fr">France</button><button data-board="hardes" data-flag="es">Espagne</button><button data-board="harduk" data-flag="uk">Royaume-Uni</button><button data-board="hardde" data-flag="de">Allemagne</button><button data-board="hardit" data-flag="it">Italie</button><button data-board="hardwc">🏆 Mondial</button><button data-board="hardcan">🌍 CAN</button>
     </div>
@@ -371,6 +382,7 @@
 
 <script src="questions.js"></script>
 <script src="clubs.js"></script>
+<script src="semaine.js"></script>
 <script>
 const LEVELS = ['', 'Facile', 'Moyen', 'Difficile', 'Expert', 'Légende'];
 const LEVEL_COLORS = ['', '#2ecc71', '#3fa7ff', '#ffb02e', '#ff6b3f', '#c56cff'];
@@ -381,7 +393,7 @@ const FOOT_PLAN = [0, 10, 20, 25, 25, 20]; // Spécial Foot : questions par nive
 const HARD = { hard: null, hardfoot: 'foot', hardrugby: 'rugby', hardbasket: 'basket', hardtennis: 'tennis', hardf1: 'f1', hardvelo: 'velo',
                hardfr: 'fr', hardes: 'es', harduk: 'uk', hardde: 'de', hardit: 'it', hardwc: 'wc', hardcan: 'can' }; // modes 1 vie, niveaux 4-5, sans fin (null = tous les sports)
 const HARD_PAYS = ['fr', 'es', 'uk', 'de', 'it', 'wc', 'can']; // Hardcore par pays, Mondial et CAN : questions de l'Aventure de niveau 4-5 (clubs : étapes 7-10, éditions : étapes 4-5)
-const NAMES = { foot: 'Spécial Foot', hardfr: 'Hardcore France', hardes: 'Hardcore Espagne', harduk: 'Hardcore Royaume-Uni',
+const NAMES = { semaine: 'Défi de la semaine', foot: 'Spécial Foot', hardfr: 'Hardcore France', hardes: 'Hardcore Espagne', harduk: 'Hardcore Royaume-Uni',
                 hardde: 'Hardcore Allemagne', hardit: 'Hardcore Italie', hardwc: 'Hardcore Coupe du monde', hardcan: 'Hardcore CAN', hard: 'Hardcore Tous sports', hardfoot: 'Hardcore Foot', hardrugby: 'Hardcore Rugby',
                 hardbasket: 'Hardcore Basket', hardtennis: 'Hardcore Tennis', hardf1: 'Hardcore Sport auto', hardvelo: 'Hardcore Cyclisme', adv: 'Aventure' };
 // Aventure : 10 étapes par sport (2 par niveau), 5 questions, 4 bonnes réponses pour passer
@@ -394,7 +406,7 @@ const stageLevel = k => Math.ceil(k * 5 / stagesOf(advClub)); // difficulté (po
 const $ = id => document.getElementById(id);
 const shuffle = a => { a = [...a]; for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const SCREENS = ['home', 'profile', 'badges', 'ranks', 'pick', 'lands', 'clubs', 'adv', 'quiz', 'end', 'advEnd'];
-const show = id => { SCREENS.forEach(s => $(s).classList.toggle('hidden', s !== id)); scrollTo(0, 0); };
+const show = id => { SCREENS.forEach(s => $(s).classList.toggle('hidden', s !== id)); scrollTo(0, 0); if (id === 'home') renderWeek(); };
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
 const store = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} };
 const load = (k, d) => { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch { return d; } };
@@ -431,8 +443,33 @@ function footSources() {
   return [QUESTIONS.foot.map(q => ['foot', q]), advQs(l => !LANDS[l].ed, k => Math.ceil(k / 2)), advQs(l => LANDS[l].ed, k => k)];
 }
 
+// Défi de la semaine (semaine.json) : 10 questions sur une personnalité, les mêmes pour tous, une seule tentative.
+// Une semaine va du lundi au dimanche (dates UTC) ; sans défi cette semaine, la tuile l'annonce.
+const isoDay = t => new Date(t).toISOString().slice(0, 10);
+const weekEnd = w => isoDay(Date.parse(w.debut + 'T00:00:00Z') + 7 * 864e5);
+const weekNow = () => { const d = isoDay(Date.now()); return SEMAINE.filter(w => w.debut <= d && d < weekEnd(w)).sort((a, b) => a.debut < b.debut ? -1 : 1).pop() || null; };
+const weekDone = load('quiz-semaine', {});   // début de la semaine → { score, good } (posé dès le début : quitter compte comme la tentative)
+function renderWeek() {
+  const w = weekNow(), done = w && weekDone[w.debut];
+  const days = w ? Math.round((Date.parse(weekEnd(w) + 'T00:00:00Z') - Date.now()) / 864e5) : 0;
+  $('weekIcon').textContent = w ? w.icone || '📅' : '📅';
+  $('goWeek').disabled = !w || !!done;
+  $('weekText').textContent = !w ? 'Prochain défi très bientôt'
+    : done ? `${w.titre} · ton score : ${done.score} pts · nouveau défi lundi`
+    : `${w.titre} · 10 questions, 1 seul essai · encore ${days} jour${days > 1 ? 's' : ''}`;
+}
+$('goWeek').onclick = () => {
+  const w = weekNow();
+  if (!w || weekDone[w.debut]) return renderWeek();
+  if (!confirm(`Défi : ${w.titre}\n${w.intro || ''}\n\n10 questions, un seul essai cette semaine. C'est parti ?`)) return;
+  weekDone[w.debut] = { score: 0, good: 0 }; store('quiz-semaine', weekDone);
+  start('semaine');
+};
+renderWeek();
+
 function buildDeck(m) {
   const out = [];
+  if (m === 'semaine') return weekNow().q.map(q => ['semaine', q]);
   if (m in HARD) { // questions niveau 4-5, jamais vues d'abord ; marquées vues quand posées
     const pool = HARD_PAYS.includes(HARD[m])
       ? Object.entries(CLUBS).filter(([, c]) => c.pays === HARD[m]).flatMap(([id, c]) => c.q.map(q => [id, [LANDS[HARD[m]].ed ? q[0] : Math.ceil(q[0] / 2), ...q.slice(1)]]))
@@ -463,7 +500,7 @@ const points = (lvl, left) => Math.round(lvl * 100 * (mode in HARD ? 0.2 + 1.8 *
 
 function start(m) {
   mode = m; deck = buildDeck(m); idx = 0; score = 0; good = 0; saved = false;
-  lives = m in HARD ? 1 : m === 'adv' ? PER_STAGE - NEED + 1 : 3;
+  lives = m in HARD ? 1 : m === 'adv' ? PER_STAGE - NEED + 1 : m === 'semaine' ? Infinity : 3;
   $('score').textContent = 0;
   show('quiz');
   ask();
@@ -477,14 +514,15 @@ function ask() {
     $('count').textContent = `💀 Question ${idx + 1} · ❤️ 1 vie`;
     $('progress').style.width = '0';
   } else {
-    $('count').textContent = mode === 'adv'
+    $('count').textContent = mode === 'semaine' ? `📅 Question ${idx + 1} / ${deck.length}`
+      : mode === 'adv'
       ? `🗺️ Étape ${stage} · ${idx + 1}/${PER_STAGE} · ✅ ${good}/${NEED}`
       : `Question ${idx + 1} / ${deck.length} · ${'❤️'.repeat(lives)}`;
     $('progress').style.width = (idx / deck.length * 100) + '%';
   }
   $('level').textContent = mode === 'adv' ? `Étape ${stage} · ${eraOf(advClub, stage)}` : `Niveau ${lvl} · ${LEVELS[lvl]}`;
   $('level').style.background = LEVEL_COLORS[lvl]; $('level').style.color = '#111';
-  $('sport').textContent = SPORTS[sport] || `${LANDS[landOf(sport)].icon || '⚽'} ${CLUBS[sport].court}`;
+  $('sport').textContent = sport === 'semaine' ? `📅 ${weekNow()?.titre || 'Défi'}` : SPORTS[sport] || `${LANDS[landOf(sport)].icon || '⚽'} ${CLUBS[sport].court}`;
   $('question').textContent = q.replace(/ ([?!:;»])/g, '\u00a0$1').replace(/« /g, '«\u00a0');
   $('feedback').textContent = ''; $('stake').textContent = '';
   $('answers').innerHTML = '';
@@ -533,7 +571,7 @@ function answer(btn, ok, lvl) {
       if (lost) msg += ` −${lost} points`;
     }
     if (mode === 'adv') msg += lives ? ' · encore une erreur et l\'étape est ratée' : ' · étape ratée';
-    else msg += lives ? ` · plus qu'${lives > 1 ? lives + ' vies' : 'une vie'} ❤️` : ' 💀 Game over';
+    else if (mode !== 'semaine') msg += lives ? ` · ${lives > 1 ? `plus que ${lives} vies` : 'plus qu’une vie'} ❤️` : ' 💀 Game over';
     $('feedback').textContent = msg;
     $('feedback').style.color = 'var(--ko)';
   }
@@ -545,6 +583,7 @@ function finish() {
   $('progress').style.width = '100%';
   unlock('first');
   if (mode === 'foot' && good === deck.length) unlock('perfect');
+  if (mode === 'semaine' && good === deck.length) unlock('semaine');   // une seule fois : un badge déjà gagné ne se regagne pas
   if (mode === 'foot' && lives > 0) unlock('marathon');
   if (mode === 'foot' && score >= 20000) unlock('footscore');
   if (HARD[mode]) { // Hardcore par sport : on retient les sports joués
@@ -554,6 +593,8 @@ function finish() {
   }
   if (mode === 'adv') return advFinish();
   $('final').textContent = score + ' pts';
+  $('again').classList.toggle('hidden', mode === 'semaine');
+  if (mode === 'semaine') { const w = weekNow(); if (w) { weekDone[w.debut] = { score, good }; store('quiz-semaine', weekDone); } }
   // Demande d'avis App Store après une belle partie, à partir de la 3e (iOS décide s'il l'affiche, 3 fois par an au plus)
   const played = load('quiz-played', 0) + 1; store('quiz-played', played);
   if (played >= 3 && (mode in HARD ? good >= 10 : good / deck.length >= .6)) setTimeout(() => nativeApp('review'), 1500);
@@ -909,6 +950,7 @@ function advFinish() {
 const BADGES = [
   ['first', '🎮', 'Première partie', 'Jouer une partie jusqu’au bout'],
   ['perfect', '🎯', 'Sans faute', 'Finir le Spécial Foot sans aucune erreur'],
+  ['semaine', '📅', 'Défi parfait', 'Répondre juste aux 10 questions d’un défi de la semaine'],
   ['reflex', '⚡', 'Réflexe', 'Bonne réponse en moins de 2 secondes'],
   ['streak', '🔥', 'Série', '10 bonnes réponses d’affilée en Hardcore'],
   ['supporter', '📣', 'Supporter', 'Finir les 10 étapes d’un club de l’Aventure'],
@@ -1053,7 +1095,7 @@ $('goProfile').onclick = () => { refreshProfile(); show('profile'); };
 $('goBadges').onclick = () => { refreshProfile(); show('badges'); };
 // Contact : ouvre l'app mail avec l'objet et l'appareil pré-remplis
 const CONTACT = 'sportquiz64@gmail.com';
-$('contact').href = `mailto:${CONTACT}?subject=${encodeURIComponent('Sport Quiz : bug / suggestion')}&body=${encodeURIComponent(
+$('contact').href = `mailto:${CONTACT}?subject=${encodeURIComponent('Football Quiz : bug / suggestion')}&body=${encodeURIComponent(
   `Bonjour,\n\n(Décris le bug ou ton idée ici)\n\n---\nAppareil : ${navigator.userAgent}\nVersion : ${GC ? 'app iOS' : 'site web'}`)}`;
 
 /* ---------- Classements ---------- */
@@ -1068,7 +1110,7 @@ function renderBoard(rows, table, me, m) {
 
 // Page Classement : podium pour le top 3, liste à partir du 4e, et la place du joueur toujours visible en bas
 const fmt = n => Number(n).toLocaleString('fr-FR');
-const BOARDS = ['foot', 'hardfoot', 'hardfr', 'hardes', 'harduk', 'hardde', 'hardit', 'hardwc', 'hardcan'];
+const BOARDS = ['semaine', 'foot', 'hardfoot', 'hardfr', 'hardes', 'harduk', 'hardde', 'hardit', 'hardwc', 'hardcan'];
 let boardMode = 'foot', lastHard = 'hardfoot', boardReq = 0;
 function renderRanks(rows) {
   const me = playerName(), mine = rows.findIndex(r => me && nameKey(r.name) === nameKey(me));
@@ -1084,9 +1126,13 @@ function renderRanks(rows) {
     : 'Connecte-toi à Game Center pour apparaître au classement';
 }
 async function openBoard(m) {
-  boardMode = m; if (m !== 'foot') lastHard = m;
-  document.querySelectorAll('[data-kind]').forEach(b => b.classList.toggle('on', (b.dataset.kind === 'foot') === (m === 'foot')));
-  $('hardChips').classList.toggle('hidden', m === 'foot');
+  boardMode = m; if (m in HARD) lastHard = m;
+  const kind = m === 'foot' ? 'foot' : m === 'semaine' ? 'week' : 'hard';
+  document.querySelectorAll('[data-kind]').forEach(b => b.classList.toggle('on', b.dataset.kind === kind));
+  $('hardChips').classList.toggle('hidden', kind !== 'hard');
+  const w = weekNow();
+  $('boardInfo').classList.toggle('hidden', kind !== 'week');
+  $('boardInfo').textContent = w ? `${w.icone || '📅'} Défi : ${w.titre} · remis à zéro lundi` : 'Pas de défi cette semaine';
   document.querySelectorAll('[data-board]').forEach(b => {
     b.classList.toggle('on', b.dataset.board === m);
     if (b.dataset.board === m) b.scrollIntoView({ block: 'nearest', inline: 'nearest' });
@@ -1159,6 +1205,9 @@ const RULES = {
     'Coupe d’Afrique : les 14 CAN de 2000 à 2025, 5 étapes chacune, sur le même principe.',
     '5 questions par étape : il faut au moins 4 bonnes réponses pour débloquer l’étape suivante.',
     '20 secondes par question.', 'Ta progression est gardée sur cet appareil.']],
+  week: ['📅 Défi de la semaine', ['Chaque lundi, un nouveau défi : 10 questions sur une personnalité du foot, les mêmes pour tout le monde.',
+    'Un seul essai par semaine : quitter la partie compte comme ton essai.', 'Pas de vies : les 10 questions sont posées, de plus en plus dures.',
+    '20 secondes par question, et plus tu réponds vite, plus tu marques.', 'Classement de la semaine, remis à zéro chaque lundi.']],
 };
 document.querySelectorAll('[data-info]').forEach(b => b.onclick = () => {
   const [title, lines] = RULES[b.dataset.info];
@@ -1172,7 +1221,7 @@ $('goAdv').onclick = openLands;
 document.querySelectorAll('[data-back]').forEach(b => b.onclick = () => show(b.dataset.back));
 $('advBack').onclick = openClubs;
 $('advMap').onclick = () => openAdv(advClub);
-document.querySelectorAll('[data-kind]').forEach(b => b.onclick = () => openBoard(b.dataset.kind === 'foot' ? 'foot' : lastHard));
+document.querySelectorAll('[data-kind]').forEach(b => b.onclick = () => openBoard({ foot: 'foot', week: 'semaine' }[b.dataset.kind] || lastHard));
 document.querySelectorAll('[data-board]').forEach(b => b.onclick = () => openBoard(b.dataset.board));
 $('gcBoard').classList.toggle('hidden', !GC);
 // Réglages du profil (app seulement : les vibrations n'existent pas sur le site)
@@ -1254,6 +1303,21 @@ if (GC) {
   if (cached && countC(cached) >= countC(CLUBS)) Object.assign(CLUBS, cached);
   fetch(CLUBS_URL, { cache: 'no-store' }).then(r => r.ok ? r.json() : null)
     .then(c => { const ok = validClubs(c); if (ok) { Object.assign(CLUBS, ok); store('quiz-clubs', ok); } })
+    .catch(() => {});
+}
+// Défis de la semaine : même principe avec semaine.json (les nouvelles semaines arrivent sans mise à jour de l'app).
+const SEMAINE_URL = 'https://raw.githubusercontent.com/charlit/sportquiz/main/semaine.json';
+function validWeeks(a) {
+  const str = v => typeof v === 'string' && v;
+  return Array.isArray(a) && a.length && a.every(w => w && /^\d{4}-\d{2}-\d{2}$/.test(w.debut) && str(w.titre) && Array.isArray(w.q) && w.q.length === 10 &&
+    w.q.every(q => Array.isArray(q) && q.length === 6 && Number.isInteger(q[0]) && q[0] >= 1 && q[0] <= 5 && q.slice(1).every(str))) ? a : null;
+}
+if (GC) {
+  const useWeeks = a => { SEMAINE.splice(0, SEMAINE.length, ...a); renderWeek(); };
+  const cached = validWeeks(load('quiz-semaine-data', null));
+  if (cached && cached.length >= SEMAINE.length) useWeeks(cached);
+  fetch(SEMAINE_URL, { cache: 'no-store' }).then(r => r.ok ? r.json() : null)
+    .then(a => { const ok = validWeeks(a); if (ok) { useWeeks(ok); store('quiz-semaine-data', ok); } })
     .catch(() => {});
 }
 if (GC) document.documentElement.classList.add('app');

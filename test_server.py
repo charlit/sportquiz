@@ -111,6 +111,25 @@ for _ in range(server.MAX_FAILS):
 assert call('/api/profile/sync', {'name': 'Zoé', 'code': code})[0] == 429
 print('ok profils')
 
+# Défi de la semaine : semaine.js servi, une semaine = un classement, refusé sans défi en cours
+import datetime  # noqa: E402
+with urllib.request.urlopen(URL + '/semaine.js') as r:
+    weeks = json.loads(r.read().decode().removeprefix('const SEMAINE = ').rstrip().rstrip(';'))
+assert weeks and all(len(w['q']) == 10 and all(len(q) == 6 and len(set(q[2:])) == 4 for q in w['q']) for w in weeks)
+assert len({w['debut'] for w in weeks}) == len(weeks) and all(datetime.date.fromisoformat(w['debut']).weekday() == 0 for w in weeks)  # lundis
+assert server.current_week(datetime.date.fromisoformat(weeks[0]['debut']) + datetime.timedelta(days=6)) == weeks[0]['debut']
+real_week = server.current_week
+server.current_week = lambda today=None: '2026-10-12'
+assert call('/api/scores', {'name': 'Semaine', 'mode': 'semaine', 'score': 2500, 'good': 9})[0] == 200
+assert call('/api/scores', {'name': 'Triche', 'mode': 'semaine', 'score': 3100, 'good': 10})[0] == 400   # au-dessus du max (3 000)
+assert [r['name'] for r in call('/api/scores?mode=semaine')[1]] == ['Semaine']
+server.current_week = lambda today=None: '2026-10-19'                                                    # semaine suivante : classement vide
+assert call('/api/scores?mode=semaine') == (200, [])
+server.current_week = lambda today=None: None
+assert call('/api/scores', {'name': 'Semaine', 'mode': 'semaine', 'score': 10, 'good': 1})[0] == 400
+server.current_week = real_week
+print('ok défi de la semaine')
+
 # Page admin : HTTP Basic (admin + QUIZ_ADMIN_PASSWORD), échappe les pseudos, se bloque après trop d'erreurs
 import base64  # noqa: E402
 

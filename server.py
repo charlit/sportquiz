@@ -1,5 +1,6 @@
 """Sport Quiz : sert le jeu + classement partagé (stdlib uniquement)."""
 import base64
+import datetime
 import hashlib
 import html
 import json
@@ -17,13 +18,15 @@ FILES = {'/': ('index.html', 'text/html; charset=utf-8'),
 # questions/<sport>.json (un fichier par sport ; l'app iOS les télécharge aussi depuis GitHub) et clubs.json (Aventure : clubs de cinq pays et Coupes du monde)
 # sont les seules sources ; la page les reçoit sous forme de script pour rester synchrone au chargement.
 QUESTIONS_DIR = os.path.join(ROOT, 'questions')
-DATA_JS = {'/questions.js': ('QUESTIONS', None), '/clubs.js': ('CLUBS', 'clubs.json')}
+DATA_JS = {'/questions.js': ('QUESTIONS', None), '/clubs.js': ('CLUBS', 'clubs.json'), '/semaine.js': ('SEMAINE', 'semaine.json')}
 MAX_SCORE = {'foot': 32_500, 'multi': 4500, 'hard': 400_000, 'hardfoot': 400_000, 'hardrugby': 400_000, 'hardbasket': 400_000, 'hardtennis': 400_000, 'hardf1': 400_000, 'hardvelo': 400_000, 'hardfr': 400_000, 'hardes': 400_000, 'harduk': 400_000, 'hardde': 400_000, 'hardit': 400_000, 'hardwc': 400_000, 'hardcan': 400_000}  # foot 100 questions (FOOT_PLAN : 100 × (10×1 + 20×2 + 25×3 + 25×4 + 20×5)) / multi 15, max niveau*100 pts ; hard* = sans fin
-MAX_GOOD = {'foot': 100, 'multi': 15, 'hard': 400, 'hardfoot': 400, 'hardrugby': 400, 'hardbasket': 400, 'hardtennis': 400, 'hardf1': 400, 'hardvelo': 400, 'hardfr': 400, 'hardes': 400, 'harduk': 400, 'hardde': 400, 'hardit': 400, 'hardwc': 400, 'hardcan': 400}
+# Défi de la semaine : 10 questions (2 par niveau), une seule tentative ; classement propre à chaque semaine (voir board_key)
+MAX_SCORE['semaine'] = 100 * 2 * sum(range(1, 6))
+MAX_GOOD = {'foot': 100, 'multi': 15, 'hard': 400, 'hardfoot': 400, 'hardrugby': 400, 'hardbasket': 400, 'hardtennis': 400, 'hardf1': 400, 'hardvelo': 400, 'hardfr': 400, 'hardes': 400, 'harduk': 400, 'hardde': 400, 'hardit': 400, 'hardwc': 400, 'hardcan': 400, 'semaine': 10}
 # Profils web : pseudo + code secret pour retrouver ses badges sur un autre appareil (l'app iOS utilise Game Center).
 PROFILES = os.environ.get('QUIZ_PROFILES', os.path.join(os.path.dirname(DB), 'profiles.json'))
 CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'  # sans 0/O ni 1/I, faciles à confondre
-BADGES = {'first', 'perfect', 'reflex', 'streak', 'supporter', 'tour', 'liga', 'albion', 'bundes', 'calcio', 'globe', 'marathon', 'multi', 'beast', 'allround',
+BADGES = {'first', 'perfect', 'semaine', 'reflex', 'streak', 'supporter', 'tour', 'liga', 'albion', 'bundes', 'calcio', 'globe', 'marathon', 'multi', 'beast', 'allround',
           'footscore', 'multiscore', 'hard', 'hardfoot', 'hardrugby', 'hardbasket', 'hardtennis', 'hardf1', 'hardvelo', 'mondial', 'memoire', 'hardfr', 'hardes', 'harduk', 'hardde', 'hardit', 'hardwc', 'can', 'canall', 'hardcan'}
 # Page /admin (joueurs, scores, badges) : désactivée tant que QUIZ_ADMIN_PASSWORD n'est pas défini. Identifiant : admin.
 ADMIN_PASSWORD = os.environ.get('QUIZ_ADMIN_PASSWORD', '')
@@ -113,9 +116,32 @@ def merge_badges(mine, sent):
     return mine
 
 
+def current_week(today=None):
+    """Début (« AAAA-MM-JJ ») du défi de la semaine en cours dans semaine.json, ou None s'il n'y en a pas cette semaine."""
+    today = today or datetime.datetime.now(datetime.timezone.utc).date()
+    try:
+        weeks = json.load(open(os.path.join(ROOT, 'semaine.json'), encoding='utf-8'))
+    except (OSError, ValueError):
+        return None
+    starts = [w['debut'] for w in weeks if datetime.date.fromisoformat(w['debut']) <= today < datetime.date.fromisoformat(w['debut']) + datetime.timedelta(days=7)]
+    return max(starts, default=None)
+
+
+def board_key(mode):
+    """Clé du classement dans scores.json : le défi de la semaine a un classement par semaine (« semaine:2026-10-12 »)."""
+    if mode != 'semaine':
+        return mode
+    week = current_week()
+    return week and 'semaine:' + week
+
+
 def top(db, mode, n=100):  # 100 premiers affichés au classement
     rows = sorted(db.get(mode, {}).values(), key=lambda p: (-p['score'], p['date']))
     return rows[:n]
+
+
+def mode_name(m):
+    return 'Défi du ' + m.split(':')[1] if m.startswith('semaine:') else MODE_NAMES.get(m, m)
 
 
 def admin_page(db, profiles):
@@ -135,9 +161,9 @@ def admin_page(db, profiles):
     day = lambda t: time.strftime('%d/%m/%Y %H:%M', time.localtime(t)) if t else '—'
     e = html.escape
     stats = [('Joueurs', len(rows)), ('Actifs 24 h', active(1)), ('Actifs 7 j', active(7)), ('Actifs 30 j', active(30)), ('Profils protégés', len(profiles))]
-    modes = sorted(((MODE_NAMES.get(m, m), len(b), max((x['score'] for x in b.values()), default=0)) for m, b in db.items() if b), key=lambda x: -x[1])
+    modes = sorted(((mode_name(m), len(b), max((x['score'] for x in b.values()), default=0)) for m, b in db.items() if b), key=lambda x: -x[1])
     body = ''.join(f'<tr><td>{e(p["name"])}{" 🔒" if p["profile"] else ""}</td><td>{day(p["last"])}</td><td>🏅 {p["badges"]}</td>'
-                   f'<td>{len(p["best"])}</td><td class="m">{e(", ".join(f"{MODE_NAMES.get(m, m)} {v}" for m, v in sorted(p["best"].items(), key=lambda x: -x[1])))}</td></tr>'
+                   f'<td>{len(p["best"])}</td><td class="m">{e(", ".join(f"{mode_name(m)} {v}" for m, v in sorted(p["best"].items(), key=lambda x: -x[1])))}</td></tr>'
                    for p in rows) or '<tr><td colspan="5">Aucun joueur pour l’instant.</td></tr>'
     return f'''<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex"><title>Sport Quiz · Admin</title><style>
@@ -202,7 +228,7 @@ class Handler(BaseHTTPRequestHandler):
             mode = query.removeprefix('mode=')
             if mode not in MAX_SCORE:
                 return self.send(400, {'error': 'mode inconnu'})
-            return self.send(200, top(load(), mode))
+            return self.send(200, top(load(), board_key(mode)) if board_key(mode) else [])
         if path in ('/admin', '/admin/') and ADMIN_PASSWORD:
             with lock:
                 ok = admin_ok(self.headers.get('Authorization', ''))
@@ -248,8 +274,10 @@ class Handler(BaseHTTPRequestHandler):
                 ok = code_ok(profile, key, d.get('code', ''))
                 if ok is not True:
                     return self.send(429 if ok == 'bloqué' else 403, {'error': 'pseudo protégé par un code'})
+            if not board_key(mode):
+                return self.send(400, {'error': 'pas de défi cette semaine'})
             db = load()
-            board = db.setdefault(mode, {})
+            board = db.setdefault(board_key(mode), {})
             p = board.get(key)
             if not p or score > p['score']:  # on garde le meilleur score par pseudo
                 board[key] = {'name': name, 'score': score, 'good': good, 'badges': badges, 'date': int(time.time())}
@@ -257,7 +285,7 @@ class Handler(BaseHTTPRequestHandler):
             elif p.get('badges', 0) != badges:  # score pas battu, mais le nombre de badges est mis à jour
                 p['badges'] = badges
                 save(db)
-            rows = top(db, mode)
+            rows = top(db, board_key(mode))
         self.send(200, rows)
 
 

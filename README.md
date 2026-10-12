@@ -15,6 +15,10 @@ QCM de sport : 15 questions de plus en plus difficiles (5 niveaux), 20 s par que
   `[niveau, question, bonne réponse, mauvaise, mauvaise, mauvaise]`. `server.py` les réunit et les sert à la page sous forme de `questions.js` ; l'app iOS ([sportquiz-ios](https://github.com/charlit/sportquiz-ios))
   les embarque et télécharge en arrière-plan la dernière version depuis GitHub (`main`) : **une question poussée sur `main` arrive
   dans l'app sans republier sur l'App Store** (à la partie suivante, ou au lancement suivant).
+- **Défi de la semaine** : chaque lundi, 10 questions sur une personnalité (`semaine.json` : `debut` = un lundi « AAAA-MM-JJ »,
+  `titre`, `icone`, `intro`, `q` = 10 × `[niveau, question, bonne réponse, mauvaise ×3]`), une seule tentative, classement remis à zéro chaque lundi
+  (serveur : « semaine:<debut> », app : classement Game Center récurrent `sportquiz.semaine`). Sans défi pour la semaine en cours, la tuile l'annonce.
+  L'app télécharge aussi `semaine.json` depuis GitHub : **ajouter des semaines à l'avance suffit, sans mise à jour de l'app**.
 - `server.py` (Python, stdlib) sert le jeu + `api/scores` ; scores dans `data/scores.json`
 - Page **`/admin`** (joueurs du site, dernière partie, badges, meilleurs scores, joueurs par mode) : identifiant `admin`,
   mot de passe dans la variable d'environnement `QUIZ_ADMIN_PASSWORD` (sans elle, la page n'existe pas).
