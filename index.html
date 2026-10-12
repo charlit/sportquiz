@@ -198,6 +198,13 @@
   @property --a { syntax:'<angle>'; inherits:true; initial-value:0deg; }
   @keyframes ringspin { to { --a:360deg; } }
   @media (prefers-reduced-motion: reduce) { .avatar[data-tier="legende"] { animation:none; } }
+  .frames { display:grid; grid-template-columns:repeat(6, 1fr); gap:6px; padding:8px 0 4px; }
+  .frame { display:grid; justify-items:center; gap:6px; min-width:0; padding:10px 0 8px; border-radius:14px; cursor:pointer;
+           border:1px solid var(--line); background:var(--card2); color:var(--txt); font-size:.68rem; font-weight:700; }
+  .frame .avatar { width:30px; height:30px; font-size:.9rem; }
+  .frame.on { border-color:var(--acc); box-shadow:0 0 0 2px var(--acc) inset; }
+  .frame:disabled { cursor:default; opacity:.4; }
+  .frame small { color:var(--dim); font-weight:400; font-size:.7rem; }
   .profbtn { padding-left:7px; gap:10px; }
   .who { padding-left:8px; }
   .profbtn small { font-weight:800; color:var(--acc); }
@@ -282,6 +289,11 @@
     <div class="who"><span class="avatar" id="whoAvatar">👤</span><span><strong id="whoName"></strong><small id="whoCount"></small></span></div>
     <button class="rankbtn" id="goBadges">🏅 Mes badges <small id="badgesCount"></small></button>
     <a class="rankbtn" id="contact" style="font-size:1rem;text-align:center;text-decoration:none;color:inherit">✉️ Signaler un bug ou proposer une idée</a>
+    <div class="card hidden" id="frames">
+      <h2>🎨 Mon encart</h2>
+      <p class="small" style="color:var(--dim);margin:0 0 12px">Choisis l’encart autour de ton nom parmi ceux que tu as débloqués.</p>
+      <div class="frames" id="frameList"></div>
+    </div>
     <div class="card hidden" id="settings">
       <h2>⚙️ Réglages</h2>
       <label class="setting"><span>📳 Vibrations<small>Bonne réponse, erreur, badge débloqué</small></span><input type="checkbox" class="toggle" id="hapticsOn"></label>
@@ -1047,7 +1059,9 @@ const SHOWN = BADGES.filter(b => !HIDDEN.has(b[0]));
 const earned = load('quiz-badges', {});
 // Encart autour de la lettre du profil, selon le nombre de badges : [minimum, id, nom]
 const TIERS = [[1, 'bronze', 'Bronze'], [3, 'argent', 'Argent'], [5, 'or', 'Or'], [12, 'platine', 'Platine'], [SHOWN.length, 'legende', 'Légende']];
-const tierOf = n => TIERS.filter(t => n >= t[0]).pop();
+const bestTier = n => TIERS.filter(t => n >= t[0]).pop();
+// Encart affiché : celui choisi dans le profil s'il est débloqué, sinon le plus haut débloqué (« aucun » = pas d'encart)
+const tierOf = n => { const c = load('quiz-tier', null); return c === 'aucun' ? null : TIERS.find(t => t[1] === c && n >= t[0]) || bestTier(n); };
 let toastTimer;
 
 function unlock(id) {
@@ -1138,6 +1152,12 @@ function refreshProfile() {
     $('logout').textContent = 'Se déconnecter de cet appareil';
   }
   const tier = tierOf(n), next = TIERS.find(t => n < t[0]);
+  const letter = name ? esc(name[0].toUpperCase()) : '👤', chosen = tier ? tier[1] : 'aucun';
+  $('frames').classList.toggle('hidden', !bestTier(n));   // rien à choisir tant qu'aucun encart n'est débloqué
+  $('frameList').innerHTML = [[0, 'aucun', 'Aucun'], ...TIERS].map(([min, id, label]) =>
+    `<button class="frame${id === chosen ? ' on' : ''}" data-frame="${id}" ${n >= min ? '' : 'disabled'}>` +
+    `<span class="avatar" data-tier="${id === 'aucun' ? '' : id}">${letter}</span>${label}${n >= min ? '' : `<small>🔒 ${min}</small>`}</button>`).join('');
+  $('frameList').querySelectorAll('.frame:not(:disabled)').forEach(b => b.onclick = () => { store('quiz-tier', b.dataset.frame); refreshProfile(); });
   $('profAvatar').dataset.tier = $('whoAvatar').dataset.tier = tier ? tier[1] : '';
   $('whoCount').textContent = `${n} badge${n > 1 ? 's' : ''} sur ${SHOWN.length}` + (tier ? ` · encart ${tier[2]}` : '') +
     (next ? ` · encore ${next[0] - n} pour l’encart ${next[2]}` : '') + (!name && GC ? ' · connecte-toi à Game Center' : '');
