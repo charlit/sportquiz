@@ -46,12 +46,16 @@
   .c-foot { --c:#2ecc71; } .c-hc { --c:#ff5a4f; } .c-adv { --c:#ffb02e; } .c-week { --c:#4fa3ff; }
   .tile:disabled { cursor:default; opacity:.6; transform:none; box-shadow:none; }
   #boardInfo { margin:12px 2px 0; color:var(--dim); text-align:center; }
-  .matches { display:grid; gap:10px; margin-top:12px; }
-  .match { display:flex; align-items:center; gap:12px; width:100%; padding:12px 14px; border-radius:16px; cursor:pointer; text-align:left; color:var(--txt);
-           border:1px solid #ffd23f88; background:linear-gradient(110deg, #ffd23f26, var(--card) 70%); animation:pulse 1.6s infinite; }
-  .match b { font-size:1.8rem; }
-  .match strong { display:block; font-size:1.05rem; }
-  .match small { color:var(--dim); }
+  /* Avant-match : une fine bannière sur l'accueil, et la liste des matchs sur son propre écran */
+  .mbanner { display:flex; align-items:center; gap:8px; width:100%; margin-top:12px; padding:10px 14px; border-radius:999px; cursor:pointer;
+             border:1px solid #ffd23f88; background:linear-gradient(90deg, #ffd23f2e, var(--card)); color:var(--txt); font-weight:700; text-align:left; }
+  .mbanner span { flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .mbanner i { font-style:normal; color:var(--acc); font-size:1.3rem; line-height:1; }
+  .matches { display:grid; gap:8px; }
+  .match { display:flex; align-items:center; gap:12px; width:100%; padding:12px 14px; border-radius:14px; cursor:pointer; text-align:left; color:var(--txt);
+           border:1px solid var(--line); background:var(--card); }
+  .match strong { flex:1; font-size:1.05rem; }
+  .match small { color:var(--dim); text-align:right; }
 
   /* choix du sport */
   .sports { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:12px; }
@@ -263,7 +267,7 @@
         <strong>Défi de la semaine</strong><small id="weekText"></small></button>
         <button class="info" data-info="week" aria-label="Règles du défi de la semaine">i</button></div>
     </div>
-    <div class="matches" id="matchList"></div>
+    <button class="mbanner hidden" id="matchBanner"><span id="matchBannerText"></span><i>›</i></button>
     <button class="rankbtn" id="goRanks">🏅 Classement</button>
     <dialog id="infoBox" aria-labelledby="infoTitle">
       <h2 id="infoTitle"></h2>
@@ -305,6 +309,12 @@
     <div class="head"><button class="back" data-back="profile">← Profil</button><h2>🏅 Mes badges</h2></div>
     <p class="advinfo" id="badgesInfo"></p>
     <div class="trophies" id="trophies"></div>
+  </section>
+
+  <section id="matchs" class="hidden">
+    <div class="head"><button class="back" data-back="home">← Accueil</button><h2>⚡ Avant-match</h2></div>
+    <p class="advinfo">10 questions sur les deux équipes, rejouables jusqu'au coup d'envoi.</p>
+    <div class="matches" id="matchList"></div>
   </section>
 
   <section id="ranks" class="hidden">
@@ -408,7 +418,7 @@ const ERAS = ['', '2024-2026', '2021-2023', '2018-2020', '2015-2017', '2012-2014
 const stageLevel = k => Math.ceil(k * 5 / stagesOf(advClub)); // difficulté (points) : clubs, étapes 1-2 → niveau 1 … 9-10 → niveau 5 ; Mondial, étape = niveau
 const $ = id => document.getElementById(id);
 const shuffle = a => { a = [...a]; for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
-const SCREENS = ['home', 'profile', 'badges', 'ranks', 'pick', 'lands', 'clubs', 'adv', 'quiz', 'end', 'advEnd'];
+const SCREENS = ['home', 'matchs', 'profile', 'badges', 'ranks', 'pick', 'lands', 'clubs', 'adv', 'quiz', 'end', 'advEnd'];
 const show = id => { SCREENS.forEach(s => $(s).classList.toggle('hidden', s !== id)); scrollTo(0, 0); if (id === 'home') { renderWeek(); renderMatches(); } };
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
 const store = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} };
@@ -478,14 +488,22 @@ const kickoff = x => {
   const d = new Date(x.date), today = new Date().toDateString() === d.toDateString();
   return `${today ? (d.getHours() >= 18 ? 'ce soir' : 'aujourd’hui') : 'demain'} à ${d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}`;
 };
+const playMatch = id => {
+  curMatch = MATCHS.find(x => String(x.id) === String(id));
+  if (curMatch && Date.parse(curMatch.date) > Date.now()) start('match'); else { renderMatches(); show('home'); }
+};
 function renderMatches() {
-  $('matchList').innerHTML = matchesSoon().map(x => `<button class="match" data-match="${x.id}"><b>⚡</b><span><strong>${esc(CLUBS[x.dom].court)} – ${esc(CLUBS[x.ext].court)}</strong>` +
-    `<small>Avant-match · ${esc(x.comp)} · ${kickoff(x)} · 10 questions</small></span></button>`).join('');
-  $('matchList').querySelectorAll('[data-match]').forEach(b => b.onclick = () => {
-    curMatch = MATCHS.find(x => String(x.id) === b.dataset.match);
-    if (curMatch && Date.parse(curMatch.date) > Date.now()) start('match'); else renderMatches();
-  });
+  const list = matchesSoon(), first = list[0];
+  $('matchBanner').classList.toggle('hidden', !list.length);
+  $('matchBannerText').textContent = !first ? '' : list.length === 1
+    ? `⚡ Avant-match : ${CLUBS[first.dom].court} – ${CLUBS[first.ext].court} · ${kickoff(first)}`
+    : `⚡ ${list.length} avant-matchs · dès ${kickoff(first)}`;
+  $('matchList').innerHTML = list.map(x => `<button class="match" data-match="${x.id}"><strong>${esc(CLUBS[x.dom].court)} – ${esc(CLUBS[x.ext].court)}</strong>` +
+    `<small>${esc(x.comp)}<br>${kickoff(x)}</small></button>`).join('');
+  $('matchList').querySelectorAll('[data-match]').forEach(b => b.onclick = () => playMatch(b.dataset.match));
 }
+// Un seul match : la bannière lance directement le quiz ; plusieurs : elle ouvre la liste
+$('matchBanner').onclick = () => { const list = matchesSoon(); if (list.length === 1) playMatch(list[0].id); else if (list.length) show('matchs'); };
 renderMatches();
 
 function buildDeck(m) {
