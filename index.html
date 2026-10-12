@@ -45,6 +45,7 @@
   .tile .tag { position:absolute; top:46px; right:10px; font-size:.75rem; font-weight:800; padding:2px 8px; border-radius:999px; background:var(--c); color:#111; }
   .c-foot { --c:#2ecc71; } .c-hc { --c:#ff5a4f; } .c-adv { --c:#ffb02e; } .c-week { --c:#4fa3ff; }
   .tile:disabled { cursor:default; opacity:.6; transform:none; box-shadow:none; }
+  .version { margin:28px 0 8px; text-align:center; color:var(--dim); font-size:.8rem; }
   #boardInfo { margin:12px 2px 0; color:var(--dim); text-align:center; }
   /* Avant-match : une fine bannière sur l'accueil, et la liste des matchs sur son propre écran */
   .mbanner { display:flex; align-items:center; gap:8px; width:100%; margin-top:12px; padding:10px 14px; border-radius:999px; cursor:pointer;
@@ -303,6 +304,7 @@
         <button class="linkbtn" id="logout" type="button">Se déconnecter de cet appareil</button>
       </div>
     </div>
+    <p class="version" id="appVersion"></p>
   </section>
 
   <section id="badges" class="hidden">
@@ -1152,7 +1154,9 @@ $('goBadges').onclick = () => { refreshProfile(); show('badges'); };
 // Contact : ouvre l'app mail avec l'objet et l'appareil pré-remplis
 const CONTACT = 'sportquiz64@gmail.com';
 $('contact').href = `mailto:${CONTACT}?subject=${encodeURIComponent('Football Quiz : bug / suggestion')}&body=${encodeURIComponent(
-  `Bonjour,\n\n(Décris le bug ou ton idée ici)\n\n---\nAppareil : ${navigator.userAgent}\nVersion : ${GC ? 'app iOS' : 'site web'}`)}`;
+  `Bonjour,\n\n(Décris le bug ou ton idée ici)\n\n---\nAppareil : ${navigator.userAgent}\nVersion : ${GC ? 'app iOS ' + (window.__appVersion || '') : 'site web'}`)}`;
+// Bas du profil : version de l'app (fournie par l'app iOS), ou « version web »
+$('appVersion').textContent = GC ? `Football Quiz · version ${window.__appVersion || '?'}` : 'Football Quiz · version web';
 
 /* ---------- Classements ---------- */
 // Même clé que name_key() côté serveur : « Léa » et « lea » sont le même pseudo
