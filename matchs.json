@@ -1,9 +1,6 @@
 [
-  {"id": 575346, "date": "2026-10-13T19:00:00Z", "comp": "Ligue des champions", "dom": "arsenal", "ext": "losc"},
-  {"id": 575349, "date": "2026-10-13T19:00:00Z", "comp": "Ligue des champions", "dom": "villarreal", "ext": "napoli"},
-  {"id": 575345, "date": "2026-10-13T19:00:00Z", "comp": "Ligue des champions", "dom": "atleti", "ext": "manutd"},
-  {"id": 575352, "date": "2026-10-14T19:00:00Z", "comp": "Ligue des champions", "dom": "roma", "ext": "real"},
   {"id": 575353, "date": "2026-10-14T19:00:00Z", "comp": "Ligue des champions", "dom": "mancity", "ext": "psg"},
+  {"id": 575352, "date": "2026-10-14T19:00:00Z", "comp": "Ligue des champions", "dom": "roma", "ext": "real"},
   {"id": 559661, "date": "2026-10-16T18:45:00Z", "comp": "Ligue 1", "dom": "lemans", "ext": "tfc"},
   {"id": 560603, "date": "2026-10-17T11:30:00Z", "comp": "Premier League", "dom": "everton", "ext": "chelsea"},
   {"id": 565822, "date": "2026-10-17T13:30:00Z", "comp": "Bundesliga", "dom": "hsv", "ext": "vfb"},
@@ -18,10 +15,10 @@
   {"id": 559663, "date": "2026-10-18T15:15:00Z", "comp": "Ligue 1", "dom": "hac", "ext": "aja"},
   {"id": 559658, "date": "2026-10-18T15:15:00Z", "comp": "Ligue 1", "dom": "pfc", "ext": "rennes"},
   {"id": 558569, "date": "2026-10-18T16:00:00Z", "comp": "Serie A", "dom": "milan", "ext": "atalanta"},
-  {"id": 559665, "date": "2026-10-18T18:45:00Z", "comp": "Ligue 1", "dom": "ol", "ext": "nice"},
   {"id": 558570, "date": "2026-10-18T18:45:00Z", "comp": "Serie A", "dom": "juve", "ext": "lazio"},
+  {"id": 559665, "date": "2026-10-18T18:45:00Z", "comp": "Ligue 1", "dom": "ol", "ext": "nice"},
   {"id": 564709, "date": "2026-10-18T19:00:00Z", "comp": "Liga", "dom": "real", "ext": "sevilla"},
-  {"id": 575362, "date": "2026-10-20T19:00:00Z", "comp": "Ligue des champions", "dom": "vfb", "ext": "atleti"},
   {"id": 575363, "date": "2026-10-20T19:00:00Z", "comp": "Ligue des champions", "dom": "liverpool", "ext": "villarreal"},
-  {"id": 575367, "date": "2026-10-20T19:00:00Z", "comp": "Ligue des champions", "dom": "psg", "ext": "barca"}
+  {"id": 575367, "date": "2026-10-20T19:00:00Z", "comp": "Ligue des champions", "dom": "psg", "ext": "barca"},
+  {"id": 575362, "date": "2026-10-20T19:00:00Z", "comp": "Ligue des champions", "dom": "vfb", "ext": "atleti"}
 ]
