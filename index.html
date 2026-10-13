@@ -44,9 +44,9 @@
   dialog .btn { width:100%; }
   .tile .tag { position:absolute; top:46px; right:10px; font-size:.75rem; font-weight:800; padding:2px 8px; border-radius:999px; background:var(--c); color:#111; }
   .c-foot { --c:#2ecc71; } .c-hc { --c:#ff5a4f; } .c-adv { --c:#ffb02e; } .c-week { --c:#4fa3ff; } .c-derby { --c:#b06bff; }
-  .tile.row { min-height:0; display:flex; align-items:center; justify-content:flex-start; gap:14px; padding-top:16px; width:100%; }
-  .tile.row strong { margin:0 0 2px; }
-  .tile.row + .info { top:50%; transform:translateY(-50%); }   /* tuile en ligne : bouton ⓘ centré verticalement */
+  .tile.wide { min-height:0; display:flex; align-items:center; justify-content:flex-start; gap:14px; padding-top:16px; width:100%; }
+  .tile.wide strong { margin:0 0 2px; }
+  .tile.wide + .info { top:50%; transform:translateY(-50%); }   /* tuile en ligne : bouton ⓘ centré verticalement */
   .derby { display:flex; align-items:center; gap:12px; width:100%; padding:12px 14px; border-radius:14px; cursor:pointer; text-align:left; color:var(--txt);
            border:1px solid var(--line); background:var(--card); }
   .derby b { font-size:1.6rem; }
@@ -284,8 +284,8 @@
       <div class="tw"><button class="tile c-week" id="goWeek"><span class="tag">HEBDO</span><b id="weekIcon">📅</b>
         <strong>Défi de la semaine</strong><small id="weekText"></small></button>
         <button class="info" data-info="week" aria-label="Règles du défi de la semaine">i</button></div>
-      <div class="tw" style="grid-column:1/-1"><button class="tile c-derby row" id="goDerbies"><b>⚔️</b>
-        <span><strong>Derbies</strong><small id="derbyText">Le Classique, le derby du Rhône, du Nord, breton, corse…</small></span></button>
+      <div class="tw" style="grid-column:1/-1"><button class="tile c-derby wide" id="goDerbies"><b>⚔️</b>
+        <span><strong>Derbies</strong><small id="derbyText">France et Espagne : le Classique, El Clásico…</small></span></button>
         <button class="info" data-info="derby" aria-label="Règles des derbies">i</button></div>
     </div>
     <button class="mbanner hidden" id="matchBanner"><span id="matchBannerText"></span><i>›</i></button>
@@ -340,7 +340,8 @@
 
   <section id="derbies" class="hidden">
     <div class="head"><button class="back" data-back="home">← Accueil</button><h2>⚔️ Derbies</h2></div>
-    <p class="advinfo">Les grandes rivalités du foot français : 15 questions par derby, de plus en plus dures.</p>
+    <div class="chips" id="derbyLands" style="margin-bottom:10px"><button data-pays="fr" data-flag="fr">France</button><button data-pays="es" data-flag="es">Espagne</button></div>
+    <p class="advinfo" id="derbyInfo"></p>
     <div class="matches" id="derbyList"></div>
   </section>
 
@@ -547,10 +548,18 @@ renderMatches();
 // Meilleur score gardé par derby ; badge « Roi des derbies » quand tous ont été réussis sans faute au moins une fois.
 let curDerby = null;
 const derbyBest = load('quiz-derbies', {});   // id → { good, score }
+const DERBY_LANDS = { fr: 'du foot français', es: 'du foot espagnol' };
+let derbyLand = load('quiz-derby-pays', 'fr');
 function renderDerbies() {
+  if (!DERBY_LANDS[derbyLand]) derbyLand = 'fr';
   const perfect = DERBIES.filter(x => derbyBest[x.id]?.good === x.q.length).length;
-  $('derbyText').textContent = perfect ? `${perfect} / ${DERBIES.length} derbies sans faute` : 'Le Classique, le derby du Rhône, du Nord, breton, corse…';
-  $('derbyList').innerHTML = DERBIES.map(x => { const b = derbyBest[x.id];
+  $('derbyText').textContent = perfect ? `${perfect} / ${DERBIES.length} derbies sans faute` : 'France et Espagne : le Classique, El Clásico…';
+  $('derbyLands').querySelectorAll('[data-pays]').forEach(b => {
+    b.classList.toggle('on', b.dataset.pays === derbyLand);
+    b.onclick = () => { derbyLand = b.dataset.pays; store('quiz-derby-pays', derbyLand); renderDerbies(); };
+  });
+  $('derbyInfo').textContent = `Les grandes rivalités ${DERBY_LANDS[derbyLand]} : 15 questions par derby, de plus en plus dures.`;
+  $('derbyList').innerHTML = DERBIES.filter(x => (x.pays || 'fr') === derbyLand).map(x => { const b = derbyBest[x.id];
     return `<button class="derby" data-derby="${esc(x.id)}"><b>${x.icone}</b><span><strong>${esc(x.nom)}</strong><small>${esc(x.clubs)}</small></span>` +
       `<em>${b ? (b.good === x.q.length ? '✅ ' : '') + b.good + ' / ' + x.q.length : ''}</em></button>`; }).join('');
   $('derbyList').querySelectorAll('[data-derby]').forEach(btn => btn.onclick = () => { curDerby = DERBIES.find(x => x.id === btn.dataset.derby); start('derby'); });
@@ -1073,7 +1082,7 @@ const BADGES = [
   ['perfect', '🎯', 'Sans faute', 'Finir le Spécial Foot sans aucune erreur'],
   ['semaine', '📅', 'Défi parfait', 'Répondre juste aux 10 questions d’un défi de la semaine'],
   ['avantmatch', '⚡', 'Échauffé', 'Faire un sans-faute à un quiz d’avant-match'],
-  ['derbies', '⚔️', 'Roi des derbies', 'Réussir sans faute les 15 questions de chacun des derbies'],
+  ['derbies', '⚔️', 'Roi des derbies', 'Réussir sans faute tous les derbies, en France et en Espagne'],
   ['reflex', '⚡', 'Réflexe', 'Bonne réponse en moins de 2 secondes'],
   ['streak', '🔥', 'Série', '10 bonnes réponses d’affilée en Hardcore'],
   ['supporter', '📣', 'Supporter', 'Finir les 10 étapes d’un club de l’Aventure'],
@@ -1338,10 +1347,11 @@ const RULES = {
     'Coupe d’Afrique : les 14 CAN de 2000 à 2025, 5 étapes chacune, sur le même principe.',
     '5 questions par étape : il faut au moins 4 bonnes réponses pour débloquer l’étape suivante.',
     '20 secondes par question.', 'Ta progression est gardée sur cet appareil.']],
-  derby: ['⚔️ Derbies', ['Choisis une grande rivalité du foot français : le Classique, le derby du Rhône, du Nord, de la Côte d’Azur, breton, de l’Atlantique, corse ou lorrain.',
+  derby: ['⚔️ Derbies', ['Choisis un pays, puis une grande rivalité. En France : le Classique, le derby du Rhône, du Nord, de la Côte d’Azur, breton, de l’Atlantique, corse ou lorrain.',
+    'En Espagne : El Clásico, le derby de Madrid, de Barcelone, le Gran Derbi de Séville, le derby basque, valencien ou galicien.',
     '15 questions par derby, de la plus facile à la plus dure. Pas de vies : toutes les questions sont posées.',
     '20 secondes par question, et plus tu réponds vite, plus tu marques.', 'Ton meilleur score est gardé pour chaque derby ; rejoue autant que tu veux.',
-    'Badge « Roi des derbies » pour qui les réussit tous sans faute.']],
+    'Badge « Roi des derbies » pour qui les réussit tous sans faute, en France comme en Espagne.']],
   week: ['📅 Défi de la semaine', ['Chaque lundi, un nouveau défi : 10 questions sur une personnalité du foot, les mêmes pour tout le monde.',
     'Un seul essai par semaine : quitter la partie compte comme ton essai.', 'Pas de vies : les 10 questions sont posées, de plus en plus dures.',
     '20 secondes par question, et plus tu réponds vite, plus tu marques.', 'Classement de la semaine, remis à zéro chaque lundi.']],
