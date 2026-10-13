@@ -1520,6 +1520,13 @@ $('gcBoard').onclick = () => nativeApp('gameCenter', { mode: boardMode });
 window.__quizShortcut = a => ({ foot: () => start('foot'), hard: openPick, adv: openLands, ranks: () => $('goRanks').click(),
   week: () => { show('home'); $('goWeek').click(); }, supporters: openSupporters, matchs: () => { show('home'); if (matchesSoon().length) $('matchBanner').click(); } })[a]?.();   // raccourcis et notifications
 if (location.hash === '#supporters') openSupporters();   // accès de test au mode Supporters (pas encore à l'accueil)
+// Accès secret au mode Supporters : 3 appuis rapides sur « Football » dans le titre de l'accueil
+let logoTaps = 0, logoTimer;
+document.querySelector('#home .logo').onclick = e => {
+  if (e.target.closest('span')) return;   // « Quiz » ne compte pas
+  clearTimeout(logoTimer); logoTimer = setTimeout(() => { logoTaps = 0; }, 700);
+  if (++logoTaps === 3) { logoTaps = 0; nativeApp('haptic', { kind: 'light' }); openSupporters(); }
+};
 $('again').onclick = () => start(mode);
 // Partage du score : feuille de partage iOS dans l'app, partage du navigateur (ou copie) sur le web
 const APP_URL = 'https://charlit.github.io/sportquiz/';
