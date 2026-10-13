@@ -273,6 +273,22 @@
     #end:not(.hidden), #advEnd:not(.hidden) { justify-content:center; }
   }
   @media (max-width:420px) { .tile { min-height:140px; padding:14px 12px; } .tile strong { font-size:1.1rem; } .logo { font-size:2.2rem; } }
+  /* Accueil sur téléphone : tout tient sur un écran, sans défiler (profil à côté du titre, tuiles plus basses) */
+  @media (max-width:600px) {
+    #home { position:relative; }
+    #home .topbar { position:absolute; top:0; right:0; }
+    #home .logo { text-align:left; margin:6px 96px 6px 0; font-size:min(1.95rem, 7vw); white-space:nowrap; }
+    #home .sub { text-align:left; }
+    #home .sub { margin-bottom:14px; font-size:.9rem; }
+    .tiles { gap:10px; }
+    .tile { min-height:122px; }
+  }
+  @media (max-width:600px) and (max-height:720px) {   /* petits iPhone (SE…) */
+    #home .sub { display:none; }
+    #home .logo { margin-bottom:12px; }
+    .tile { min-height:100px; padding:12px; } .tile b { font-size:1.8rem; } .tile strong { margin-top:8px; }
+    .tile .tag { top:12px; right:46px; }   /* étiquette à côté du bouton ⓘ, pas sur le titre */
+  }
 </style>
 </head>
 <body>
