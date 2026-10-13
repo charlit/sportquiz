@@ -1295,9 +1295,17 @@ $('appVersion').textContent = GC ? `Football Quiz · version ${window.__appVersi
 // Même clé que name_key() côté serveur : « Léa » et « lea » sont le même pseudo
 const nameKey = s => s.normalize('NFKD').toLowerCase().replace(/[^\p{L}\p{N}]/gu, '');
 function renderBoard(rows, table, me, m) {
-  table.innerHTML = rows.length ? rows.map((r, i) =>
+  // Écran de fin : top 3 et la place du joueur seulement, pour que Rejouer et Accueil restent visibles sans défiler
+  // (le classement complet est sur la page Classement)
+  let shown = rows.map((r, i) => [r, i]);
+  if (table.id === 'endBoard' && rows.length > 4) {
+    const mine = rows.findIndex(r => me && nameKey(r.name) === nameKey(me));
+    shown = shown.slice(0, 3);
+    if (mine >= 3) shown.push(null, [rows[mine], mine]);
+  }
+  table.innerHTML = rows.length ? shown.map(x => !x ? '<tr><td colspan="3" class="empty" style="padding:2px">⋯</td></tr>' : (([r, i]) =>
     `<tr class="${me && nameKey(r.name) === nameKey(me) ? 'me' : ''}"><td>${['🥇', '🥈', '🥉'][i] || i + 1}</td>` +
-    `<td>${esc(r.name)} <small style="color:var(--dim)">🏅 ${r.badges || 0} · ${r.good} ✔</small></td><td>${r.score}</td></tr>`).join('')
+    `<td>${esc(r.name)} <small style="color:var(--dim)">🏅 ${r.badges || 0} · ${r.good} ✔</small></td><td>${r.score}</td></tr>`)(x)).join('')
     : '<tr><td colspan="3" class="empty">Personne pour l\'instant… à toi de jouer !</td></tr>';
 }
 
