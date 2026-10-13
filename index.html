@@ -43,7 +43,17 @@
   dialog li { margin:6px 0; }
   dialog .btn { width:100%; }
   .tile .tag { position:absolute; top:46px; right:10px; font-size:.75rem; font-weight:800; padding:2px 8px; border-radius:999px; background:var(--c); color:#111; }
-  .c-foot { --c:#2ecc71; } .c-hc { --c:#ff5a4f; } .c-adv { --c:#ffb02e; } .c-week { --c:#4fa3ff; }
+  .c-foot { --c:#2ecc71; } .c-hc { --c:#ff5a4f; } .c-adv { --c:#ffb02e; } .c-week { --c:#4fa3ff; } .c-derby { --c:#b06bff; }
+  .tile.row { min-height:0; display:flex; align-items:center; justify-content:flex-start; gap:14px; padding-top:16px; width:100%; }
+  .tile.row strong { margin:0 0 2px; }
+  .tile.row + .info { top:50%; transform:translateY(-50%); }   /* tuile en ligne : bouton ⓘ centré verticalement */
+  .derby { display:flex; align-items:center; gap:12px; width:100%; padding:12px 14px; border-radius:14px; cursor:pointer; text-align:left; color:var(--txt);
+           border:1px solid var(--line); background:var(--card); }
+  .derby b { font-size:1.6rem; }
+  .derby span { flex:1; min-width:0; }
+  .derby strong { display:block; }
+  .derby small { color:var(--dim); }
+  .derby em { font-style:normal; font-weight:800; color:var(--acc); white-space:nowrap; }
   .tile:disabled { cursor:default; opacity:.6; transform:none; box-shadow:none; }
   .version { margin:28px 0 8px; text-align:center; color:var(--dim); font-size:.8rem; }
   #boardInfo { margin:12px 2px 0; color:var(--dim); text-align:center; }
@@ -274,6 +284,9 @@
       <div class="tw"><button class="tile c-week" id="goWeek"><span class="tag">HEBDO</span><b id="weekIcon">📅</b>
         <strong>Défi de la semaine</strong><small id="weekText"></small></button>
         <button class="info" data-info="week" aria-label="Règles du défi de la semaine">i</button></div>
+      <div class="tw" style="grid-column:1/-1"><button class="tile c-derby row" id="goDerbies"><b>⚔️</b>
+        <span><strong>Derbies</strong><small id="derbyText">Le Classique, le derby du Rhône, du Nord, breton, corse…</small></span></button>
+        <button class="info" data-info="derby" aria-label="Règles des derbies">i</button></div>
     </div>
     <button class="mbanner hidden" id="matchBanner"><span id="matchBannerText"></span><i>›</i></button>
     <button class="rankbtn" id="goRanks">🏅 Classement</button>
@@ -323,6 +336,12 @@
     <div class="head"><button class="back" data-back="profile">← Profil</button><h2>🏅 Mes badges</h2></div>
     <p class="advinfo" id="badgesInfo"></p>
     <div class="trophies" id="trophies"></div>
+  </section>
+
+  <section id="derbies" class="hidden">
+    <div class="head"><button class="back" data-back="home">← Accueil</button><h2>⚔️ Derbies</h2></div>
+    <p class="advinfo">Les grandes rivalités du foot français : 15 questions par derby, de plus en plus dures.</p>
+    <div class="matches" id="derbyList"></div>
   </section>
 
   <section id="matchs" class="hidden">
@@ -410,6 +429,7 @@
 <script src="clubs.js"></script>
 <script src="semaine.js"></script>
 <script src="matchs.js"></script>
+<script src="derbies.js"></script>
 <script>
 const LEVELS = ['', 'Facile', 'Moyen', 'Difficile', 'Expert', 'Légende'];
 const LEVEL_COLORS = ['', '#2ecc71', '#3fa7ff', '#ffb02e', '#ff6b3f', '#c56cff'];
@@ -420,7 +440,7 @@ const FOOT_PLAN = [0, 10, 20, 25, 25, 20]; // Spécial Foot : questions par nive
 const HARD = { hard: null, hardfoot: 'foot', hardrugby: 'rugby', hardbasket: 'basket', hardtennis: 'tennis', hardf1: 'f1', hardvelo: 'velo',
                hardfr: 'fr', hardes: 'es', harduk: 'uk', hardde: 'de', hardit: 'it', hardwc: 'wc', hardcan: 'can' }; // modes 1 vie, niveaux 4-5, sans fin (null = tous les sports)
 const HARD_PAYS = ['fr', 'es', 'uk', 'de', 'it', 'wc', 'can']; // Hardcore par pays, Mondial et CAN : questions de l'Aventure notées 4-5 (Expert et Légende)
-const NAMES = { match: 'Avant-match', semaine: 'Défi de la semaine', foot: 'Spécial Foot', hardfr: 'Hardcore France', hardes: 'Hardcore Espagne', harduk: 'Hardcore Royaume-Uni',
+const NAMES = { derby: 'Derbies', match: 'Avant-match', semaine: 'Défi de la semaine', foot: 'Spécial Foot', hardfr: 'Hardcore France', hardes: 'Hardcore Espagne', harduk: 'Hardcore Royaume-Uni',
                 hardde: 'Hardcore Allemagne', hardit: 'Hardcore Italie', hardwc: 'Hardcore Coupe du monde', hardcan: 'Hardcore CAN', hard: 'Hardcore Tous sports', hardfoot: 'Hardcore Foot', hardrugby: 'Hardcore Rugby',
                 hardbasket: 'Hardcore Basket', hardtennis: 'Hardcore Tennis', hardf1: 'Hardcore Sport auto', hardvelo: 'Hardcore Cyclisme', adv: 'Aventure' };
 // Aventure : 10 étapes par sport (2 par niveau), 5 questions, 4 bonnes réponses pour passer
@@ -432,8 +452,8 @@ const ERAS = ['', '2024-2026', '2021-2023', '2018-2020', '2015-2017', '2012-2014
 const stageLevel = k => Math.ceil(k * 5 / stagesOf(advClub)); // difficulté (points) : clubs, étapes 1-2 → niveau 1 … 9-10 → niveau 5 ; Mondial, étape = niveau
 const $ = id => document.getElementById(id);
 const shuffle = a => { a = [...a]; for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
-const SCREENS = ['home', 'matchs', 'profile', 'badges', 'ranks', 'pick', 'lands', 'clubs', 'adv', 'quiz', 'end', 'advEnd'];
-const show = id => { SCREENS.forEach(s => $(s).classList.toggle('hidden', s !== id)); scrollTo(0, 0); if (id === 'home') { renderWeek(); renderMatches(); } };
+const SCREENS = ['home', 'derbies', 'matchs', 'profile', 'badges', 'ranks', 'pick', 'lands', 'clubs', 'adv', 'quiz', 'end', 'advEnd'];
+const show = id => { SCREENS.forEach(s => $(s).classList.toggle('hidden', s !== id)); scrollTo(0, 0); if (id === 'home') { renderWeek(); renderMatches(); renderDerbies(); } };
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
 const store = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} };
 const load = (k, d) => { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch { return d; } };
@@ -523,9 +543,25 @@ function renderMatches() {
 $('matchBanner').onclick = () => { const list = matchesSoon(); if (list.length === 1) playMatch(list[0].id); else if (list.length) show('matchs'); };
 renderMatches();
 
+// Derbies (derbies.json) : 15 questions par derby, des plus faciles aux plus dures, rejouables, sans classement.
+// Meilleur score gardé par derby ; badge « Roi des derbies » quand tous ont été réussis sans faute au moins une fois.
+let curDerby = null;
+const derbyBest = load('quiz-derbies', {});   // id → { good, score }
+function renderDerbies() {
+  const perfect = DERBIES.filter(x => derbyBest[x.id]?.good === x.q.length).length;
+  $('derbyText').textContent = perfect ? `${perfect} / ${DERBIES.length} derbies sans faute` : 'Le Classique, le derby du Rhône, du Nord, breton, corse…';
+  $('derbyList').innerHTML = DERBIES.map(x => { const b = derbyBest[x.id];
+    return `<button class="derby" data-derby="${esc(x.id)}"><b>${x.icone}</b><span><strong>${esc(x.nom)}</strong><small>${esc(x.clubs)}</small></span>` +
+      `<em>${b ? (b.good === x.q.length ? '✅ ' : '') + b.good + ' / ' + x.q.length : ''}</em></button>`; }).join('');
+  $('derbyList').querySelectorAll('[data-derby]').forEach(btn => btn.onclick = () => { curDerby = DERBIES.find(x => x.id === btn.dataset.derby); start('derby'); });
+}
+$('goDerbies').onclick = () => { renderDerbies(); show('derbies'); };
+renderDerbies();
+
 function buildDeck(m) {
   const out = [];
   if (m === 'semaine') return weekNow().q.map(q => ['semaine', q]);
+  if (m === 'derby') return shuffle(curDerby.q).sort((a, b) => a[0] - b[0]).map(q => ['derby', q]);
   if (m === 'match') {   // 5 questions par équipe, des plus faciles aux plus dures (étapes 1-2 → niveau 1 … 9-10 → niveau 5)
     const of = id => pick(CLUBS[id].q.map(q => clubQ(id, q)), 5, e => e[1][1]);
     out.push(...of(curMatch.dom), ...of(curMatch.ext));
@@ -562,7 +598,7 @@ const points = (lvl, left) => Math.round(lvl * 100 * (mode in HARD ? 0.2 + 1.8 *
 
 function start(m) {
   mode = m; deck = buildDeck(m); idx = 0; score = 0; good = 0; saved = false;
-  lives = m in HARD ? 1 : m === 'adv' ? PER_STAGE - NEED + 1 : m === 'semaine' || m === 'match' ? Infinity : 3;
+  lives = m in HARD ? 1 : m === 'adv' ? PER_STAGE - NEED + 1 : m === 'semaine' || m === 'match' || m === 'derby' ? Infinity : 3;
   $('score').textContent = 0;
   show('quiz');
   ask();
@@ -577,6 +613,7 @@ function ask() {
     $('progress').style.width = '0';
   } else {
     $('count').textContent = mode === 'semaine' ? `📅 Question ${idx + 1} / ${deck.length}`
+      : mode === 'derby' ? `⚔️ ${curDerby.nom} · ${idx + 1} / ${deck.length}`
       : mode === 'match' ? `⚡ ${CLUBS[curMatch.dom].court} – ${CLUBS[curMatch.ext].court} · ${idx + 1} / ${deck.length}`
       : mode === 'adv'
       ? `🗺️ Étape ${stage} · ${idx + 1}/${PER_STAGE} · ✅ ${good}/${NEED}`
@@ -585,7 +622,7 @@ function ask() {
   }
   $('level').textContent = mode === 'adv' ? `Étape ${stage} · ${eraOf(advClub, stage)}` : `Niveau ${lvl} · ${LEVELS[lvl]}`;
   $('level').style.background = LEVEL_COLORS[lvl]; $('level').style.color = '#111';
-  $('sport').textContent = sport === 'semaine' ? `📅 ${weekNow()?.titre || 'Défi'}` : SPORTS[sport] || `${LANDS[landOf(sport)].icon || '⚽'} ${CLUBS[sport].court}`;
+  $('sport').textContent = sport === 'derby' ? `${curDerby.icone} ${curDerby.clubs}` : sport === 'semaine' ? `📅 ${weekNow()?.titre || 'Défi'}` : SPORTS[sport] || `${LANDS[landOf(sport)].icon || '⚽'} ${CLUBS[sport].court}`;
   $('question').textContent = q.replace(/ ([?!:;»])/g, '\u00a0$1').replace(/« /g, '«\u00a0');
   $('feedback').textContent = ''; $('stake').textContent = '';
   $('answers').innerHTML = '';
@@ -634,7 +671,7 @@ function answer(btn, ok, lvl) {
       if (lost) msg += ` −${lost} points`;
     }
     if (mode === 'adv') msg += lives ? ' · encore une erreur et l\'étape est ratée' : ' · étape ratée';
-    else if (mode !== 'semaine' && mode !== 'match') msg += lives ? ` · ${lives > 1 ? `plus que ${lives} vies` : 'plus qu’une vie'} ❤️` : ' 💀 Game over';
+    else if (!['semaine', 'match', 'derby'].includes(mode)) msg += lives ? ` · ${lives > 1 ? `plus que ${lives} vies` : 'plus qu’une vie'} ❤️` : ' 💀 Game over';
     $('feedback').textContent = msg;
     $('feedback').style.color = 'var(--ko)';
   }
@@ -648,6 +685,11 @@ function finish() {
   if (mode === 'foot' && good === deck.length) unlock('perfect');
   if (mode === 'semaine' && good === deck.length) unlock('semaine');   // une seule fois : un badge déjà gagné ne se regagne pas
   if (mode === 'match' && good === deck.length) unlock('avantmatch');
+  if (mode === 'derby') {
+    const b = derbyBest[curDerby.id];
+    if (!b || good > b.good || good === b.good && score > b.score) { derbyBest[curDerby.id] = { good, score }; store('quiz-derbies', derbyBest); }
+    if (DERBIES.every(x => derbyBest[x.id]?.good === x.q.length)) unlock('derbies');
+  }
   if (mode === 'foot' && lives > 0) unlock('marathon');
   if (mode === 'foot' && score >= 20000) unlock('footscore');
   if (HARD[mode]) { // Hardcore par sport : on retient les sports joués
@@ -658,6 +700,13 @@ function finish() {
   if (mode === 'adv') return advFinish();
   $('final').textContent = score + ' pts';
   $('again').classList.toggle('hidden', mode === 'semaine' || (mode === 'match' && Date.parse(curMatch.date) <= Date.now()));
+  if (mode === 'derby') {   // pas de classement : meilleur score du derby et rejouer
+    $('saveForm').classList.add('hidden'); $('endBoard').innerHTML = '';
+    $('summary').textContent = `${good} bonne${good > 1 ? 's' : ''} réponse${good > 1 ? 's' : ''} sur ${deck.length} — ` +
+      `${good === deck.length ? 'Tu connais ce derby par cœur ! 🏆' : good >= 10 ? 'Tu as le niveau d’un vrai supporter ! 🔥' : 'Il faut réviser tes classiques ! 📚'} (${curDerby.nom})`;
+    $('saveMsg').textContent = `Ton record sur ce derby : ${derbyBest[curDerby.id].good} / ${deck.length}`;
+    return show('end');
+  }
   if (mode === 'match') {
     $('saveForm').classList.add('hidden'); $('endBoard').innerHTML = '';
     const r = good / deck.length;
@@ -1024,6 +1073,7 @@ const BADGES = [
   ['perfect', '🎯', 'Sans faute', 'Finir le Spécial Foot sans aucune erreur'],
   ['semaine', '📅', 'Défi parfait', 'Répondre juste aux 10 questions d’un défi de la semaine'],
   ['avantmatch', '⚡', 'Échauffé', 'Faire un sans-faute à un quiz d’avant-match'],
+  ['derbies', '⚔️', 'Roi des derbies', 'Réussir sans faute les 15 questions de chacun des derbies'],
   ['reflex', '⚡', 'Réflexe', 'Bonne réponse en moins de 2 secondes'],
   ['streak', '🔥', 'Série', '10 bonnes réponses d’affilée en Hardcore'],
   ['supporter', '📣', 'Supporter', 'Finir les 10 étapes d’un club de l’Aventure'],
@@ -1288,6 +1338,10 @@ const RULES = {
     'Coupe d’Afrique : les 14 CAN de 2000 à 2025, 5 étapes chacune, sur le même principe.',
     '5 questions par étape : il faut au moins 4 bonnes réponses pour débloquer l’étape suivante.',
     '20 secondes par question.', 'Ta progression est gardée sur cet appareil.']],
+  derby: ['⚔️ Derbies', ['Choisis une grande rivalité du foot français : le Classique, le derby du Rhône, du Nord, de la Côte d’Azur, breton, de l’Atlantique, corse ou lorrain.',
+    '15 questions par derby, de la plus facile à la plus dure. Pas de vies : toutes les questions sont posées.',
+    '20 secondes par question, et plus tu réponds vite, plus tu marques.', 'Ton meilleur score est gardé pour chaque derby ; rejoue autant que tu veux.',
+    'Badge « Roi des derbies » pour qui les réussit tous sans faute.']],
   week: ['📅 Défi de la semaine', ['Chaque lundi, un nouveau défi : 10 questions sur une personnalité du foot, les mêmes pour tout le monde.',
     'Un seul essai par semaine : quitter la partie compte comme ton essai.', 'Pas de vies : les 10 questions sont posées, de plus en plus dures.',
     '20 secondes par question, et plus tu réponds vite, plus tu marques.', 'Classement de la semaine, remis à zéro chaque lundi.']],

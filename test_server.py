@@ -132,6 +132,11 @@ print('ok défi de la semaine')
 with urllib.request.urlopen(URL + '/matchs.js') as r:  # avant-matchs : liste (éventuellement vide) produite par scripts/matchs.py
     assert isinstance(json.loads(r.read().decode().removeprefix('const MATCHS = ').rstrip().rstrip(';')), list)
 print('ok matchs.js')
+with urllib.request.urlopen(URL + '/derbies.js') as r:  # derbies : 15 questions (3 par niveau) et 4 réponses distinctes
+    derbies = json.loads(r.read().decode().removeprefix('const DERBIES = ').rstrip().rstrip(';'))
+assert len(derbies) >= 8 and len({d['id'] for d in derbies}) == len(derbies)
+assert all(sorted(q[0] for q in d['q']) == [1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4, 5, 5, 5] and all(len(q) == 6 and len(set(q[2:])) == 4 for q in d['q']) for d in derbies)
+print('ok derbies.js')
 
 # Page admin : HTTP Basic (admin + QUIZ_ADMIN_PASSWORD), échappe les pseudos, se bloque après trop d'erreurs
 import base64  # noqa: E402
