@@ -137,6 +137,12 @@ with urllib.request.urlopen(URL + '/derbies.js') as r:  # derbies : 15 questions
 assert len(derbies) >= 8 and len({d['id'] for d in derbies}) == len(derbies)
 assert all(sorted(q[0] for q in d['q']) == [1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4, 5, 5, 5] and all(len(q) == 6 and len(set(q[2:])) == 4 for q in d['q']) for d in derbies)
 print('ok derbies.js')
+with urllib.request.urlopen(URL + '/supporters.js') as r:  # supporters : 10 questions par club (2 par niveau), clubs de l'Aventure
+    sup = json.loads(r.read().decode().removeprefix('const SUPPORTERS = ').rstrip().rstrip(';'))
+clubs_ids = set(json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'clubs.json'))))
+assert len(sup) >= 10 and all(x['club'] in clubs_ids for x in sup)
+assert all(sorted(q[0] for q in x['q']) == [1, 1, 2, 2, 3, 3, 4, 4, 5, 5] and all(len(set(q[2:])) == 4 for q in x['q']) for x in sup)
+print('ok supporters.js')
 
 # Page admin : HTTP Basic (admin + QUIZ_ADMIN_PASSWORD), échappe les pseudos, se bloque après trop d'erreurs
 import base64  # noqa: E402

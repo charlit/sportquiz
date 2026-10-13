@@ -362,6 +362,12 @@
     <div class="trophies" id="trophies"></div>
   </section>
 
+  <section id="supporters" class="hidden">
+    <div class="head"><button class="back" data-back="home">← Accueil</button><h2>📣 Supporters</h2></div>
+    <p class="advinfo">Tribunes, chants, groupes et traditions : 10 questions sur les supporters de chaque club.</p>
+    <div class="matches" id="supList"></div>
+  </section>
+
   <section id="derbies" class="hidden">
     <div class="head"><button class="back" data-back="home">← Accueil</button><h2>⚔️ Derbies</h2></div>
     <div class="chips" id="derbyLands" style="margin-bottom:10px"><button data-pays="fr" data-flag="fr">France</button><button data-pays="es" data-flag="es">Espagne</button><button data-pays="de" data-flag="de">Allemagne</button><button data-pays="it" data-flag="it">Italie</button><button data-pays="uk" data-flag="uk">R.-Uni</button></div>
@@ -455,6 +461,7 @@
 <script src="semaine.js"></script>
 <script src="matchs.js"></script>
 <script src="derbies.js"></script>
+<script src="supporters.js"></script>
 <script>
 const LEVELS = ['', 'Facile', 'Moyen', 'Difficile', 'Expert', 'Légende'];
 const LEVEL_COLORS = ['', '#2ecc71', '#3fa7ff', '#ffb02e', '#ff6b3f', '#c56cff'];
@@ -465,7 +472,7 @@ const FOOT_PLAN = [0, 10, 20, 25, 25, 20]; // Spécial Foot : questions par nive
 const HARD = { hard: null, hardfoot: 'foot', hardrugby: 'rugby', hardbasket: 'basket', hardtennis: 'tennis', hardf1: 'f1', hardvelo: 'velo',
                hardfr: 'fr', hardes: 'es', harduk: 'uk', hardde: 'de', hardit: 'it', hardwc: 'wc', hardcan: 'can' }; // modes 1 vie, niveaux 4-5, sans fin (null = tous les sports)
 const HARD_PAYS = ['fr', 'es', 'uk', 'de', 'it', 'wc', 'can']; // Hardcore par pays, Mondial et CAN : questions de l'Aventure notées 4-5 (Expert et Légende)
-const NAMES = { derby: 'Derbies', match: 'Avant-match', semaine: 'Défi de la semaine', foot: 'Spécial Foot', hardfr: 'Hardcore France', hardes: 'Hardcore Espagne', harduk: 'Hardcore Royaume-Uni',
+const NAMES = { supporters: 'Supporters', derby: 'Derbies', match: 'Avant-match', semaine: 'Défi de la semaine', foot: 'Spécial Foot', hardfr: 'Hardcore France', hardes: 'Hardcore Espagne', harduk: 'Hardcore Royaume-Uni',
                 hardde: 'Hardcore Allemagne', hardit: 'Hardcore Italie', hardwc: 'Hardcore Coupe du monde', hardcan: 'Hardcore CAN', hard: 'Hardcore Tous sports', hardfoot: 'Hardcore Foot', hardrugby: 'Hardcore Rugby',
                 hardbasket: 'Hardcore Basket', hardtennis: 'Hardcore Tennis', hardf1: 'Hardcore Sport auto', hardvelo: 'Hardcore Cyclisme', adv: 'Aventure' };
 // Aventure : 10 étapes par sport (2 par niveau), 5 questions, 4 bonnes réponses pour passer
@@ -477,7 +484,7 @@ const ERAS = ['', '2024-2026', '2021-2023', '2018-2020', '2015-2017', '2012-2014
 const stageLevel = k => Math.ceil(k * 5 / stagesOf(advClub)); // difficulté (points) : clubs, étapes 1-2 → niveau 1 … 9-10 → niveau 5 ; Mondial, étape = niveau
 const $ = id => document.getElementById(id);
 const shuffle = a => { a = [...a]; for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
-const SCREENS = ['home', 'derbies', 'matchs', 'profile', 'badges', 'ranks', 'pick', 'lands', 'clubs', 'adv', 'quiz', 'end', 'advEnd'];
+const SCREENS = ['home', 'supporters', 'derbies', 'matchs', 'profile', 'badges', 'ranks', 'pick', 'lands', 'clubs', 'adv', 'quiz', 'end', 'advEnd'];
 const show = id => { SCREENS.forEach(s => $(s).classList.toggle('hidden', s !== id)); scrollTo(0, 0); if (id === 'home') { renderWeek(); renderMatches(); renderDerbies(); planNotifs(); } };
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
 // Progression sauvegardée dans iCloud par l'app iOS (les données téléchargées en ligne, recréées à la demande, n'y vont pas)
@@ -631,8 +638,20 @@ function renderDerbies() {
 $('goDerbies').onclick = () => { renderDerbies(); show('derbies'); };
 renderDerbies();
 
+// Supporters (supporters.json) : mode pas encore affiché à l'accueil. Accès de test : adresse terminée par #supporters,
+// ou raccourci 'supporters' de l'app. 10 questions par club, des plus faciles aux plus dures, rejouables, sans classement.
+let curSup = null;
+const supClubs = () => (typeof SUPPORTERS === 'undefined' ? [] : SUPPORTERS).filter(x => CLUBS[x.club]);
+function openSupporters() {
+  $('supList').innerHTML = supClubs().map(x => `<button class="derby" data-sup="${esc(x.club)}"><b>${flag(landOf(x.club))}</b>` +
+    `<span><strong>${esc(CLUBS[x.club].nom)}</strong><small>${x.q.length} questions</small></span></button>`).join('');
+  $('supList').querySelectorAll('[data-sup]').forEach(b => b.onclick = () => { curSup = supClubs().find(x => x.club === b.dataset.sup); start('supporters'); });
+  show('supporters');
+}
+
 function buildDeck(m) {
   const out = [];
+  if (m === 'supporters') return shuffle(curSup.q).sort((a, b) => a[0] - b[0]).map(q => ['supporters', q]);
   if (m === 'semaine') return weekNow().q.map(q => ['semaine', q]);
   if (m === 'derby') return shuffle(curDerby.q).sort((a, b) => a[0] - b[0]).map(q => ['derby', q]);
   if (m === 'match') {   // 5 questions par équipe, des plus faciles aux plus dures (étapes 1-2 → niveau 1 … 9-10 → niveau 5)
@@ -671,7 +690,7 @@ const points = (lvl, left) => Math.round(lvl * 100 * (mode in HARD ? 0.2 + 1.8 *
 
 function start(m) {
   mode = m; deck = buildDeck(m); idx = 0; score = 0; good = 0; saved = false;
-  lives = m in HARD ? 1 : m === 'adv' ? PER_STAGE - NEED + 1 : m === 'semaine' || m === 'match' || m === 'derby' ? Infinity : 3;
+  lives = m in HARD ? 1 : m === 'adv' ? PER_STAGE - NEED + 1 : m === 'semaine' || m === 'match' || m === 'derby' || m === 'supporters' ? Infinity : 3;
   $('score').textContent = 0;
   show('quiz');
   ask();
@@ -687,6 +706,7 @@ function ask() {
   } else {
     $('count').textContent = mode === 'semaine' ? `📅 Question ${idx + 1} / ${deck.length}`
       : mode === 'derby' ? `⚔️ ${curDerby.nom} · ${idx + 1} / ${deck.length}`
+      : mode === 'supporters' ? `📣 Supporters · ${idx + 1} / ${deck.length}`
       : mode === 'match' ? `⚡ ${CLUBS[curMatch.dom].court} – ${CLUBS[curMatch.ext].court} · ${idx + 1} / ${deck.length}`
       : mode === 'adv'
       ? `🗺️ Étape ${stage} · ${idx + 1}/${PER_STAGE} · ✅ ${good}/${NEED}`
@@ -695,7 +715,7 @@ function ask() {
   }
   $('level').textContent = mode === 'adv' ? `Étape ${stage} · ${eraOf(advClub, stage)}` : `Niveau ${lvl} · ${LEVELS[lvl]}`;
   $('level').style.background = LEVEL_COLORS[lvl]; $('level').style.color = '#111';
-  $('sport').textContent = sport === 'derby' ? `${curDerby.icone} ${curDerby.clubs}` : sport === 'semaine' ? `📅 ${weekNow()?.titre || 'Défi'}` : SPORTS[sport] || `${LANDS[landOf(sport)].icon || '⚽'} ${CLUBS[sport][mode === 'foot' ? 'nom' : 'court']}`;
+  $('sport').textContent = sport === 'supporters' ? `📣 ${CLUBS[curSup.club].nom}` : sport === 'derby' ? `${curDerby.icone} ${curDerby.clubs}` : sport === 'semaine' ? `📅 ${weekNow()?.titre || 'Défi'}` : SPORTS[sport] || `${LANDS[landOf(sport)].icon || '⚽'} ${CLUBS[sport][mode === 'foot' ? 'nom' : 'court']}`;
   $('sport').classList.toggle('big', mode === 'foot');   // Spécial Foot : grand bandeau aux couleurs du club ou de la compétition
   $('sport').style.setProperty('--cc', CLUBS[sport]?.couleur || '#2ecc71');
   $('question').textContent = q.replace(/ ([?!:;»])/g, '\u00a0$1').replace(/« /g, '«\u00a0');
@@ -746,7 +766,7 @@ function answer(btn, ok, lvl) {
       if (lost) msg += ` −${lost} points`;
     }
     if (mode === 'adv') msg += lives ? ' · encore une erreur et l\'étape est ratée' : ' · étape ratée';
-    else if (!['semaine', 'match', 'derby'].includes(mode)) msg += lives ? ` · ${lives > 1 ? `plus que ${lives} vies` : 'plus qu’une vie'} ❤️` : ' 💀 Game over';
+    else if (!['semaine', 'match', 'derby', 'supporters'].includes(mode)) msg += lives ? ` · ${lives > 1 ? `plus que ${lives} vies` : 'plus qu’une vie'} ❤️` : ' 💀 Game over';
     $('feedback').textContent = msg;
     $('feedback').style.color = 'var(--ko)';
   }
@@ -775,6 +795,13 @@ function finish() {
   if (mode === 'adv') return advFinish();
   $('final').textContent = score + ' pts';
   $('again').classList.toggle('hidden', mode === 'semaine' || (mode === 'match' && Date.parse(curMatch.date) <= Date.now()));
+  if (mode === 'supporters') {   // pas de classement : résultat et rejouer
+    $('saveForm').classList.add('hidden'); $('endBoard').innerHTML = '';
+    $('summary').textContent = `${good} bonne${good > 1 ? 's' : ''} réponse${good > 1 ? 's' : ''} sur ${deck.length} — ` +
+      `${good === deck.length ? 'Un vrai ultra ! 📣' : good >= 7 ? 'Tu connais bien ta tribune ! 🔥' : 'Il faut aller au stade plus souvent ! 🏟️'} (${CLUBS[curSup.club].nom})`;
+    $('saveMsg').textContent = '';
+    return show('end');
+  }
   if (mode === 'derby') {   // pas de classement : meilleur score du derby et rejouer
     $('saveForm').classList.add('hidden'); $('endBoard').innerHTML = '';
     $('summary').textContent = `${good} bonne${good > 1 ? 's' : ''} réponse${good > 1 ? 's' : ''} sur ${deck.length} — ` +
@@ -1491,7 +1518,8 @@ planNotifs();
 $('gcBoard').onclick = () => nativeApp('gameCenter', { mode: boardMode });
 // Raccourcis de l'icône de l'app (appui long sur l'écran d'accueil de l'iPhone)
 window.__quizShortcut = a => ({ foot: () => start('foot'), hard: openPick, adv: openLands, ranks: () => $('goRanks').click(),
-  week: () => { show('home'); $('goWeek').click(); }, matchs: () => { show('home'); if (matchesSoon().length) $('matchBanner').click(); } })[a]?.();   // raccourcis et notifications
+  week: () => { show('home'); $('goWeek').click(); }, supporters: openSupporters, matchs: () => { show('home'); if (matchesSoon().length) $('matchBanner').click(); } })[a]?.();   // raccourcis et notifications
+if (location.hash === '#supporters') openSupporters();   // accès de test au mode Supporters (pas encore à l'accueil)
 $('again').onclick = () => start(mode);
 // Partage du score : feuille de partage iOS dans l'app, partage du navigateur (ou copie) sur le web
 const APP_URL = 'https://charlit.github.io/sportquiz/';
