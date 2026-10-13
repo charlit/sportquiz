@@ -28,14 +28,14 @@
           border-radius:20px; border:1px solid color-mix(in srgb, var(--c) 45%, var(--line));
           background:linear-gradient(150deg, color-mix(in srgb, var(--c) 32%, var(--card)) 0, var(--card) 75%);
           transition:transform .12s, box-shadow .12s; }
-  .tile:hover { transform:translateY(-3px); box-shadow:0 10px 28px -10px var(--c); }
+  @media (hover:hover) { .tile:hover { transform:translateY(-3px); box-shadow:0 10px 28px -10px var(--c); } }
   .tile b { display:block; font-size:2.4rem; line-height:1; }
   .tile strong { display:block; font-size:1.25rem; margin:12px 0 4px; }
   .tile small { color:var(--dim); display:block; }
   .tw { position:relative; display:grid; }
   .info { position:absolute; top:10px; right:10px; width:28px; height:28px; border-radius:50%; cursor:pointer; padding:0;
           border:1px solid #ffffff40; background:#0006; font:italic 800 .95rem Georgia, serif; }
-  .info:hover { background:#000a; border-color:#fff8; }
+  @media (hover:hover) { .info:hover { background:#000a; border-color:#fff8; } }
   dialog { width:calc(100% - 32px); max-width:420px; padding:20px; border-radius:18px; border:1px solid var(--line); background:var(--card); color:var(--txt); }
   dialog::backdrop { background:#000b; }
   dialog h2 { margin:0 0 10px; font-size:1.3rem; }
@@ -73,13 +73,13 @@
   .sports { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:12px; }
   .sport { --c:var(--acc); text-align:left; cursor:pointer; padding:16px; border-radius:16px; border:1px solid var(--line); background:var(--card);
            transition:border-color .12s, transform .12s; }
-  .sport:hover { border-color:var(--c); transform:translateY(-2px); }
+  @media (hover:hover) { .sport:hover { border-color:var(--c); transform:translateY(-2px); } }
   .sport b { font-size:2rem; display:block; }
   .sport strong { display:block; margin:8px 0 2px; font-size:1.1rem; overflow-wrap:anywhere; hyphens:auto; }
   .sport small { color:var(--dim); }
   .sport.wide { grid-column:1/-1; }
   .sport.locked { filter:grayscale(1); opacity:.45; }
-  .sport.locked:hover { transform:none; border-color:var(--line); }
+  @media (hover:hover) { .sport.locked:hover { transform:none; border-color:var(--line); } }
   .sport.unlockable { border-color:var(--acc); animation:pulse 1.6s infinite; }
   .meter { height:6px; border-radius:3px; background:#0006; margin-top:10px; overflow:hidden; }
   .meter i { display:block; height:100%; background:var(--c); }
@@ -155,7 +155,7 @@
   td.empty { text-align:center; font-weight:400; color:var(--dim); padding:12px; }
   .rankbtn { display:block; width:100%; margin-top:12px; padding:16px; border-radius:16px; cursor:pointer; font-size:1.15rem; font-weight:800;
              border:1px solid color-mix(in srgb, var(--acc) 50%, var(--line)); background:linear-gradient(150deg, #ffd23f33 0, var(--card) 75%); }
-  .rankbtn:hover { border-color:var(--acc); }
+  @media (hover:hover) { .rankbtn:hover { border-color:var(--acc); } }
 
   /* quiz */
   .top { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; color:var(--dim); }
@@ -176,7 +176,7 @@
   #question { font-size:1.35rem; margin:8px 0 18px; min-height:3em; }
   .answers { display:grid; gap:10px; margin-top:16px; }
   .answers button { padding:14px 16px; border-radius:12px; border:2px solid var(--line); background:var(--card); font-size:1.05rem; text-align:left; cursor:pointer; }
-  .answers button:hover:not(:disabled) { border-color:var(--acc); }
+  @media (hover:hover) { .answers button:hover:not(:disabled) { border-color:var(--acc); } }   /* pas sur tactile : le survol y reste collé à la réponse suivante */
   .answers button.ok { background:var(--ok); border-color:var(--ok); color:#06210f; font-weight:700; }
   .answers button.ko { background:var(--ko); border-color:var(--ko); }
   .answers button:disabled { cursor:default; }
@@ -197,7 +197,7 @@
   .topbar { display:flex; justify-content:flex-end; }
   .profbtn { display:flex; align-items:center; gap:6px; padding:4px 10px 4px 4px; cursor:pointer;
              border-radius:999px; border:1px solid var(--line); background:var(--card); }
-  .profbtn:hover { border-color:var(--acc); }
+  @media (hover:hover) { .profbtn:hover { border-color:var(--acc); } }
   .avatar { width:34px; height:34px; border-radius:50%; display:grid; place-items:center; flex:none; font-weight:900;
             background:var(--acc); color:#111; }
   /* encart autour de la lettre : bronze (1-2 badges), argent (3-4), or (5-11), platine (12+), légende (tous) */
