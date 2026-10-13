@@ -167,6 +167,12 @@
   #timer i { background:var(--ok); transition:none; }
   .badges { display:flex; gap:8px; margin:16px 0 8px; flex-wrap:wrap; }
   .badge { padding:3px 10px; border-radius:999px; font-size:.85rem; font-weight:700; background:#0005; }
+  @media (max-width:600px) { .badges { gap:10px; } .badge { padding:6px 14px; font-size:1.05rem; } }   /* niveau et catégorie bien lisibles sur téléphone */
+  /* Spécial Foot : catégorie de la question en grand bandeau, elle aide le joueur à se repérer (club, Mondial, CAN…) */
+  #sport.big { flex:1 1 100%; order:-1; display:flex; align-items:center; gap:10px; padding:12px 16px; border-radius:16px; font-size:1.35rem; font-weight:800;
+           line-height:1.2; background:linear-gradient(135deg, color-mix(in srgb, var(--cc, #fff) 30%, transparent), #ffffff08);
+           border:1px solid color-mix(in srgb, var(--cc, #fff) 55%, transparent); border-left:6px solid var(--cc, #fff); }
+  #sport.big:empty { display:none; }
   #question { font-size:1.35rem; margin:8px 0 18px; min-height:3em; }
   .answers { display:grid; gap:10px; margin-top:16px; }
   .answers button { padding:14px 16px; border-radius:12px; border:2px solid var(--line); background:var(--card); font-size:1.05rem; text-align:left; cursor:pointer; }
@@ -673,7 +679,9 @@ function ask() {
   }
   $('level').textContent = mode === 'adv' ? `Étape ${stage} · ${eraOf(advClub, stage)}` : `Niveau ${lvl} · ${LEVELS[lvl]}`;
   $('level').style.background = LEVEL_COLORS[lvl]; $('level').style.color = '#111';
-  $('sport').textContent = sport === 'derby' ? `${curDerby.icone} ${curDerby.clubs}` : sport === 'semaine' ? `📅 ${weekNow()?.titre || 'Défi'}` : SPORTS[sport] || `${LANDS[landOf(sport)].icon || '⚽'} ${CLUBS[sport].court}`;
+  $('sport').textContent = sport === 'derby' ? `${curDerby.icone} ${curDerby.clubs}` : sport === 'semaine' ? `📅 ${weekNow()?.titre || 'Défi'}` : SPORTS[sport] || `${LANDS[landOf(sport)].icon || '⚽'} ${CLUBS[sport][mode === 'foot' ? 'nom' : 'court']}`;
+  $('sport').classList.toggle('big', mode === 'foot');   // Spécial Foot : grand bandeau aux couleurs du club ou de la compétition
+  $('sport').style.setProperty('--cc', CLUBS[sport]?.couleur || '#2ecc71');
   $('question').textContent = q.replace(/ ([?!:;»])/g, '\u00a0$1').replace(/« /g, '«\u00a0');
   $('feedback').textContent = ''; $('stake').textContent = '';
   $('answers').innerHTML = '';
