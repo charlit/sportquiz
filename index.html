@@ -311,6 +311,7 @@
     <div class="card hidden" id="settings">
       <h2>⚙️ Réglages</h2>
       <label class="setting"><span>📳 Vibrations<small>Bonne réponse, erreur, badge débloqué</small></span><input type="checkbox" class="toggle" id="hapticsOn"></label>
+      <label class="setting"><span>🔔 Rappels<small id="notifsHint">Nouveau défi le lundi, avant-matchs la veille</small></span><input type="checkbox" class="toggle" id="notifsOn"></label>
     </div>
     <div class="card hidden" id="account">
       <div id="accNew">
@@ -455,10 +456,50 @@ const stageLevel = k => Math.ceil(k * 5 / stagesOf(advClub)); // difficulté (po
 const $ = id => document.getElementById(id);
 const shuffle = a => { a = [...a]; for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const SCREENS = ['home', 'derbies', 'matchs', 'profile', 'badges', 'ranks', 'pick', 'lands', 'clubs', 'adv', 'quiz', 'end', 'advEnd'];
-const show = id => { SCREENS.forEach(s => $(s).classList.toggle('hidden', s !== id)); scrollTo(0, 0); if (id === 'home') { renderWeek(); renderMatches(); renderDerbies(); } };
+const show = id => { SCREENS.forEach(s => $(s).classList.toggle('hidden', s !== id)); scrollTo(0, 0); if (id === 'home') { renderWeek(); renderMatches(); renderDerbies(); planNotifs(); } };
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
-const store = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} };
+// Progression sauvegardée dans iCloud par l'app iOS (les données téléchargées en ligne, recréées à la demande, n'y vont pas)
+const CLOUD_KEYS = new Set(['quiz-adv', 'quiz-adv-open', 'quiz-badges', 'quiz-derbies', 'quiz-derby-pays', 'quiz-haptics', 'quiz-hc', 'quiz-notifs',
+  'quiz-played', 'quiz-profile', 'quiz-pseudo', 'quiz-seen', 'quiz-semaine', 'quiz-tier']);
+const toCloud = all => { try { webkit.messageHandlers.app.postMessage({ type: 'cloud', all }); } catch {} };
+const store = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} if (CLOUD_KEYS.has(k)) toCloud({ [k]: JSON.stringify(v) }); };
 const load = (k, d) => { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch { return d; } };
+// Fusionne une valeur venue d'iCloud avec celle de l'appareil, sans jamais perdre de progression :
+// listes réunies, compteurs au maximum, objets clé par clé (étape la plus haute, meilleur score) ; un réglage local l'emporte.
+function mergeCloud(local, cloud) {
+  if (local == null) return cloud;
+  if (Array.isArray(local) && Array.isArray(cloud)) return [...new Set([...local, ...cloud])];
+  if (typeof local === 'number' && typeof cloud === 'number') return Math.max(local, cloud);
+  if (local && cloud && typeof local === 'object' && typeof cloud === 'object' && !Array.isArray(local) && !Array.isArray(cloud)) {
+    const out = { ...local };
+    for (const [k, v] of Object.entries(cloud)) {
+      const l = out[k];
+      if (l == null) out[k] = v;
+      else if (typeof l === 'number' && typeof v === 'number') out[k] = k === 'code' ? l : Math.max(l, v);
+      else if (l && v && typeof l === 'object' && 'good' in l && 'good' in v && (v.good > l.good || v.good === l.good && v.score > l.score)) out[k] = v;
+    }
+    return out;
+  }
+  return local;
+}
+window.__cloudMerge = (cloud, live) => {   // live : arrivée d'iCloud pendant que l'app tourne
+  let changed = false;
+  for (const [k, raw] of Object.entries(cloud || {})) {
+    if (!CLOUD_KEYS.has(k)) continue;
+    let v; try { v = JSON.parse(raw); } catch { continue; }
+    const before = localStorage.getItem(k), merged = mergeCloud(load(k, null), v);
+    if (merged != null && JSON.stringify(merged) !== before) { try { localStorage.setItem(k, JSON.stringify(merged)); changed = true; } catch {} }
+  }
+  // Le quiz garde sa progression en mémoire : on recharge, mais seulement depuis l'accueil (jamais au milieu d'une partie)
+  if (live && changed && !$('home').classList.contains('hidden')) location.reload();
+  return changed;
+};
+if (window.__cloud) {   // au lancement : on récupère la progression d'iCloud, puis on y renvoie l'état fusionné
+  window.__cloudMerge(window.__cloud);
+  const all = {};
+  for (const k of CLOUD_KEYS) { const v = localStorage.getItem(k); if (v != null) all[k] = v; }
+  toCloud(all);
+}
 
 let mode, deck, idx, score, good, lives, timer, next, t0, saved, advClub, stage, cityFilter;
 
@@ -728,6 +769,7 @@ function finish() {
   if (mode === 'semaine') { const w = weekNow(); if (w) { weekDone[w.debut] = { score, good }; store('quiz-semaine', weekDone); } }
   // Demande d'avis App Store après une belle partie, à partir de la 3e (iOS décide s'il l'affiche, 3 fois par an au plus)
   const played = load('quiz-played', 0) + 1; store('quiz-played', played);
+  if (played === 1 && load('quiz-notifs', true)) setTimeout(() => planNotifs(true), 2500);   // demande d'autorisation après la 1re partie
   if (played >= 3 && (mode in HARD ? good >= 10 : good / deck.length >= .6)) setTimeout(() => nativeApp('review'), 1500);
   if (mode in HARD) {
     const msg = good >= 25 ? 'Inhumain ! 🐐' : good >= 12 ? 'Énorme ! 🔥' : good >= 5 ? 'Solide ! 💪' : `Le ${NAMES[mode]} porte bien son nom… 💀`;
@@ -1133,7 +1175,7 @@ function unlock(id) {
   store('quiz-badges', earned);
   const [, icon, title] = BADGES.find(b => b[0] === id);
   $('toastIcon').innerHTML = flag(icon); $('toastText').textContent = `Badge débloqué : ${title}`;
-  $('toast').classList.add('on');
+  if (!(GC && gcName)) $('toast').classList.add('on');   // dans l'app connectée à Game Center, c'est la bannière « Succès » d'iOS qui s'affiche
   nativeApp('haptic', { kind: 'success' });
   clearTimeout(toastTimer); toastTimer = setTimeout(() => $('toast').classList.remove('on'), 3000);
   reportBadges([id]);
@@ -1378,9 +1420,46 @@ $('gcBoard').classList.toggle('hidden', !GC);
 $('settings').classList.toggle('hidden', !GC);
 $('hapticsOn').checked = load('quiz-haptics', true);
 $('hapticsOn').onchange = () => { store('quiz-haptics', $('hapticsOn').checked); nativeApp('haptic', { kind: 'light' }); };
+$('notifsOn').checked = load('quiz-notifs', true);
+$('notifsOn').onchange = () => { store('quiz-notifs', $('notifsOn').checked); planNotifs($('notifsOn').checked); };
+// Notifications locales, programmées sur le téléphone (aucun serveur) : nouveau défi le lundi à 10 h, rappel le dimanche à 18 h
+// si le défi n'est pas joué, et la veille des grosses affiches (24 h avant le coup d'envoi, un message par jour de match).
+// Reprogrammées à chaque retour à l'accueil, puisque défis et matchs sont mis à jour en ligne.
+function planNotifs(ask = false) {
+  if (!GC) return;
+  const list = [], now = Date.now(), at = (day, h) => { const d = new Date(day + 'T00:00:00'); d.setHours(h); return d.getTime(); };
+  if (load('quiz-notifs', true)) {
+    for (const w of SEMAINE) {
+      const t = at(w.debut, 10);
+      if (t > now && t < now + 60 * 864e5)
+        list.push({ id: 'semaine-' + w.debut, at: t, action: 'week', title: `${w.icone || '📅'} Nouveau défi de la semaine`, body: `10 questions sur ${w.titre}. Un seul essai : à toi de jouer !` });
+    }
+    const w = weekNow();
+    if (w && !weekDone[w.debut]) {
+      const t = at(weekEnd(w), 0) - 6 * 3600e3;   // dimanche 18 h
+      if (t > now) list.push({ id: 'rappel-' + w.debut, at: t, action: 'week', title: '⏳ Dernier jour pour le défi', body: `Le défi ${w.titre} se termine ce soir à minuit. Tu as encore ta chance !` });
+    }
+    const days = {};
+    for (const x of MATCHS) { const k = Date.parse(x.date); if (CLUBS[x.dom] && CLUBS[x.ext] && k - 864e5 > now) (days[new Date(k).toDateString()] ||= []).push(x); }
+    for (const ms of Object.values(days)) {
+      ms.sort((a, b) => Date.parse(a.date) - Date.parse(b.date));
+      const name = x => `${CLUBS[x.dom].court} – ${CLUBS[x.ext].court}`, hour = new Date(ms[0].date).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+      list.push({ id: 'match-' + ms[0].id, at: Date.parse(ms[0].date) - 864e5, action: 'matchs', title: '⚡ Avant-match',
+        body: ms.length === 1 ? `${name(ms[0])} demain à ${hour} : ton quiz d'avant-match est prêt !`
+          : `${ms.slice(0, 2).map(name).join(', ')}${ms.length > 2 ? ` et ${ms.length - 2} autre${ms.length > 3 ? 's' : ''}` : ''} demain : tes quiz d'avant-match sont prêts !` });
+    }
+  }
+  nativeApp('notifs', { ask, list: list.sort((a, b) => a.at - b.at).slice(0, 60) });
+}
+window.__notifStatus = st => {   // réponse de l'app : 'on', 'denied' (refusées dans les Réglages iOS) ou 'unknown'
+  $('notifsHint').textContent = st === 'denied' && load('quiz-notifs', true) ? 'Bloquées par iOS : touche ici pour les autoriser' : 'Nouveau défi le lundi, avant-matchs la veille';
+  $('notifsHint').onclick = st === 'denied' ? e => { e.preventDefault(); nativeApp('openSettings'); } : null;
+};
+planNotifs();
 $('gcBoard').onclick = () => nativeApp('gameCenter', { mode: boardMode });
 // Raccourcis de l'icône de l'app (appui long sur l'écran d'accueil de l'iPhone)
-window.__quizShortcut = a => ({ foot: () => start('foot'), hard: openPick, adv: openLands, ranks: () => $('goRanks').click() })[a]?.();
+window.__quizShortcut = a => ({ foot: () => start('foot'), hard: openPick, adv: openLands, ranks: () => $('goRanks').click(),
+  week: () => { show('home'); $('goWeek').click(); }, matchs: () => { show('home'); if (matchesSoon().length) $('matchBanner').click(); } })[a]?.();   // raccourcis et notifications
 $('again').onclick = () => start(mode);
 // Partage du score : feuille de partage iOS dans l'app, partage du navigateur (ou copie) sur le web
 const APP_URL = 'https://charlit.github.io/sportquiz/';
