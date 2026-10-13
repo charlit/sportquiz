@@ -79,7 +79,7 @@ clubs = json.loads(js.removeprefix('const CLUBS = ').rstrip().rstrip(';'))
 assert sorted(sum(c['pays'] == p for c in clubs.values()) for p in ('fr', 'es', 'uk', 'de', 'it')) == [10, 10, 10, 10, 18] and all(sum(q[0] == k for q in c['q']) >= 5 for c in clubs.values() if c['pays'] not in ('wc', 'can') for k in range(1, 11))
 wc = [c for c in clubs.values() if c['pays'] == 'wc']   # Mondial : 12 éditions (1978-2022), 5 étapes de 5 questions au moins
 assert sorted(c['annee'] for c in wc) == list(range(1978, 2023, 4)) and all(sum(q[0] == k for q in c['q']) >= 5 for c in wc for k in range(1, 6))
-assert all(len(q) == 6 and len(set(q[2:])) == 4 for c in clubs.values() for q in c['q'])                  # 4 réponses distinctes
+assert all(len(q) == 7 and len(set(q[2:6])) == 4 and q[6] in range(1, 6) for c in clubs.values() for q in c['q'])  # 4 réponses distinctes, difficulté 1-5
 texts = [q[1] for c in wc for q in c['q']]
 assert len(texts) == len(set(texts))                                                                      # intitulés uniques (questions vues retenues par leur texte)
 can = [c for c in clubs.values() if c['pays'] == 'can']  # CAN : 14 éditions (2000-2025), 5 étapes de 5 questions

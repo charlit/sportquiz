@@ -419,7 +419,7 @@ const TIME = 20;
 const FOOT_PLAN = [0, 10, 20, 25, 25, 20]; // Spécial Foot : questions par niveau 1→5 (100)
 const HARD = { hard: null, hardfoot: 'foot', hardrugby: 'rugby', hardbasket: 'basket', hardtennis: 'tennis', hardf1: 'f1', hardvelo: 'velo',
                hardfr: 'fr', hardes: 'es', harduk: 'uk', hardde: 'de', hardit: 'it', hardwc: 'wc', hardcan: 'can' }; // modes 1 vie, niveaux 4-5, sans fin (null = tous les sports)
-const HARD_PAYS = ['fr', 'es', 'uk', 'de', 'it', 'wc', 'can']; // Hardcore par pays, Mondial et CAN : questions de l'Aventure de niveau 4-5 (clubs : étapes 7-10, éditions : étapes 4-5)
+const HARD_PAYS = ['fr', 'es', 'uk', 'de', 'it', 'wc', 'can']; // Hardcore par pays, Mondial et CAN : questions de l'Aventure notées 4-5 (Expert et Légende)
 const NAMES = { match: 'Avant-match', semaine: 'Défi de la semaine', foot: 'Spécial Foot', hardfr: 'Hardcore France', hardes: 'Hardcore Espagne', harduk: 'Hardcore Royaume-Uni',
                 hardde: 'Hardcore Allemagne', hardit: 'Hardcore Italie', hardwc: 'Hardcore Coupe du monde', hardcan: 'Hardcore CAN', hard: 'Hardcore Tous sports', hardfoot: 'Hardcore Foot', hardrugby: 'Hardcore Rugby',
                 hardbasket: 'Hardcore Basket', hardtennis: 'Hardcore Tennis', hardf1: 'Hardcore Sport auto', hardvelo: 'Hardcore Cyclisme', adv: 'Aventure' };
@@ -462,12 +462,15 @@ function pick(pool, n, text = q => q[1]) {
   return out;
 }
 
-// Toutes les questions de foot, en trois lots au niveau 1-5 : foot général, clubs de l'Aventure (étapes 1-2 → niveau 1 … 9-10 → niveau 5)
-// et compétitions internationales (Coupes du monde et CAN, étape = niveau). Servent au Spécial Foot et au Hardcore Foot.
+// Questions de clubs.json : [étape, question, bonne réponse, mauvaise ×3, difficulté 1-5]. L'étape est une période (Aventure),
+// pas une difficulté : les autres modes utilisent la difficulté notée (7e valeur), ou à défaut l'ancienne correspondance étape → niveau.
+const clubLevel = (id, q) => q[6] || (LANDS[landOf(id)].ed ? q[0] : Math.ceil(q[0] / 2));
+const clubQ = (id, q, lvl = clubLevel(id, q)) => [id, [lvl, ...q.slice(1, 6)]];
+// Toutes les questions de foot, en trois lots notés de 1 à 5 : foot général, clubs de l'Aventure et compétitions internationales
+// (Coupes du monde et CAN). Servent au Spécial Foot, au Hardcore Foot et à l'avant-match.
 function footSources() {
-  const advQs = (pays, lvlOf) => Object.entries(CLUBS).filter(([, c]) => pays(c.pays))
-    .flatMap(([id, c]) => c.q.map(q => [id, [lvlOf(q[0]), ...q.slice(1)]]));
-  return [QUESTIONS.foot.map(q => ['foot', q]), advQs(l => !LANDS[l].ed, k => Math.ceil(k / 2)), advQs(l => LANDS[l].ed, k => k)];
+  const advQs = pays => Object.entries(CLUBS).filter(([, c]) => pays(c.pays || 'fr')).flatMap(([id, c]) => c.q.map(q => clubQ(id, q)));
+  return [QUESTIONS.foot.map(q => ['foot', q]), advQs(l => !LANDS[l].ed), advQs(l => LANDS[l].ed)];
 }
 
 // Défi de la semaine (semaine.json) : 10 questions sur une personnalité, les mêmes pour tous, une seule tentative.
@@ -524,14 +527,14 @@ function buildDeck(m) {
   const out = [];
   if (m === 'semaine') return weekNow().q.map(q => ['semaine', q]);
   if (m === 'match') {   // 5 questions par équipe, des plus faciles aux plus dures (étapes 1-2 → niveau 1 … 9-10 → niveau 5)
-    const of = id => pick(CLUBS[id].q.map(q => [id, [LANDS[landOf(id)].ed ? q[0] : Math.ceil(q[0] / 2), ...q.slice(1)]]), 5, e => e[1][1]);
+    const of = id => pick(CLUBS[id].q.map(q => clubQ(id, q)), 5, e => e[1][1]);
     out.push(...of(curMatch.dom), ...of(curMatch.ext));
     store('quiz-seen', [...seen]);
     return out.sort((a, b) => a[1][0] - b[1][0]);
   }
   if (m in HARD) { // questions niveau 4-5, jamais vues d'abord ; marquées vues quand posées
     const pool = HARD_PAYS.includes(HARD[m])
-      ? Object.entries(CLUBS).filter(([, c]) => c.pays === HARD[m]).flatMap(([id, c]) => c.q.map(q => [id, [LANDS[HARD[m]].ed ? q[0] : Math.ceil(q[0] / 2), ...q.slice(1)]]))
+      ? Object.entries(CLUBS).filter(([, c]) => c.pays === HARD[m]).flatMap(([id, c]) => c.q.map(q => clubQ(id, q)))
           .filter(e => e[1][0] >= 4)
       : HARD[m] === 'foot' ? footSources().flat().filter(e => e[1][0] >= 4)   // tout le foot : général, clubs, Mondial et CAN
       : Object.entries(QUESTIONS).filter(([s]) => !HARD[m] || s === HARD[m]).flatMap(([s, qs]) => qs.filter(q => q[0] >= 4).map(q => [s, q]));
@@ -541,7 +544,7 @@ function buildDeck(m) {
   }
   if (m === 'adv') {
     pick(CLUBS[advClub].q.filter(q => q[0] === stage), PER_STAGE)
-      .forEach(q => out.push([advClub, [stageLevel(stage), ...q.slice(1)]]));
+      .forEach(q => out.push(clubQ(advClub, q, stageLevel(stage))));
   } else {
     // Spécial Foot : chaque niveau mêle à parts égales foot général, clubs et compétitions internationales (Mondial + CAN)
     const sources = footSources();
@@ -1373,7 +1376,8 @@ function validClubs(c) {
   const ok = Object.keys(CLUBS).every(id => known[id]) && Object.values(known).every(x => {
     const n = LANDS[x.pays || 'fr'].stages || STAGES;
     return str(x.nom) && str(x.court) && str(x.ville) && str(x.couleur) && Number.isFinite(x.lat) && Number.isFinite(x.lon) && Array.isArray(x.q) &&
-      x.q.every(q => Array.isArray(q) && q.length === 6 && Number.isInteger(q[0]) && q[0] >= 1 && q[0] <= n && q.slice(1).every(str)) &&
+      x.q.every(q => Array.isArray(q) && (q.length === 6 || q.length === 7 && Number.isInteger(q[6]) && q[6] >= 1 && q[6] <= 5) &&
+        Number.isInteger(q[0]) && q[0] >= 1 && q[0] <= n && q.slice(1, 6).every(str)) &&
       Array.from({ length: n }, (_, k) => k + 1).every(k => x.q.filter(q => q[0] === k).length >= PER_STAGE);   // 5 questions par étape au moins
   });
   return ok ? known : null;
