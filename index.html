@@ -29,6 +29,7 @@
           background:linear-gradient(150deg, color-mix(in srgb, var(--c) 32%, var(--card)) 0, var(--card) 75%);
           transition:transform .12s, box-shadow .12s; }
   @media (hover:hover) { .tile:hover { transform:translateY(-3px); box-shadow:0 10px 28px -10px var(--c); } }
+  .tile:not(.wide) { display:flex; flex-direction:column; justify-content:flex-start; }   /* contenu en haut, même si la tuile a peu de texte (un bouton centre son contenu) */
   .tile b { display:block; font-size:2.4rem; line-height:1; }
   .tile strong { display:block; font-size:1.25rem; margin:12px 0 4px; }
   .tile small { color:var(--dim); display:block; }
