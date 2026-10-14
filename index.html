@@ -237,7 +237,21 @@
                                  box-shadow:0 0 18px #ffd23faa; animation:ringspin 4s linear infinite; }
   @property --a { syntax:'<angle>'; inherits:true; initial-value:0deg; }
   @keyframes ringspin { to { --a:360deg; } }
-  @media (prefers-reduced-motion: reduce) { .avatar[data-tier="legende"] { animation:none; } }
+  /* Transitions entre écrans, score qui compte, confettis : tout se coupe avec « Réduire les animations » */
+  section.enter { animation:enter .2s ease-out; }
+  @keyframes enter { from { opacity:0; transform:translateY(10px); } }
+  #toast.on #toastIcon { display:inline-block; animation:pop .5s cubic-bezier(.3,1.6,.5,1); }
+  @keyframes pop { 0% { transform:scale(.3) rotate(-20deg); } 70% { transform:scale(1.25) rotate(6deg); } }
+  #score.bump { display:inline-block; animation:bump .35s ease-out; }
+  @keyframes bump { 40% { transform:scale(1.25); color:var(--ok); } }
+  .rec { text-align:center; font-weight:800; color:var(--acc); margin:-6px 0 10px; animation:pop .6s cubic-bezier(.3,1.6,.5,1); }
+  #confetti { position:fixed; inset:0; pointer-events:none; z-index:60; overflow:hidden; }
+  #confetti i { position:absolute; top:-12px; width:8px; height:14px; border-radius:2px; animation:fall linear forwards; }
+  @keyframes fall { to { transform:translate(var(--dx), 110vh) rotate(var(--r)); opacity:.9; } }
+  @media (prefers-reduced-motion: reduce) {
+    .avatar[data-tier="legende"], .sport.unlockable, section.enter, #toast.on #toastIcon, #score.bump, .rec { animation:none; }
+    #confetti { display:none; }
+  }
   .frames { display:grid; grid-template-columns:repeat(6, 1fr); gap:6px; padding:8px 0 4px; }
   .frame { display:grid; justify-items:center; gap:6px; min-width:0; padding:10px 0 8px; border-radius:14px; cursor:pointer;
            border:1px solid var(--line); background:var(--card2); color:var(--txt); font-size:.68rem; font-weight:700; }
@@ -457,6 +471,7 @@
   <section id="end" class="hidden">
     <h1 class="center">Terminé !</h1>
     <p class="big" id="final"></p>
+    <p class="rec hidden" id="record">🎉 Nouveau record perso !</p>
     <p class="center" id="summary"></p>
     <div class="card">
       <h2>Enregistre ton score</h2>
@@ -509,12 +524,17 @@ const stageLevel = k => Math.ceil(k * 5 / stagesOf(advClub)); // difficulté (po
 const $ = id => document.getElementById(id);
 const shuffle = a => { a = [...a]; for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const SCREENS = ['home', 'supporters', 'derbies', 'matchs', 'profile', 'badges', 'ranks', 'pick', 'lands', 'clubs', 'adv', 'quiz', 'end', 'advEnd'];
-const show = id => { SCREENS.forEach(s => $(s).classList.toggle('hidden', s !== id)); scrollTo(0, 0); if (id === 'home') { renderWeek(); renderMatches(); renderDerbies(); planNotifs(); } };
+const show = id => { SCREENS.forEach(s => $(s).classList.toggle('hidden', s !== id)); scrollTo(0, 0);
+  const sec = $(id); sec.classList.remove('enter'); void sec.offsetWidth; sec.classList.add('enter');   // apparition douce
+  if (id === 'home') { renderWeek(); renderMatches(); renderDerbies(); planNotifs(); } };
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
 // Progression sauvegardée dans iCloud par l'app iOS (les données téléchargées en ligne, recréées à la demande, n'y vont pas)
-const CLOUD_KEYS = new Set(['quiz-adv', 'quiz-adv-open', 'quiz-badges', 'quiz-derbies', 'quiz-derby-pays', 'quiz-haptics', 'quiz-hc', 'quiz-notifs',
+const CLOUD_KEYS = new Set(['quiz-adv', 'quiz-adv-open', 'quiz-badges', 'quiz-best', 'quiz-derbies', 'quiz-derby-pays', 'quiz-haptics', 'quiz-hc', 'quiz-notifs',
   'quiz-played', 'quiz-profile', 'quiz-pseudo', 'quiz-seen', 'quiz-semaine', 'quiz-tier']);
 const toCloud = all => { try { webkit.messageHandlers.app.postMessage({ type: 'cloud', all }); } catch {} };
+// confirm() avec un bouton qui dit l'action (« Abandonner », « C'est parti ») au lieu de « OK » :
+// dans l'app iOS, le libellé suit un séparateur invisible que la fenêtre native retire ; le site web garde confirm() tel quel.
+const confirmBtn = (msg, label) => confirm(window.__quizGC ? `${msg}\u001f${label}` : msg);
 const store = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} if (CLOUD_KEYS.has(k)) toCloud({ [k]: JSON.stringify(v) }); };
 const load = (k, d) => { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch { return d; } };
 // Fusionne une valeur venue d'iCloud avec celle de l'appareil, sans jamais perdre de progression :
@@ -554,7 +574,7 @@ if (window.__cloud) {   // au lancement : on récupère la progression d'iCloud,
   toCloud(all);
 }
 
-let mode, deck, idx, score, good, lives, timer, next, t0, saved, advClub, stage, cityFilter;
+let mode, deck, idx, score, good, lives, timer, next, t0, saved, advClub, stage, cityFilter, lastTick = 0;
 
 // Dans l'app iOS, le classement passe par Game Center : pas de pseudo, le score part tout seul.
 const GC = !!window.__quizGC;
@@ -607,7 +627,7 @@ function renderWeek() {
 $('goWeek').onclick = () => {
   const w = weekNow();
   if (!w || weekDone[w.debut]) return renderWeek();
-  if (!confirm(`Défi : ${w.titre}\n${w.intro || ''}\n\n10 questions, un seul essai cette semaine. C'est parti ?`)) return;
+  if (!confirmBtn(`Défi : ${w.titre}\n${w.intro || ''}\n\n10 questions, un seul essai cette semaine. C'est parti ?`, "C'est parti")) return;
   weekDone[w.debut] = { score: 0, good: 0 }; store('quiz-semaine', weekDone);
   start('semaine');
 };
@@ -753,12 +773,27 @@ function ask() {
   });
   t0 = performance.now();
   clearInterval(timer);
+  lastTick = 0;
   timer = setInterval(() => {
     const left = TIME - (performance.now() - t0) / 1000;
-    $('timer').firstElementChild.style.width = Math.max(0, left / TIME * 100) + '%';
+    const bar = $('timer').firstElementChild;
+    bar.style.width = Math.max(0, left / TIME * 100) + '%';
+    bar.style.background = left > 10 ? 'var(--ok)' : left > 5 ? '#ffb02e' : 'var(--ko)';   // vert, orange à 10 s, rouge à 5 s
+    const sec = Math.ceil(left);
+    if (sec <= 3 && sec > 0 && sec !== lastTick) { lastTick = sec; nativeApp('haptic', { kind: 'tick' }); }   // 3, 2, 1
     if (mode in HARD && left > 0) $('stake').textContent = `⚡ ${points(lvl, left)} pts en jeu`; // hors zone annoncée : change 20×/s
     if (left <= 0) answer(null, false, lvl);
   }, 50);
+}
+
+// Le score défile jusqu'à sa nouvelle valeur au lieu de sauter (instantané avec « Réduire les animations »)
+function countScore(to) {
+  const el = $('score'), from = +el.textContent || 0;
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches || from === to) { el.textContent = to; return; }
+  const t0 = performance.now(), d = 400;
+  const step = now => { const k = Math.min(1, (now - t0) / d); el.textContent = Math.round(from + (to - from) * (1 - (1 - k) ** 3)); if (k < 1) requestAnimationFrame(step); };
+  requestAnimationFrame(step);
+  if (to > from) { el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump'); }
 }
 
 function answer(btn, ok, lvl) {
@@ -774,7 +809,7 @@ function answer(btn, ok, lvl) {
     if (mode in HARD && good + 1 >= 15 && BADGES.some(b => b[0] === mode)) unlock(mode);         // badge du Hardcore joué (même id que le mode)
     const pts = points(lvl, left);
     score += pts; good++;
-    $('score').textContent = score;
+    countScore(score);
     nativeApp('haptic', { kind: 'success' });
     $('feedback').textContent = `✅ Bravo ! +${pts} points`;
     $('feedback').style.color = 'var(--ok)';
@@ -786,7 +821,7 @@ function answer(btn, ok, lvl) {
     if (mode === 'foot') { // l'erreur coûte la moitié de la valeur de la question
       const lost = Math.min(score, lvl * 50);
       score -= lost;
-      $('score').textContent = score;
+      countScore(score);
       if (lost) msg += ` −${lost} points`;
     }
     if (mode === 'adv') msg += lives ? ' · encore une erreur et l\'étape est ratée' : ' · étape ratée';
@@ -798,8 +833,25 @@ function answer(btn, ok, lvl) {
   next = setTimeout(() => !over && ++idx < deck.length ? ask() : finish(), ok ? 1200 : 2200);
 }
 
+// Confettis (écran de fin d'un sans-faute ou d'un record perso)
+function confetti() {
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const box = document.createElement('div'); box.id = 'confetti';
+  const colors = ['#ffd23f', '#2ecc71', '#4fa3ff', '#ff5a4f', '#b06bff', '#fff'];
+  box.innerHTML = Array.from({ length: 70 }, () => `<i style="left:${Math.random() * 100}%;background:${colors[Math.random() * colors.length | 0]};` +
+    `--dx:${(Math.random() - .5) * 160}px;--r:${(Math.random() - .5) * 900}deg;animation-duration:${1.6 + Math.random() * 1.4}s;animation-delay:${Math.random() * .3}s"></i>`).join('');
+  document.body.append(box); setTimeout(() => box.remove(), 3500);
+}
+
 function finish() {
   $('progress').style.width = '100%';
+  // Célébration graduée : record perso battu (pas la 1re partie du mode) ou sans-faute → confettis et vibration de victoire
+  const best = load('quiz-best', {}), scored = !['adv', 'derby', 'supporters', 'match'].includes(mode);
+  const record = scored && best[mode] != null && score > best[mode];
+  if (scored && score > (best[mode] ?? -1)) { best[mode] = score; store('quiz-best', best); }
+  const perfect = good > 0 && good === deck.length;
+  $('record').classList.toggle('hidden', !record);
+  if (record || perfect) setTimeout(() => { confetti(); nativeApp('haptic', { kind: 'celebrate' }); }, 300);
   unlock('first');
   if (mode === 'foot' && good === deck.length) unlock('perfect');
   if (mode === 'semaine' && good === deck.length) unlock('semaine');   // une seule fois : un badge déjà gagné ne se regagne pas
@@ -1090,7 +1142,7 @@ function openLands() {
     if (!advOpen.includes(l)) {
       if (unlocksLeft() <= 0) return alert(landFinished('fr') ? 'Termine d’abord tous les clubs (ou éditions) de tes pays ouverts.'
                                                               : 'Termine d’abord tous les clubs de France.');
-      if (!confirm(`Débloquer ${LANDS[l].nom} ?`)) return;
+      if (!confirmBtn(`Débloquer ${LANDS[l].nom} ?`, 'Débloquer')) return;
       advOpen.push(l); store('quiz-adv-open', advOpen);
     }
     advLand = l; cityFilter = null; openClubs();
@@ -1251,7 +1303,7 @@ function unlock(id) {
   const [, icon, title] = BADGES.find(b => b[0] === id);
   $('toastIcon').innerHTML = flag(icon); $('toastText').textContent = `Badge débloqué : ${title}`;
   if (!(GC && gcName)) $('toast').classList.add('on');   // dans l'app connectée à Game Center, c'est la bannière « Succès » d'iOS qui s'affiche
-  nativeApp('haptic', { kind: 'success' });
+  nativeApp('haptic', { kind: 'badge' });   // plus marqué qu'une bonne réponse : un badge est plus rare
   clearTimeout(toastTimer); toastTimer = setTimeout(() => $('toast').classList.remove('on'), 3000);
   reportBadges([id]);
   syncProfile();
