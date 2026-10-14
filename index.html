@@ -324,9 +324,6 @@
     <div class="head"><button class="back" data-back="home">← Accueil</button><h2>Mon profil</h2></div>
     <div class="who"><span class="avatar" id="whoAvatar">👤</span><span><strong id="whoName"></strong><small id="whoCount"></small></span></div>
     <button class="rankbtn" id="goBadges">🏅 Mes badges <small id="badgesCount"></small></button>
-    <a class="rankbtn" id="contact" style="font-size:1rem;text-align:center;text-decoration:none;color:inherit">✉️ Signaler un bug ou proposer une idée</a>
-    <a class="rankbtn" href="https://charlit.github.io/sportquiz/confidentialite.html" target="_blank" rel="noopener"
-       style="font-size:1rem;text-align:center;text-decoration:none;color:inherit;margin-top:10px">🔒 Politique de confidentialité</a>
     <div class="card hidden" id="frames">
       <h2>🎨 Mon encart</h2>
       <p class="small" style="color:var(--dim);margin:0 0 12px">Choisis l’encart autour de ton nom parmi ceux que tu as débloqués.</p>
@@ -355,6 +352,9 @@
         <button class="linkbtn" id="logout" type="button">Se déconnecter de cet appareil</button>
       </div>
     </div>
+    <a class="rankbtn" id="contact" style="font-size:1rem;text-align:center;text-decoration:none;color:inherit;margin-top:16px">✉️ Signaler un bug ou proposer une idée</a>
+    <a class="rankbtn" href="https://charlit.github.io/sportquiz/confidentialite.html" target="_blank" rel="noopener"
+       style="font-size:1rem;text-align:center;text-decoration:none;color:inherit;margin-top:10px">🔒 Politique de confidentialité</a>
     <p class="version" id="appVersion"></p>
   </section>
 
@@ -1522,13 +1522,6 @@ $('gcBoard').onclick = () => nativeApp('gameCenter', { mode: boardMode });
 window.__quizShortcut = a => ({ foot: () => start('foot'), hard: openPick, adv: openLands, ranks: () => $('goRanks').click(),
   week: () => { show('home'); $('goWeek').click(); }, supporters: openSupporters, matchs: () => { show('home'); if (matchesSoon().length) $('matchBanner').click(); } })[a]?.();   // raccourcis et notifications
 if (location.hash === '#supporters') openSupporters();   // accès de test au mode Supporters (pas encore à l'accueil)
-// Accès secret au mode Supporters : 3 appuis rapides sur « Football » dans le titre de l'accueil
-let logoTaps = 0, logoTimer;
-document.querySelector('#home .logo').onclick = e => {
-  if (e.target.closest('span')) return;   // « Quiz » ne compte pas
-  clearTimeout(logoTimer); logoTimer = setTimeout(() => { logoTaps = 0; }, 700);
-  if (++logoTaps === 3) { logoTaps = 0; nativeApp('haptic', { kind: 'light' }); openSupporters(); }
-};
 $('again').onclick = () => start(mode);
 // Partage du score : feuille de partage iOS dans l'app, partage du navigateur (ou copie) sur le web
 const APP_URL = 'https://charlit.github.io/sportquiz/';
