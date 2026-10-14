@@ -121,6 +121,28 @@
   /* classement */
   .card { background:var(--card); border:1px solid var(--line); border-radius:18px; padding:16px; margin-top:20px; }
   .card h2 { margin:0 0 10px; font-size:1.2rem; }
+  /* Profil : contact et confidentialité côte à côte, en bas */
+  .plinks { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:16px; }
+  .plinks .rankbtn { margin:0; display:flex; align-items:center; justify-content:center; text-align:center; font-size:.9rem; padding:12px 8px;
+                     text-decoration:none; color:inherit; }
+  /* Profil sur téléphone : tout tient sur un écran, sans défiler */
+  @media (max-width:600px) {
+    #profile .who { margin-bottom:12px; }
+    #profile .card { margin-top:12px; padding:12px 14px; }
+    #profile .card h2 { margin-bottom:6px; font-size:1.1rem; }
+    #profile .fhint { display:none; }
+    #profile .setting + .setting { margin-top:10px; }
+    #profile .plinks { margin-top:12px; }
+    #profile .version { margin:12px 0 0; }
+  }
+  @media (max-width:600px) and (max-height:720px) {   /* petits iPhone (SE…) */
+    #profile .who .avatar { width:52px; height:52px; }
+    #settings small { display:none; }
+    #profile .frame { padding:6px 0; }
+    #profile .who small { font-size:.8rem; }
+    #goBadges { padding-top:12px; padding-bottom:12px; }
+    #profile .plinks .rankbtn { font-size:.8rem; padding:9px 6px; }
+  }
   /* Classement : Spécial Foot / Hardcore, puis une ligne de pays qui défile, podium, liste et ta place toujours visible */
   .seg { display:grid; grid-template-columns:repeat(3, 1fr); gap:4px; padding:4px; border-radius:14px; background:var(--card); border:1px solid var(--line); }
   .seg button { padding:10px 4px; border:0; border-radius:10px; background:transparent; color:var(--dim); font-size:.92rem; font-weight:700; cursor:pointer; white-space:nowrap; }
@@ -327,7 +349,7 @@
     <button class="rankbtn" id="goBadges">🏅 Mes badges <small id="badgesCount"></small></button>
     <div class="card hidden" id="frames">
       <h2>🎨 Mon encart</h2>
-      <p class="small" style="color:var(--dim);margin:0 0 12px">Choisis l’encart autour de ton nom parmi ceux que tu as débloqués.</p>
+      <p class="small fhint" style="color:var(--dim);margin:0 0 12px">Choisis l’encart autour de ton nom parmi ceux que tu as débloqués.</p>
       <div class="frames" id="frameList"></div>
     </div>
     <div class="card hidden" id="settings">
@@ -353,9 +375,8 @@
         <button class="linkbtn" id="logout" type="button">Se déconnecter de cet appareil</button>
       </div>
     </div>
-    <a class="rankbtn" id="contact" style="font-size:1rem;text-align:center;text-decoration:none;color:inherit;margin-top:16px">✉️ Signaler un bug ou proposer une idée</a>
-    <a class="rankbtn" href="https://charlit.github.io/sportquiz/confidentialite.html" target="_blank" rel="noopener"
-       style="font-size:1rem;text-align:center;text-decoration:none;color:inherit;margin-top:10px">🔒 Politique de confidentialité</a>
+    <div class="plinks"><a class="rankbtn" id="contact">✉️ Signaler un bug ou une idée</a>
+      <a class="rankbtn" href="https://charlit.github.io/sportquiz/confidentialite.html" target="_blank" rel="noopener">🔒 Confidentialité</a></div>
     <p class="version" id="appVersion"></p>
   </section>
 
