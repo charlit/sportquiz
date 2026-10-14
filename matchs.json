@@ -1,6 +1,6 @@
 [
-  {"id": 575353, "date": "2026-10-14T19:00:00Z", "comp": "Ligue des champions", "dom": "mancity", "ext": "psg"},
   {"id": 575352, "date": "2026-10-14T19:00:00Z", "comp": "Ligue des champions", "dom": "roma", "ext": "real"},
+  {"id": 575353, "date": "2026-10-14T19:00:00Z", "comp": "Ligue des champions", "dom": "mancity", "ext": "psg"},
   {"id": 559661, "date": "2026-10-16T18:45:00Z", "comp": "Ligue 1", "dom": "lemans", "ext": "tfc"},
   {"id": 560603, "date": "2026-10-17T11:30:00Z", "comp": "Premier League", "dom": "everton", "ext": "chelsea"},
   {"id": 565822, "date": "2026-10-17T13:30:00Z", "comp": "Bundesliga", "dom": "hsv", "ext": "vfb"},
@@ -18,7 +18,8 @@
   {"id": 558570, "date": "2026-10-18T18:45:00Z", "comp": "Serie A", "dom": "juve", "ext": "lazio"},
   {"id": 559665, "date": "2026-10-18T18:45:00Z", "comp": "Ligue 1", "dom": "ol", "ext": "nice"},
   {"id": 564709, "date": "2026-10-18T19:00:00Z", "comp": "Liga", "dom": "real", "ext": "sevilla"},
-  {"id": 575363, "date": "2026-10-20T19:00:00Z", "comp": "Ligue des champions", "dom": "liverpool", "ext": "villarreal"},
+  {"id": 575362, "date": "2026-10-20T19:00:00Z", "comp": "Ligue des champions", "dom": "vfb", "ext": "atleti"},
   {"id": 575367, "date": "2026-10-20T19:00:00Z", "comp": "Ligue des champions", "dom": "psg", "ext": "barca"},
-  {"id": 575362, "date": "2026-10-20T19:00:00Z", "comp": "Ligue des champions", "dom": "vfb", "ext": "atleti"}
+  {"id": 575363, "date": "2026-10-20T19:00:00Z", "comp": "Ligue des champions", "dom": "liverpool", "ext": "villarreal"},
+  {"id": 575372, "date": "2026-10-21T19:00:00Z", "comp": "Ligue des champions", "dom": "bayern", "ext": "arsenal"}
 ]
