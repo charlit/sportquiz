@@ -17,7 +17,7 @@
   {"id": 558570, "date": "2026-10-18T18:45:00Z", "comp": "Serie A", "dom": "juve", "ext": "lazio"},
   {"id": 564709, "date": "2026-10-18T19:00:00Z", "comp": "Liga", "dom": "real", "ext": "sevilla"},
   {"id": 575362, "date": "2026-10-20T19:00:00Z", "comp": "Ligue des champions", "dom": "vfb", "ext": "atleti"},
-  {"id": 575363, "date": "2026-10-20T19:00:00Z", "comp": "Ligue des champions", "dom": "liverpool", "ext": "villarreal"},
   {"id": 575367, "date": "2026-10-20T19:00:00Z", "comp": "Ligue des champions", "dom": "psg", "ext": "barca"},
+  {"id": 575363, "date": "2026-10-20T19:00:00Z", "comp": "Ligue des champions", "dom": "liverpool", "ext": "villarreal"},
   {"id": 575372, "date": "2026-10-21T19:00:00Z", "comp": "Ligue des champions", "dom": "bayern", "ext": "arsenal"}
 ]
