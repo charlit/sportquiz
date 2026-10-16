@@ -578,6 +578,8 @@ let mode, deck, idx, score, good, lives, timer, next, t0, saved, advClub, stage,
 
 // Dans l'app iOS, le classement passe par Game Center : pas de pseudo, le score part tout seul.
 const GC = !!window.__quizGC;
+// App Android (1re version) : pas encore de classement (Google Play Jeux à venir), le bouton est masqué.
+const NOBOARD = !!window.__quizNoBoard, OS = window.__quizOS || 'iOS';
 // Fonctions natives de l'app iOS (vibrations, partage, Game Center, avis) ; sans effet sur le site web.
 const nativeApp = (type, data = {}) => {
   if (type === 'haptic' && !load('quiz-haptics', true)) return;   // vibrations coupées dans les réglages du profil
@@ -910,7 +912,8 @@ function finish() {
   }
   if (GC) {
     show('end');
-    if (gcName) { $('saveMsg').textContent = 'Envoi du score…'; sendScore(gcName); }
+    if (NOBOARD) { $('saveMsg').textContent = ''; $('endBoard').innerHTML = ''; }
+    else if (gcName) { $('saveMsg').textContent = 'Envoi du score…'; sendScore(gcName); }
     else { $('saveMsg').textContent = 'Connecte-toi à Game Center pour entrer au classement'; $('endBoard').innerHTML = ''; }
     return;
   }
@@ -1395,7 +1398,7 @@ function refreshProfile() {
   $('frameList').querySelectorAll('.frame:not(:disabled)').forEach(b => b.onclick = () => { store('quiz-tier', b.dataset.frame); refreshProfile(); });
   $('profAvatar').dataset.tier = $('whoAvatar').dataset.tier = tier ? tier[1] : '';
   $('whoCount').textContent = `${n} badge${n > 1 ? 's' : ''} sur ${SHOWN.length}` + (tier ? ` · encart ${tier[2]}` : '') +
-    (next ? ` · encore ${next[0] - n} pour l’encart ${next[2]}` : '') + (!name && GC ? ' · connecte-toi à Game Center' : '');
+    (next ? ` · encore ${next[0] - n} pour l’encart ${next[2]}` : '') + (!name && GC && !NOBOARD ? ' · connecte-toi à Game Center' : '');
   $('badgesCount').textContent = `· ${n} / ${SHOWN.length}`;
   $('badgesInfo').textContent = `${n} badge${n > 1 ? 's' : ''} gagné${n > 1 ? 's' : ''} sur ${SHOWN.length}` + (next ? ` · encore ${next[0] - n} pour l’encart ${next[2]}` : '');
   $('trophies').innerHTML = SHOWN.map(([id, icon, title, how]) => {
@@ -1409,7 +1412,7 @@ $('goBadges').onclick = () => { refreshProfile(); show('badges'); };
 // Contact : ouvre l'app mail avec l'objet et l'appareil pré-remplis
 const CONTACT = 'sportquiz64@gmail.com';
 $('contact').href = `mailto:${CONTACT}?subject=${encodeURIComponent('Football Quiz : bug / suggestion')}&body=${encodeURIComponent(
-  `Bonjour,\n\n(Décris le bug ou ton idée ici)\n\n---\nAppareil : ${navigator.userAgent}\nVersion : ${GC ? 'app iOS ' + (window.__appVersion || '') : 'site web'}`)}`;
+  `Bonjour,\n\n(Décris le bug ou ton idée ici)\n\n---\nAppareil : ${navigator.userAgent}\nVersion : ${GC ? `app ${OS} ` + (window.__appVersion || '') : 'site web'}`)}`;
 // Bas du profil : version de l'app (fournie par l'app iOS), ou « version web »
 $('appVersion').textContent = GC ? `Football Quiz · version ${window.__appVersion || '?'}` : 'Football Quiz · version web';
 
@@ -1509,6 +1512,7 @@ async function sendScore(name) {
 /* ---------- Navigation ---------- */
 const goHome = () => show('home');
 // Classement : ouvre sur l'onglet du dernier mode joué (Foot par défaut)
+$('goRanks').classList.toggle('hidden', NOBOARD);
 $('goRanks').onclick = () => { show('ranks'); openBoard(BOARDS.includes(mode) ? mode : 'foot'); };
 document.querySelectorAll('[data-mode]').forEach(b => b.onclick = () => start(b.dataset.mode));
 $('goHard').onclick = openPick; // Hardcore : foot ou pays (les questions des autres sports restent dans questions/<sport>.json)
@@ -1589,7 +1593,7 @@ function planNotifs(ask = false) {
   nativeApp('notifs', { ask, list: list.sort((a, b) => a.at - b.at).slice(0, 60) });
 }
 window.__notifStatus = st => {   // réponse de l'app : 'on', 'denied' (refusées dans les Réglages iOS) ou 'unknown'
-  $('notifsHint').textContent = st === 'denied' && load('quiz-notifs', true) ? 'Bloquées par iOS : touche ici pour les autoriser' : 'Nouveau défi le lundi, avant-matchs la veille';
+  $('notifsHint').textContent = st === 'denied' && load('quiz-notifs', true) ? `Bloquées par ${OS} : touche ici pour les autoriser` : 'Nouveau défi le lundi, avant-matchs la veille';
   $('notifsHint').onclick = st === 'denied' ? e => { e.preventDefault(); nativeApp('openSettings'); } : null;
 };
 planNotifs();
