@@ -337,9 +337,9 @@
     <div class="tiles">
       <div class="tw"><button class="tile c-foot" data-mode="foot"><b>⚽</b><strong>Spécial Foot</strong><small>100 questions, 3 vies</small></button>
         <button class="info" data-info="foot" aria-label="Règles du Spécial Foot">i</button></div>
-      <div class="tw"><button class="tile c-hc" id="goHard"><span class="tag">1 VIE</span><b>💀</b><strong>Hardcore</strong><small>Que du foot très dur : général, par pays, Mondial ou CAN</small></button>
+      <div class="tw"><button class="tile c-hc" id="goHard"><span class="tag">1 VIE</span><b>💀</b><strong>Hardcore</strong><small>Que du foot très dur : général ou par pays</small></button>
         <button class="info" data-info="hard" aria-label="Règles du Hardcore">i</button></div>
-      <div class="tw"><button class="tile c-adv" id="goAdv"><span class="tag">NOUVEAU</span><b>🗺️</b><strong>Aventure</strong><small>Les clubs de cinq pays, le Mondial et la CAN</small></button>
+      <div class="tw"><button class="tile c-adv" id="goAdv"><span class="tag">NOUVEAU</span><b>🗺️</b><strong>Aventure</strong><small>Les clubs de cinq grands pays</small></button>
         <button class="info" data-info="adv" aria-label="Règles de l'Aventure">i</button></div>
       <div class="tw"><button class="tile c-week" id="goWeek"><span class="tag">HEBDO</span><b id="weekIcon">📅</b>
         <strong>Défi de la semaine</strong><small id="weekText"></small></button>
@@ -424,7 +424,7 @@
     <div class="seg"><button data-kind="foot" class="on">⚽ Spécial Foot</button><button data-kind="hard">💀 Hardcore</button><button data-kind="week">📅 Semaine</button></div>
     <p id="boardInfo" class="hidden"></p>
     <div class="chips hidden" id="hardChips">
-      <button data-board="hardfoot">⚽ Tout le foot</button><button data-board="hardfr" data-flag="fr">France</button><button data-board="hardes" data-flag="es">Espagne</button><button data-board="harduk" data-flag="uk">Royaume-Uni</button><button data-board="hardde" data-flag="de">Allemagne</button><button data-board="hardit" data-flag="it">Italie</button><button data-board="hardwc">🏆 Mondial</button><button data-board="hardcan">🌍 CAN</button>
+      <button data-board="hardfoot">⚽ Tout le foot</button><button data-board="hardfr" data-flag="fr">France</button><button data-board="hardes" data-flag="es">Espagne</button><button data-board="harduk" data-flag="uk">Royaume-Uni</button><button data-board="hardde" data-flag="de">Allemagne</button><button data-board="hardit" data-flag="it">Italie</button>
     </div>
     <div class="podium" id="podium"></div>
     <div class="card"><table id="board"></table></div>
@@ -434,7 +434,7 @@
 
   <section id="pick" class="hidden">
     <div class="head"><button class="back" data-back="home">← Accueil</button><h2>💀 Hardcore</h2></div>
-    <p class="advinfo">1 seule vie, que des questions Expert et Légende. Tout le foot, les clubs d’un pays, la Coupe du monde ou la CAN :</p>
+    <p class="advinfo">1 seule vie, que des questions Expert et Légende. Tout le foot ou les clubs d’un pays :</p>
     <div class="sports" id="pickList"></div>
   </section>
 
@@ -509,10 +509,10 @@ const SPORT_COLORS = { foot: '#2ecc71', rugby: '#ff8a3d', basket: '#ff6b1a', f1:
 const TIME = 20;
 const FOOT_PLAN = [0, 10, 20, 25, 25, 20]; // Spécial Foot : questions par niveau 1→5 (100)
 const HARD = { hard: null, hardfoot: 'foot', hardrugby: 'rugby', hardbasket: 'basket', hardtennis: 'tennis', hardf1: 'f1', hardvelo: 'velo',
-               hardfr: 'fr', hardes: 'es', harduk: 'uk', hardde: 'de', hardit: 'it', hardwc: 'wc', hardcan: 'can' }; // modes 1 vie, niveaux 4-5, sans fin (null = tous les sports)
-const HARD_PAYS = ['fr', 'es', 'uk', 'de', 'it', 'wc', 'can']; // Hardcore par pays, Mondial et CAN : questions de l'Aventure notées 4-5 (Expert et Légende)
+               hardfr: 'fr', hardes: 'es', harduk: 'uk', hardde: 'de', hardit: 'it', }; // modes 1 vie, niveaux 4-5, sans fin (null = tous les sports)
+const HARD_PAYS = ['fr', 'es', 'uk', 'de', 'it']; // Hardcore par pays : questions de l'Aventure notées 4-5 (Expert et Légende)
 const NAMES = { supporters: 'Supporters', derby: 'Derbies', match: 'Avant-match', semaine: 'Défi de la semaine', foot: 'Spécial Foot', hardfr: 'Hardcore France', hardes: 'Hardcore Espagne', harduk: 'Hardcore Royaume-Uni',
-                hardde: 'Hardcore Allemagne', hardit: 'Hardcore Italie', hardwc: 'Hardcore Coupe du monde', hardcan: 'Hardcore CAN', hard: 'Hardcore Tous sports', hardfoot: 'Hardcore Foot', hardrugby: 'Hardcore Rugby',
+                hardde: 'Hardcore Allemagne', hardit: 'Hardcore Italie', hard: 'Hardcore Tous sports', hardfoot: 'Hardcore Foot', hardrugby: 'Hardcore Rugby',
                 hardbasket: 'Hardcore Basket', hardtennis: 'Hardcore Tennis', hardf1: 'Hardcore Sport auto', hardvelo: 'Hardcore Cyclisme', adv: 'Aventure' };
 // Aventure : 10 étapes par sport (2 par niveau), 5 questions, 4 bonnes réponses pour passer
 // Aventure : 10 étapes par club (clubs.js, France, Espagne, Royaume-Uni, Allemagne, Italie), de la période la plus récente (1) aux années 1990 (10) ;
@@ -606,7 +606,8 @@ const clubQ = (id, q, lvl = clubLevel(id, q)) => [id, [lvl, ...q.slice(1, 6)]];
 // (Coupes du monde et CAN). Servent au Spécial Foot, au Hardcore Foot et à l'avant-match.
 function footSources() {
   const advQs = pays => Object.entries(CLUBS).filter(([, c]) => pays(c.pays || 'fr')).flatMap(([id, c]) => c.q.map(q => clubQ(id, q)));
-  return [QUESTIONS.foot.map(q => ['foot', q]), advQs(l => !LANDS[l].ed), advQs(l => LANDS[l].ed)];
+  const all = [QUESTIONS.foot.map(q => ['foot', q]), advQs(l => !LANDS[l].ed), advQs(l => LANDS[l].ed)];
+  return all.filter(src => src.length);   // app : pas de lot Mondial + CAN (voir LANDS)
 }
 
 // Défi de la semaine (semaine.json) : 10 questions sur une personnalité, les mêmes pour tous, une seule tentative.
@@ -721,7 +722,8 @@ function buildDeck(m) {
     // Spécial Foot : chaque niveau mêle à parts égales foot général, clubs et compétitions internationales (Mondial + CAN)
     const sources = footSources();
     for (let lvl = 1; lvl <= 5; lvl++) {
-      const n = FOOT_PLAN[lvl], third = Math.round(n / 3), share = [third, n - 2 * third, third]; // général, clubs, Mondial + CAN
+      const n = FOOT_PLAN[lvl], third = Math.round(n / 3);
+      const share = sources.length === 3 ? [third, n - 2 * third, third] : [n - Math.round(n / 2), Math.round(n / 2)]; // général, clubs (, Mondial + CAN)
       out.push(...shuffle(sources.flatMap((src, i) => pick(src.filter(e => e[1][0] === lvl), share[i], e => e[1][1]))));
     }
   }
@@ -759,7 +761,7 @@ function ask() {
   }
   $('level').textContent = mode === 'adv' ? `Étape ${stage} · ${eraOf(advClub, stage)}` : `Niveau ${lvl} · ${LEVELS[lvl]}`;
   $('level').style.background = LEVEL_COLORS[lvl]; $('level').style.color = '#111';
-  $('sport').textContent = sport === 'supporters' ? `📣 ${CLUBS[curSup.club].nom}` : sport === 'derby' ? `${curDerby.icone} ${curDerby.clubs}` : sport === 'semaine' ? `📅 ${weekNow()?.titre || 'Défi'}` : SPORTS[sport] || `${LANDS[landOf(sport)].icon || '⚽'} ${CLUBS[sport][mode === 'foot' ? 'nom' : 'court']}`;
+  $('sport').textContent = sport === 'supporters' ? `📣 ${CLUBS[curSup.club].nom}` : sport === 'derby' ? `${curDerby.icone} ${curDerby.clubs}` : sport === 'semaine' ? `📅 ${weekNow()?.titre || 'Défi'}` : SPORTS[sport] || (LANDS[landOf(sport)].ed ? '🌐 Sélections nationales' : `⚽ ${CLUBS[sport][mode === 'foot' ? 'nom' : 'court']}`);
   $('sport').classList.toggle('big', mode === 'foot');   // Spécial Foot : grand bandeau aux couleurs du club ou de la compétition
   $('sport').style.setProperty('--cc', CLUBS[sport]?.couleur || '#2ecc71');
   $('question').textContent = q.replace(/ ([?!:;»])/g, '\u00a0$1').replace(/« /g, '«\u00a0');
@@ -1045,7 +1047,7 @@ const LANDS = {
   it: { flag: 'it', c: '#0b8a3e', nom: 'Italie', de: 'd’Italie', shape: IT, isles: [SICILE, SARDAIGNE], p: [6.5, 47.2, 24, 32.3], box: '-4 -4 300 352' },
   // Mondial : une Coupe du monde par « club », placée sur son pays organisateur ; 5 étapes, de la phase de groupes à la finale
   wc: { flag: '🏆', c: '#ffd23f', nom: 'Coupe du monde', shape: EURASIE, isles: [AMERIQUES, GROENLAND, AFRIQUE, AUSTRALIE, UK, SICILE, SARDAIGNE, ...ILES], p: [-125, 70, 1.3, 1.5],
-        box: '-4 -4 366 200', r: 4.5, icon: '🏆', stages: 5, eras: ['', 'Phase de groupes', 'Huitièmes', 'Quarts', 'Demies', 'Finale'], ed: true },
+        box: '-4 -4 366 200', r: 4.5, icon: '🌐', stages: 5, eras: ['', 'Phase de groupes', 'Huitièmes', 'Quarts', 'Demies', 'Finale'], ed: true },
   // CAN : une Coupe d'Afrique des nations par « club » (2000-2025), placée sur son (ses) pays organisateur(s) ; 5 étapes comme le Mondial
   can: { flag: '🌍', c: '#2fb36b', nom: 'Coupe d’Afrique', shape: AFRIQUE, p: [-19, 38, 4.2, 4.4], box: '-8 -8 316 340', r: 4.5, icon: '🌍', stages: 5,
          eras: ['', 'Phase de groupes', 'Huitièmes', 'Quarts', 'Demies', 'Finale'], ed: true,
@@ -1053,6 +1055,9 @@ const LANDS = {
          labels: { "Côte d'Ivoire": [-10, 24, 'end'], Ghana: [2, 22, 'middle'], 'Ghana / Nigeria': [0, -10, 'middle'], Cameroun: 'right',
                    'Guinée équatoriale': [-30, 30, 'end'], 'Gabon / Guinée équatoriale': [-24, 44, 'end'], Gabon: [14, 26, 'start'], Mali: 'right' } },
 };
+// App : ni Coupes du monde ni CAN (App Review 5.2.1, propriété intellectuelle FIFA / CAF). Leurs entrées de clubs.json sont retirées
+// au build (project.yml) et ignorées par validClubs à la mise à jour en ligne.
+if (GC) { delete LANDS.wc; delete LANDS.can; }
 const landOf = id => CLUBS[id].pays || 'fr';
 const stagesOf = id => LANDS[landOf(id)].stages || STAGES;
 const eraOf = (id, k) => (LANDS[landOf(id)].eras || ERAS)[k];
@@ -1119,18 +1124,20 @@ const place = (ville, l) => (LANDS[l].ed ? (HOST_FLAGS[ville] || []).map(flag).j
 const landIds = l => Object.keys(CLUBS).filter(id => landOf(id) === l);
 const landDone = l => landIds(l).filter(id => (advDone[id] || 0) >= stagesOf(id)).length;
 const landFinished = l => landDone(l) === landIds(l).length;
-const advOpen = load('quiz-adv-open', null) || Object.keys(LANDS).filter(l => l === 'fr' || landIds(l).some(id => advDone[id]));
+// Les éditions (Mondial, CAN) ne sont plus jouables dans l'Aventure (refus App Store 5.2.1) : leurs questions restent dans le Spécial Foot et le Hardcore Foot
+const ADV_LANDS = Object.keys(LANDS).filter(l => !LANDS[l].ed);
+const advOpen = (load('quiz-adv-open', null) || ADV_LANDS.filter(l => l === 'fr' || landIds(l).some(id => advDone[id]))).filter(l => ADV_LANDS.includes(l));
 store('quiz-adv-open', advOpen);
 const unlocksLeft = () => advOpen.filter(landFinished).length - (advOpen.length - 1);
 
 // Menu de l'Aventure : un pays (ou le Mondial) par carte, avec la progression
 function openLands() {
-  const n = Object.keys(LANDS).length, free = unlocksLeft() > 0, all = advOpen.length === n;
+  const n = ADV_LANDS.length, free = unlocksLeft() > 0, all = advOpen.length === n;
   $('landsInfo').textContent = free ? '🔓 Bravo ! Choisis le prochain pays à débloquer.'
     : all ? 'Choisis un pays, puis une ville sur sa carte.'
     : !landFinished('fr') ? 'Termine tous les clubs de France pour débloquer un nouveau pays.'
-    : 'Termine tous les clubs (ou éditions) de tes pays ouverts pour en débloquer un nouveau.';
-  $('landList').innerHTML = Object.entries(LANDS).map(([l, L], i) => {
+    : 'Termine tous les clubs de tes pays ouverts pour en débloquer un nouveau.';
+  $('landList').innerHTML = ADV_LANDS.map(l => [l, LANDS[l]]).map(([l, L], i) => {
     const ids = landIds(l), done = landDone(l), open = advOpen.includes(l);
     const state = open ? '' : free ? ' unlockable' : ' locked';
     return `<button class="sport${i === n - 1 && n % 2 ? ' wide' : ''}${state}" data-land="${l}" style="--c:${L.c}"><strong>${open ? '' : '🔒 '}${flag(L.flag)} ${esc(L.nom)}</strong>` +
@@ -1140,7 +1147,7 @@ function openLands() {
   $('landList').querySelectorAll('[data-land]').forEach(b => b.onclick = () => {
     const l = b.dataset.land;
     if (!advOpen.includes(l)) {
-      if (unlocksLeft() <= 0) return alert(landFinished('fr') ? 'Termine d’abord tous les clubs (ou éditions) de tes pays ouverts.'
+      if (unlocksLeft() <= 0) return alert(landFinished('fr') ? 'Termine d’abord tous les clubs de tes pays ouverts.'
                                                               : 'Termine d’abord tous les clubs de France.');
       if (!confirmBtn(`Débloquer ${LANDS[l].nom} ?`, 'Débloquer')) return;
       advOpen.push(l); store('quiz-adv-open', advOpen);
@@ -1233,7 +1240,7 @@ function advFinish() {
                                                                      : `Tu connais l'histoire de ${CLUBS[advClub].nom} sur 30 ans ! Respect.`)
     : passed ? `L'étape ${stage + 1} (${eraOf(advClub, stage + 1)}) est débloquée.`
     : `Il faut ${NEED} bonnes réponses sur ${PER_STAGE}. Réessaie, tu connais maintenant certaines réponses !`;
-  const unlock = champion && unlocksLeft() > 0 && advOpen.length < Object.keys(LANDS).length;   // pays terminé : un nouveau pays à choisir
+  const unlock = champion && unlocksLeft() > 0 && advOpen.length < ADV_LANDS.length;   // pays terminé : un nouveau pays à choisir
   if (unlock) $('advEndText').textContent += (LANDS[landOf(advClub)].ed ? ' Toutes les éditions sont terminées' : ' Tous les clubs du pays sont terminés') + ' : choisis le prochain pays à débloquer !';
   $('advNext').textContent = unlock ? '🔓 Choisir le prochain pays' : champion ? (LANDS[landOf(advClub)].ed ? 'Autre édition' : 'Autre club') : passed ? 'Étape suivante ▶' : 'Réessayer';
   $('advNext').onclick = () => {
@@ -1285,8 +1292,8 @@ const BADGES = [
   ['hardwc', '🏆', 'Roi du Mondial', '15 bonnes réponses d’affilée en Hardcore Coupe du monde'],
   ['hardcan', '⭐', 'Étoile d’Afrique', '15 bonnes réponses d’affilée en Hardcore CAN'],
 ];
-// Badges des Hardcore retirés de l'accueil (autres sports) : gardés pour unlock() mais plus affichés ni comptés
-const HIDDEN = new Set(['hard', 'hardrugby', 'hardbasket', 'hardtennis', 'hardf1', 'hardvelo', 'allround']);
+// Badges des Hardcore retirés de l'accueil (autres sports) et des éditions Mondial/CAN (refus App Store 5.2.1) : gardés pour unlock() mais plus affichés ni comptés
+const HIDDEN = new Set(['hard', 'hardrugby', 'hardbasket', 'hardtennis', 'hardf1', 'hardvelo', 'allround', 'mondial', 'memoire', 'can', 'canall', 'hardwc', 'hardcan']);
 const SHOWN = BADGES.filter(b => !HIDDEN.has(b[0]));
 const earned = load('quiz-badges', {});
 // Encart autour de la lettre du profil, selon le nombre de badges : [minimum, id, nom]
@@ -1323,10 +1330,6 @@ function checkAdvBadges() {
   if (land('de').every(id => done.includes(id))) unlock('bundes');
   if (land('it').every(id => done.includes(id))) unlock('calcio');
   if (['fr', 'es', 'uk', 'de', 'it'].every(l => land(l).some(id => done.includes(id)))) unlock('globe');
-  if (land('wc').some(id => done.includes(id))) unlock('mondial');
-  if (land('wc').every(id => done.includes(id))) unlock('memoire');
-  if (land('can').some(id => done.includes(id))) unlock('can');
-  if (land('can').every(id => done.includes(id))) unlock('canall');
 }
 // Web : profil = pseudo + code secret, badges sauvegardés sur le serveur (app iOS : Game Center).
 let prof = load('quiz-profile', null), showCode = false;
@@ -1430,7 +1433,7 @@ function renderBoard(rows, table, me, m) {
 
 // Page Classement : podium pour le top 3, liste à partir du 4e, et la place du joueur toujours visible en bas
 const fmt = n => Number(n).toLocaleString('fr-FR');
-const BOARDS = ['semaine', 'foot', 'hardfoot', 'hardfr', 'hardes', 'harduk', 'hardde', 'hardit', 'hardwc', 'hardcan'];
+const BOARDS = ['semaine', 'foot', 'hardfoot', 'hardfr', 'hardes', 'harduk', 'hardde', 'hardit'];
 let boardMode = 'foot', lastHard = 'hardfoot', boardReq = 0;
 function renderRanks(rows) {
   const me = playerName(), mine = rows.findIndex(r => me && nameKey(r.name) === nameKey(me));
@@ -1513,16 +1516,15 @@ document.querySelectorAll('[data-flag]').forEach(b => b.innerHTML = flag(b.datas
 // Règles de chaque mode, affichées par le bouton ⓘ de sa tuile
 const RULES = {
   foot: ['⚽ Spécial Foot', ['100 questions de plus en plus dures : 10 faciles, puis Moyen, Difficile, Expert et 20 en Légende.',
-    'À chaque niveau, un tiers de foot général, un tiers de questions sur les clubs des cinq pays de l’Aventure et un tiers sur les Coupes du monde et la CAN.',
+    GC ? 'À chaque niveau, moitié foot général, moitié questions sur les clubs des cinq pays de l’Aventure.'
+       : 'À chaque niveau, un tiers de foot général, un tiers de questions sur les clubs des cinq pays de l’Aventure et un tiers sur les sélections nationales.',
     '3 vies : une erreur coûte une vie et 50 points × le niveau.', '20 secondes par question.',
     'Une bonne réponse rapporte jusqu’à 100 points × le niveau (la moitié si tu réponds au dernier moment).']],
-  hard: ['💀 Hardcore', ['Questions de foot Expert et Légende sans fin : tout le foot, les clubs d’un pays (France, Espagne, Royaume-Uni, Allemagne, Italie), la Coupe du monde ou la CAN.',
+  hard: ['💀 Hardcore', ['Questions de foot Expert et Légende sans fin : tout le foot, ou les clubs d’un pays (France, Espagne, Royaume-Uni, Allemagne, Italie).',
     '1 seule vie : la première erreur arrête tout.', '20 secondes par question.',
     'La vitesse paie double : jusqu’à 200 points × le niveau si tu réponds tout de suite, 20 % au dernier moment.']],
   adv: ['🗺️ Aventure', ['Choisis un pays (France, Espagne, Royaume-Uni, Allemagne ou Italie), touche une ville sur sa carte, puis choisis un club.',
     '10 étapes par club : la 1re porte sur les saisons 2024-2026, la 10e sur les années 1996-1999.',
-    'Mondial : les 12 Coupes du monde de 1978 à 2022, 5 étapes chacune, de la phase de groupes à la finale (de plus en plus dur).',
-    'Coupe d’Afrique : les 14 CAN de 2000 à 2025, 5 étapes chacune, sur le même principe.',
     '5 questions par étape : il faut au moins 4 bonnes réponses pour débloquer l’étape suivante.',
     '20 secondes par question.', 'Ta progression est gardée sur cet appareil.']],
   derby: ['⚔️ Derbies', ['Choisis un pays, puis une grande rivalité. En France : le Classique, le derby du Rhône, du Nord, de la Côte d’Azur, breton, de l’Atlantique, corse ou lorrain.',
