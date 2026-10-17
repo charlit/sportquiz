@@ -390,7 +390,7 @@
       </div>
     </div>
     <div class="plinks"><a class="rankbtn" id="contact">✉️ Signaler un bug ou une idée</a>
-      <a class="rankbtn" href="https://charlit.github.io/sportquiz/confidentialite.html" target="_blank" rel="noopener">🔒 Confidentialité</a></div>
+      <a class="rankbtn" id="privacy" href="https://charlit.github.io/sportquiz/confidentialite.html" target="_blank" rel="noopener">🔒 Confidentialité</a></div>
     <p class="version" id="appVersion"></p>
   </section>
 
@@ -1513,6 +1513,7 @@ async function sendScore(name) {
 const goHome = () => show('home');
 // Classement : ouvre sur l'onglet du dernier mode joué (Foot par défaut)
 $('goRanks').classList.toggle('hidden', NOBOARD);
+if (OS === 'Android') $('privacy').href = 'https://charlit.github.io/sportquiz/confidentialite-android.html';
 $('goRanks').onclick = () => { show('ranks'); openBoard(BOARDS.includes(mode) ? mode : 'foot'); };
 document.querySelectorAll('[data-mode]').forEach(b => b.onclick = () => start(b.dataset.mode));
 $('goHard').onclick = openPick; // Hardcore : foot ou pays (les questions des autres sports restent dans questions/<sport>.json)
