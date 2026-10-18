@@ -25,9 +25,9 @@
   {"id": 559650, "date": "2026-10-25T14:00:00Z", "comp": "Ligue 1", "dom": "monaco", "ext": "losc"},
   {"id": 564725, "date": "2026-10-25T15:15:00Z", "comp": "Liga", "dom": "celta", "ext": "betis"},
   {"id": 559656, "date": "2026-10-25T16:15:00Z", "comp": "Ligue 1", "dom": "aja", "ext": "lemans"},
-  {"id": 559651, "date": "2026-10-25T16:15:00Z", "comp": "Ligue 1", "dom": "rennes", "ext": "rcsa"},
   {"id": 559653, "date": "2026-10-25T16:15:00Z", "comp": "Ligue 1", "dom": "sco", "ext": "lorient"},
   {"id": 559649, "date": "2026-10-25T16:15:00Z", "comp": "Ligue 1", "dom": "om", "ext": "hac"},
+  {"id": 559651, "date": "2026-10-25T16:15:00Z", "comp": "Ligue 1", "dom": "rennes", "ext": "rcsa"},
   {"id": 559648, "date": "2026-10-25T19:45:00Z", "comp": "Ligue 1", "dom": "psg", "ext": "ol"},
   {"id": 564723, "date": "2026-10-25T20:00:00Z", "comp": "Liga", "dom": "barca", "ext": "real"}
 ]
