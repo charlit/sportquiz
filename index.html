@@ -504,16 +504,14 @@
 <script>
 const LEVELS = ['', 'Facile', 'Moyen', 'Difficile', 'Expert', 'Légende'];
 const LEVEL_COLORS = ['', '#2ecc71', '#3fa7ff', '#ffb02e', '#ff6b3f', '#c56cff'];
-const SPORTS = { foot: '⚽ Foot', tennis: '🎾 Tennis', rugby: '🏉 Rugby', basket: '🏀 Basket', f1: '🏎️ Sport auto', velo: '🚴 Cyclisme', boxe: '🥊 Boxe' };
-const SPORT_COLORS = { foot: '#2ecc71', rugby: '#ff8a3d', basket: '#ff6b1a', f1: '#ff3b3b', tennis: '#d4f53c', velo: '#ffd23f', boxe: '#ff4d6d', all: '#ff5a4f' };
+const SPORTS = { foot: '⚽ Foot' };   // questions/foot.json : le quiz n'a plus que du foot
+const SPORT_COLORS = { foot: '#2ecc71', all: '#ff5a4f' };
 const TIME = 20;
 const FOOT_PLAN = [0, 10, 20, 25, 25, 20]; // Spécial Foot : questions par niveau 1→5 (100)
-const HARD = { hard: null, hardfoot: 'foot', hardrugby: 'rugby', hardbasket: 'basket', hardtennis: 'tennis', hardf1: 'f1', hardvelo: 'velo',
-               hardfr: 'fr', hardes: 'es', harduk: 'uk', hardde: 'de', hardit: 'it', }; // modes 1 vie, niveaux 4-5, sans fin (null = tous les sports)
+const HARD = { hardfoot: 'foot', hardfr: 'fr', hardes: 'es', harduk: 'uk', hardde: 'de', hardit: 'it', }; // modes 1 vie, niveaux 4-5, sans fin
 const HARD_PAYS = ['fr', 'es', 'uk', 'de', 'it']; // Hardcore par pays : questions de l'Aventure notées 4-5 (Expert et Légende)
 const NAMES = { supporters: 'Supporters', derby: 'Derbies', match: 'Avant-match', semaine: 'Défi de la semaine', foot: 'Spécial Foot', hardfr: 'Hardcore France', hardes: 'Hardcore Espagne', harduk: 'Hardcore Royaume-Uni',
-                hardde: 'Hardcore Allemagne', hardit: 'Hardcore Italie', hard: 'Hardcore Tous sports', hardfoot: 'Hardcore Foot', hardrugby: 'Hardcore Rugby',
-                hardbasket: 'Hardcore Basket', hardtennis: 'Hardcore Tennis', hardf1: 'Hardcore Sport auto', hardvelo: 'Hardcore Cyclisme', adv: 'Aventure' };
+                hardde: 'Hardcore Allemagne', hardit: 'Hardcore Italie', hardfoot: 'Hardcore Foot', adv: 'Aventure' };
 // Aventure : 10 étapes par sport (2 par niveau), 5 questions, 4 bonnes réponses pour passer
 // Aventure : 10 étapes par club (clubs.js, France, Espagne, Royaume-Uni, Allemagne, Italie), de la période la plus récente (1) aux années 1990 (10) ;
 // onglet Mondial : une Coupe du monde par « club » (1978-2022), 5 étapes de la phase de groupes à la finale (voir LANDS.wc).
@@ -869,11 +867,6 @@ function finish() {
   }
   if (mode === 'foot' && lives > 0) unlock('marathon');
   if (mode === 'foot' && score >= 20000) unlock('footscore');
-  if (HARD[mode]) { // Hardcore par sport : on retient les sports joués
-    const hc = new Set(load('quiz-hc', [])).add(mode);
-    store('quiz-hc', [...hc]);
-    if (Object.keys(HARD).every(m => !SPORTS[HARD[m]] || hc.has(m))) unlock('allround');
-  }
   if (mode === 'adv') return advFinish();
   $('final').textContent = score + ' pts';
   $('again').classList.toggle('hidden', mode === 'semaine' || (mode === 'match' && Date.parse(curMatch.date) <= Date.now()));
@@ -1293,15 +1286,8 @@ const BADGES = [
   ['canall', '📜', 'Mémoire de la CAN', 'Finir les 14 CAN de l’Aventure'],
   ['marathon', '🏃', 'Marathon', 'Aller au bout des 100 questions du Spécial Foot'],
   ['beast', '💀', 'Increvable', '25 bonnes réponses d’affilée en Hardcore'],
-  ['allround', '🎽', 'Touche-à-tout', 'Jouer une partie Hardcore dans chacun des 6 sports'],
   ['footscore', '🥇', 'Légende du foot', 'Marquer 20 000 points au Spécial Foot'],
-  ['hard', '🌐', 'Encyclopédie', '15 bonnes réponses d’affilée en Hardcore Tous sports'],
   ['hardfoot', '⚽', 'Maître du ballon rond', '15 bonnes réponses d’affilée en Hardcore Foot'],
-  ['hardrugby', '🏉', 'Pilier', '15 bonnes réponses d’affilée en Hardcore Rugby'],
-  ['hardbasket', '🏀', 'Roi du parquet', '15 bonnes réponses d’affilée en Hardcore Basket'],
-  ['hardtennis', '🎾', 'Grand Chelem', '15 bonnes réponses d’affilée en Hardcore Tennis'],
-  ['hardf1', '🏎️', 'Pole position', '15 bonnes réponses d’affilée en Hardcore Sport auto'],
-  ['hardvelo', '🚴', 'Roi de la montagne', '15 bonnes réponses d’affilée en Hardcore Cyclisme'],
   ['hardfr', 'fr', 'Coq d’or', '15 bonnes réponses d’affilée en Hardcore France'],
   ['hardes', 'es', 'Pichichi', '15 bonnes réponses d’affilée en Hardcore Espagne'],
   ['harduk', 'uk', 'Roi d’Albion', '15 bonnes réponses d’affilée en Hardcore Royaume-Uni'],
@@ -1310,8 +1296,8 @@ const BADGES = [
   ['hardwc', '🏆', 'Roi du Mondial', '15 bonnes réponses d’affilée en Hardcore Coupe du monde'],
   ['hardcan', '⭐', 'Étoile d’Afrique', '15 bonnes réponses d’affilée en Hardcore CAN'],
 ];
-// Badges des Hardcore retirés de l'accueil (autres sports) et des éditions Mondial/CAN (refus App Store 5.2.1) : gardés pour unlock() mais plus affichés ni comptés
-const HIDDEN = new Set(['hard', 'hardrugby', 'hardbasket', 'hardtennis', 'hardf1', 'hardvelo', 'allround', 'mondial', 'memoire', 'can', 'canall', 'hardwc', 'hardcan']);
+// Badges des éditions Mondial/CAN (refus App Store 5.2.1) : gardés pour unlock() mais plus affichés ni comptés
+const HIDDEN = new Set(['mondial', 'memoire', 'can', 'canall', 'hardwc', 'hardcan']);
 const SHOWN = BADGES.filter(b => !HIDDEN.has(b[0]));
 const earned = load('quiz-badges', {});
 // Encart autour de la lettre du profil, selon le nombre de badges : [minimum, id, nom]
