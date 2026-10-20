@@ -718,7 +718,9 @@ function buildDeck(m) {
     return shuffle(fresh).concat(shuffle(pool.filter(x => !fresh.includes(x))));
   }
   if (m === 'adv') {
-    pick(CLUBS[advClub].q.filter(q => q[0] === stage), PER_STAGE)
+    const here = CLUBS[advClub].q.filter(q => q[0] === stage);   // app : moins de 5 si des questions Coupe du monde ont été retirées
+    const near = shuffle(CLUBS[advClub].q.filter(q => Math.abs(q[0] - stage) === 1)).slice(0, Math.max(0, PER_STAGE - here.length));
+    pick(here.concat(near), PER_STAGE)
       .forEach(q => out.push(clubQ(advClub, q, stageLevel(stage))));
   } else {
     // Spécial Foot : chaque niveau mêle à parts égales foot général, clubs et compétitions internationales (Mondial + CAN)
@@ -1061,6 +1063,19 @@ const LANDS = {
 // App : ni Coupes du monde ni CAN (App Review 5.2.1, propriété intellectuelle FIFA / CAF). Leurs entrées de clubs.json sont retirées
 // au build (project.yml) et ignorées par validClubs à la mise à jour en ligne.
 if (GC) { delete LANDS.wc; delete LANDS.can; }
+// Dans les apps, aucune question ne cite la Coupe du monde, la FIFA ou la CAN, même en mauvaise réponse (App Review 5.2.1, build 6).
+// Le site garde tout. Défis de la semaine : version `app` (10 questions) et `introApp` préparées dans semaine.json.
+const FIFA_RX = /coupe du monde|mondia(l|ux)|champion(ne)?s? du monde|conf[ée]d[ée]rations|fifa|coupe d.afrique/i;
+const sansFifa = qs => qs.filter(q => !q.some(x => typeof x === 'string' && (FIFA_RX.test(x) || /\bCAN\b/.test(x))));
+function cleanApp() {
+  if (!GC) return;
+  QUESTIONS.foot = sansFifa(QUESTIONS.foot);
+  for (const c of Object.values(CLUBS)) c.q = sansFifa(c.q);
+  for (const d of DERBIES) d.q = sansFifa(d.q);
+  if (typeof SUPPORTERS !== 'undefined') for (const x of SUPPORTERS) x.q = sansFifa(x.q);
+  for (const w of SEMAINE) { w.q = sansFifa(w.app || w.q); if (w.introApp) w.intro = w.introApp; }
+}
+cleanApp();
 const landOf = id => CLUBS[id].pays || 'fr';
 const stagesOf = id => LANDS[landOf(id)].stages || STAGES;
 const eraOf = (id, k) => (LANDS[landOf(id)].eras || ERAS)[k];
@@ -1646,11 +1661,11 @@ function validQuestions(q) {
 }
 if (GC) {
   const cached = validQuestions(load('quiz-questions', null)); // pas si l'app vient d'être mise à jour avec plus de questions
-  if (cached && countQ(cached) >= countQ(QUESTIONS)) Object.assign(QUESTIONS, cached);
+  if (cached && countQ(cached) >= countQ(QUESTIONS)) { Object.assign(QUESTIONS, cached); cleanApp(); }
   // Tous les sports de cette version, ou rien : un fichier manquant (hors ligne, 404) annule la mise à jour.
   Promise.all(Object.keys(SPORTS).map(s => fetch(QUESTIONS_URL(s), { cache: 'no-store' }).then(r => r.ok ? r.json() : null).then(qs => [s, qs])))
     .then(all => Object.fromEntries(all.filter(([, qs]) => qs)))
-    .then(q => { const ok = validQuestions(q); if (ok) { Object.assign(QUESTIONS, ok); store('quiz-questions', ok); } })
+    .then(q => { const ok = validQuestions(q); if (ok) { Object.assign(QUESTIONS, ok); store('quiz-questions', ok); cleanApp(); } })
     .catch(() => {});
 }
 // Clubs, Coupes du monde et CAN (Aventure, Hardcore par pays, Spécial Foot) : même principe avec clubs.json.
@@ -1673,24 +1688,25 @@ function validClubs(c) {
 }
 if (GC) {
   const cached = validClubs(load('quiz-clubs', null));
-  if (cached && countC(cached) >= countC(CLUBS)) Object.assign(CLUBS, cached);
+  if (cached && countC(cached) >= countC(CLUBS)) { Object.assign(CLUBS, cached); cleanApp(); }
   fetch(CLUBS_URL, { cache: 'no-store' }).then(r => r.ok ? r.json() : null)
-    .then(c => { const ok = validClubs(c); if (ok) { Object.assign(CLUBS, ok); store('quiz-clubs', ok); } })
+    .then(c => { const ok = validClubs(c); if (ok) { Object.assign(CLUBS, ok); store('quiz-clubs', ok); cleanApp(); } })
     .catch(() => {});
 }
 // Défis de la semaine : même principe avec semaine.json (les nouvelles semaines arrivent sans mise à jour de l'app).
 const SEMAINE_URL = 'https://raw.githubusercontent.com/charlit/sportquiz/main/semaine.json';
 function validWeeks(a) {
   const str = v => typeof v === 'string' && v;
-  return Array.isArray(a) && a.length && a.every(w => w && /^\d{4}-\d{2}-\d{2}$/.test(w.debut) && str(w.titre) && Array.isArray(w.q) && w.q.length === 10 &&
-    w.q.every(q => Array.isArray(q) && q.length === 6 && Number.isInteger(q[0]) && q[0] >= 1 && q[0] <= 5 && q.slice(1).every(str))) ? a : null;
+  const ten = qs => Array.isArray(qs) && qs.length === 10 &&
+    qs.every(q => Array.isArray(q) && q.length === 6 && Number.isInteger(q[0]) && q[0] >= 1 && q[0] <= 5 && q.slice(1).every(str));
+  return Array.isArray(a) && a.length && a.every(w => w && /^\d{4}-\d{2}-\d{2}$/.test(w.debut) && str(w.titre) && ten(w.q) && (!w.app || ten(w.app))) ? a : null;
 }
 if (GC) {
-  const useWeeks = a => { SEMAINE.splice(0, SEMAINE.length, ...a); renderWeek(); };
+  const useWeeks = a => { SEMAINE.splice(0, SEMAINE.length, ...a); cleanApp(); renderWeek(); };
   const cached = validWeeks(load('quiz-semaine-data', null));
   if (cached && cached.length >= SEMAINE.length) useWeeks(cached);
   fetch(SEMAINE_URL, { cache: 'no-store' }).then(r => r.ok ? r.json() : null)
-    .then(a => { const ok = validWeeks(a); if (ok) { useWeeks(ok); store('quiz-semaine-data', ok); } })
+    .then(a => { const ok = validWeeks(a); if (ok) { store('quiz-semaine-data', ok); useWeeks(ok); } })
     .catch(() => {});
 }
 // Avant-matchs : le calendrier change tous les jours, l'app prend toujours la dernière version publiée par le robot.
