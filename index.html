@@ -402,7 +402,7 @@
 
   <section id="supporters" class="hidden">
     <div class="head"><button class="back" data-back="home">← Accueil</button><h2>📣 Supporters</h2></div>
-    <p class="advinfo">Tribunes, chants, groupes et traditions : 10 questions sur les supporters de chaque club.</p>
+    <p class="advinfo">Tribunes, chants, groupes et traditions : une dizaine de questions sur les supporters de chaque club.</p>
     <div class="matches" id="supList"></div>
   </section>
 
@@ -674,7 +674,7 @@ function renderDerbies() {
     b.classList.toggle('on', b.dataset.pays === derbyLand);
     b.onclick = () => { derbyLand = b.dataset.pays; store('quiz-derby-pays', derbyLand); renderDerbies(); };
   });
-  $('derbyInfo').textContent = `Les grandes rivalités ${DERBY_LANDS[derbyLand]} : 15 questions par derby, de plus en plus dures.`;
+  $('derbyInfo').textContent = `Les grandes rivalités ${DERBY_LANDS[derbyLand]} : ${GC ? 'une quinzaine de' : '15'} questions par derby, de plus en plus dures.`;
   $('derbyList').innerHTML = DERBIES.filter(x => (x.pays || 'fr') === derbyLand).map(x => { const b = derbyBest[x.id];
     return `<button class="derby" data-derby="${esc(x.id)}"><b>${x.icone}</b><span><strong>${esc(x.nom)}</strong><small>${esc(x.clubs)}</small></span>` +
       `<em>${b ? (b.good === x.q.length ? '✅ ' : '') + b.good + ' / ' + x.q.length : ''}</em></button>`; }).join('');
@@ -1056,10 +1056,12 @@ const LANDS = {
 // App : ni Coupes du monde ni CAN (App Review 5.2.1, propriété intellectuelle FIFA / CAF). Leurs entrées de clubs.json sont retirées
 // au build (project.yml) et ignorées par validClubs à la mise à jour en ligne.
 if (GC) { delete LANDS.wc; delete LANDS.can; }
-// Dans les apps, aucune question ne cite la Coupe du monde, la FIFA ou la CAN, même en mauvaise réponse (App Review 5.2.1, build 6).
+// Dans les apps, que du foot de clubs : aucune question sur la Coupe du monde, la FIFA, la CAN ni les sélections nationales,
+// même en mauvaise réponse, ni sur des matchs de Coupe du monde qui ne la nomment pas (App Review 5.2.1, builds 6 et 7).
 // Le site garde tout. Défis de la semaine : version `app` (10 questions) et `introApp` préparées dans semaine.json.
-const FIFA_RX = /coupe du monde|mondia(l|ux)|champion(ne)?s? du monde|conf[ée]d[ée]rations|fifa|coupe d.afrique/i;
-const sansFifa = qs => qs.filter(q => !q.some(x => typeof x === 'string' && (FIFA_RX.test(x) || /\bCAN\b/.test(x))));
+const FIFA_RX = /coupe du monde|mondia(l|ux)|mundial|champion(ne)?s? du monde|conf[ée]d[ée]rations?|fifa|coupe d.afrique|s[ée]lection|internationa|[ée]quipe (de france|nationale)|\beuro\b|championnat d.europe des nations|ligue des nations|copa am[ée]rica|jeux (olympiques|d.|de )|grands tournois|main de dieu|knysna|battiston|squadra azzurra|oranje|teranga|diables rouges|finale (france|argentine) –|coup de tête en finale|contre l.argentine en 2018|contre la france en 2002|finale 2022|contre l.angleterre en 1986|avant 1998|victoire de 1998|avant chaque match en 1998|avec (l['’]|la |le |les )(espagne|france|argentine|portugal|allemagne|italie|brésil|pays-bas|angleterre)\b/i;
+const FIFA_CS = /\b(CAN|CAF|JO|Bleus)(?![\wÀ-ÿ])/; // sensible à la casse : pas « Joël », « João », « bleus »
+const sansFifa = qs => qs.filter(q => !q.some(x => typeof x === 'string' && (FIFA_RX.test(x) || FIFA_CS.test(x))));
 function cleanApp() {
   if (!GC) return;
   QUESTIONS.foot = sansFifa(QUESTIONS.foot);
