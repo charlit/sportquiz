@@ -7,9 +7,7 @@ QCM de foot : 15 questions de plus en plus difficiles (5 niveaux), 20 s par ques
 - **Aventure** : un menu des pays, puis la carte du pays (toucher une ville affiche ses clubs) : 18 clubs de Ligue 1, 10 grands clubs d'Espagne, 10 du Royaume-Uni
   (Angleterre + Celtic et Rangers), 10 d'Allemagne et 10 d'Italie ; 10 étapes par club, de 2024-2026 (étape 1) à 1996-1999 (étape 10),
   5 questions par étape, 4 bonnes réponses pour débloquer la suivante (progression gardée dans le navigateur).
-  **Mondial** : les 12 Coupes du monde (1978-2022) sur une carte du monde (pays organisateurs), 5 étapes par édition
-  (phase de groupes → finale, de plus en plus dur).
-  Questions dans `clubs.json` (`pays` : fr / es / uk / de / it / wc ; `[étape, question, bonne réponse, mauvaise ×3]`), servies à la page sous forme de `clubs.js` ;
+  Questions dans `clubs.json` (`pays` : fr / es / uk / de / it ; `[étape, question, bonne réponse, mauvaise ×3]`), servies à la page sous forme de `clubs.js` ;
   l'app iOS télécharge aussi la dernière version de `clubs.json` depuis GitHub (`main`), comme les questions par sport.
 - Questions de foot général dans `questions/foot.json` (seule source ; le quiz n'a plus d'autres sports) :
   `[niveau, question, bonne réponse, mauvaise, mauvaise, mauvaise]`. `server.py` les réunit et les sert à la page sous forme de `questions.js` ; l'app iOS ([sportquiz-ios](https://github.com/charlit/sportquiz-ios))

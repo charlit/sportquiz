@@ -113,8 +113,6 @@
   #frMap .city.on .frame { stroke:#fff; stroke-width:1.4; }
   .flag { width:1.3em; height:.87em; vertical-align:-.1em; border-radius:2px; box-shadow:0 0 0 1px #0005; }
   .trophy .flag, #toastIcon .flag { width:1.05em; height:.7em; }
-  #frMap.world .fr { stroke-width:.6; }
-  #frMap.world .city text { font-size:8px; stroke-width:2.5px; }
   .chip { display:inline-flex; align-items:center; gap:8px; margin:0 0 12px; padding:6px 12px; border-radius:999px;
           border:1px solid var(--line); background:var(--card); cursor:pointer; }
 
@@ -191,7 +189,7 @@
   .badges { display:flex; gap:8px; margin:16px 0 8px; flex-wrap:wrap; }
   .badge { padding:3px 10px; border-radius:999px; font-size:.85rem; font-weight:700; background:#0005; }
   @media (max-width:600px) { .badges { gap:10px; } .badge { padding:6px 14px; font-size:1.05rem; } }   /* niveau et catégorie bien lisibles sur téléphone */
-  /* Spécial Foot : catégorie de la question en grand bandeau, elle aide le joueur à se repérer (club, Mondial, CAN…) */
+  /* Spécial Foot : catégorie de la question en grand bandeau, elle aide le joueur à se repérer (club, foot général) */
   #sport.big { flex:1 1 100%; order:-1; display:flex; align-items:center; gap:10px; padding:12px 16px; border-radius:16px; font-size:1.35rem; font-weight:800;
            line-height:1.2; background:linear-gradient(135deg, color-mix(in srgb, var(--cc, #fff) 30%, transparent), #ffffff08);
            border:1px solid color-mix(in srgb, var(--cc, #fff) 55%, transparent); border-left:6px solid var(--cc, #fff); }
@@ -325,6 +323,46 @@
     #home .logo { margin-bottom:12px; }
     .tile { min-height:100px; padding:12px; } .tile b { font-size:1.8rem; } .tile strong { margin-top:8px; }
     .tile .tag { top:14px; right:44px; font-size:.65rem; padding:2px 6px; }   /* à côté du bouton ⓘ, plus petite pour ne pas toucher l'emoji sur un écran étroit */
+  }
+
+  /* Écran de question (refonte 2026) : carte en verre dépoli, chrono collé sous la question, réponses A-D */
+  #quiz .top { margin-bottom:12px; }
+  #quiz #count { padding:6px 12px; border-radius:999px; background:#ffffff0d; border:1px solid #ffffff14; font-size:.9rem; font-weight:600; color:var(--txt); }
+  #quiz .top b { display:inline-block; min-width:2.6em; padding:4px 12px; border-radius:999px; text-align:center; font-size:1.15rem; font-weight:900;
+                 color:#1a1300; background:linear-gradient(135deg, #ffe680, var(--acc)); box-shadow:0 4px 16px -4px #ffd23f99; }
+  #quiz .quit { width:36px; height:36px; padding:0; border-radius:50%; border-color:#ffffff1f; background:#ffffff0d; }
+  #quiz > .bar { height:6px; background:#ffffff12; }
+  #quiz > .bar i { background:linear-gradient(90deg, #ffb02e, var(--acc)); box-shadow:0 0 12px #ffd23f88; border-radius:3px; }
+  .qcard { position:relative; overflow:hidden; margin-top:18px; padding:18px 18px 26px; border-radius:26px;
+           background:linear-gradient(160deg, color-mix(in srgb, var(--cc, #4fa3ff) 22%, #ffffff0f), #ffffff06 70%);
+           border:1px solid #ffffff1a; box-shadow:0 20px 40px -20px #000c, inset 0 1px 0 #ffffff1a; backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px); }
+  #quiz .badges { margin:0 0 14px; gap:8px; }
+  #quiz .badge { padding:5px 12px; font-size:.82rem; letter-spacing:.02em; }
+  #quiz #sport { background:#ffffff14; }
+  #quiz #sport.big { flex:1 1 100%; order:-1; padding:0; border:0; background:none; font-size:1.05rem; font-weight:800; color:var(--txt);
+                     text-transform:uppercase; letter-spacing:.06em; }
+  #quiz #sport.big::before { content:''; width:10px; height:10px; border-radius:50%; background:var(--cc, #2ecc71); box-shadow:0 0 10px var(--cc, #2ecc71); }
+  #quiz #question { margin:0; min-height:3.6em; font-size:1.45rem; font-weight:700; line-height:1.3; letter-spacing:-.01em; text-wrap:pretty; }
+  #quiz #timer { position:absolute; left:0; right:0; bottom:0; height:5px; border-radius:0; background:#ffffff10; }
+  #quiz .answers { counter-reset:ans; gap:10px; margin-top:18px; }
+  #quiz .answers button { counter-increment:ans; display:flex; align-items:center; gap:14px; padding:12px 14px; border-radius:18px; font-weight:600;
+                          border:1px solid #ffffff1a; background:#ffffff0a; transition:transform .1s, background .2s, border-color .2s; }
+  #quiz .answers button::before { content:counter(ans, upper-alpha); flex:none; display:grid; place-items:center; width:34px; height:34px; border-radius:11px;
+                                  font-weight:800; font-size:.95rem; color:var(--dim); background:#ffffff10; border:1px solid #ffffff1a; }
+  #quiz .answers button:active:not(:disabled) { transform:scale(.98); }
+  @media (hover:hover) { #quiz .answers button:hover:not(:disabled) { border-color:var(--acc); background:#ffd23f12; } }
+  #quiz .answers button.ok { color:#fff; border-color:var(--ok); background:linear-gradient(135deg, #2ecc71, #1f9d55); box-shadow:0 8px 24px -8px #2ecc71cc; }
+  #quiz .answers button.ok::before { content:'✓'; color:#1f9d55; background:#fff; border-color:#fff; }
+  #quiz .answers button.ko { color:#fff; border-color:var(--ko); background:linear-gradient(135deg, #ff5a4f, #c8322a); animation:shake .35s; }
+  #quiz .answers button.ko::before { content:'✕'; color:#c8322a; background:#fff; border-color:#fff; }
+  #quiz .answers button:disabled:not(.ok):not(.ko) { opacity:.45; }
+  @keyframes shake { 25% { transform:translateX(-6px); } 75% { transform:translateX(6px); } }
+  #quiz .fbbox > div:not(:empty) { justify-self:center; padding:8px 16px; border-radius:999px; background:#ffffff0d; border:1px solid #ffffff14; }
+  @media (prefers-reduced-motion: reduce) { #quiz .answers button.ko { animation:none; } }
+  @media (pointer: coarse) {
+    #quiz .qcard { flex:1; display:flex; flex-direction:column; }
+    #quiz #question { flex:1; font-size:1.6rem; margin:0; }
+    #quiz .answers button { padding:14px; font-size:1.1rem; }
   }
 </style>
 </head>
@@ -461,9 +499,11 @@
   <section id="quiz" class="hidden">
     <div class="top"><span id="count"></span><span><b id="score">0</b><button class="quit" id="quit" aria-label="Quitter la partie">✕</button></span></div>
     <div class="bar"><i id="progress"></i></div>
-    <div class="badges"><span class="badge" id="level"></span><span class="badge" id="sport"></span></div>
-    <div id="question"></div>
-    <div class="bar" id="timer"><i></i></div>
+    <div class="qcard">
+      <div class="badges"><span class="badge" id="level"></span><span class="badge" id="sport"></span></div>
+      <div id="question"></div>
+      <div class="bar" id="timer"><i></i></div>
+    </div>
     <div class="answers" id="answers"></div>
     <div class="fbbox"><div id="stake" aria-hidden="true"></div><div id="feedback" role="status" aria-live="polite"></div></div>
   </section>
@@ -514,11 +554,10 @@ const NAMES = { supporters: 'Supporters', derby: 'Derbies', match: 'Avant-match'
                 hardde: 'Hardcore Allemagne', hardit: 'Hardcore Italie', hardfoot: 'Hardcore Foot', adv: 'Aventure' };
 // Aventure : 10 étapes par sport (2 par niveau), 5 questions, 4 bonnes réponses pour passer
 // Aventure : 10 étapes par club (clubs.js, France, Espagne, Royaume-Uni, Allemagne, Italie), de la période la plus récente (1) aux années 1990 (10) ;
-// onglet Mondial : une Coupe du monde par « club » (1978-2022), 5 étapes de la phase de groupes à la finale (voir LANDS.wc).
 // 5 questions par étape, 4 bonnes réponses pour passer.
 const STAGES = 10, PER_STAGE = 5, NEED = 4;
 const ERAS = ['', '2024-2026', '2021-2023', '2018-2020', '2015-2017', '2012-2014', '2009-2011', '2006-2008', '2003-2005', '2000-2002', '1996-1999'];
-const stageLevel = k => Math.ceil(k * 5 / stagesOf(advClub)); // difficulté (points) : clubs, étapes 1-2 → niveau 1 … 9-10 → niveau 5 ; Mondial, étape = niveau
+const stageLevel = k => Math.ceil(k * 5 / STAGES); // difficulté (points) : étapes 1-2 → niveau 1 … 9-10 → niveau 5
 const $ = id => document.getElementById(id);
 const shuffle = a => { a = [...a]; for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const SCREENS = ['home', 'supporters', 'derbies', 'matchs', 'profile', 'badges', 'ranks', 'pick', 'lands', 'clubs', 'adv', 'quiz', 'end', 'advEnd'];
@@ -600,14 +639,13 @@ function pick(pool, n, text = q => q[1]) {
 
 // Questions de clubs.json : [étape, question, bonne réponse, mauvaise ×3, difficulté 1-5]. L'étape est une période (Aventure),
 // pas une difficulté : les autres modes utilisent la difficulté notée (7e valeur), ou à défaut l'ancienne correspondance étape → niveau.
-const clubLevel = (id, q) => q[6] || (LANDS[landOf(id)].ed ? q[0] : Math.ceil(q[0] / 2));
+const clubLevel = (id, q) => q[6] || Math.ceil(q[0] / 2);
 const clubQ = (id, q, lvl = clubLevel(id, q)) => [id, [lvl, ...q.slice(1, 6)]];
-// Toutes les questions de foot, en trois lots notés de 1 à 5 : foot général, clubs de l'Aventure et compétitions internationales
-// (Coupes du monde et CAN). Servent au Spécial Foot, au Hardcore Foot et à l'avant-match.
+// Toutes les questions de foot, en deux lots notés de 1 à 5 : foot général et clubs de l'Aventure.
+// Servent au Spécial Foot, au Hardcore Foot et à l'avant-match.
 function footSources() {
-  const advQs = pays => Object.entries(CLUBS).filter(([, c]) => pays(c.pays || 'fr')).flatMap(([id, c]) => c.q.map(q => clubQ(id, q)));
-  const all = [QUESTIONS.foot.map(q => ['foot', q]), advQs(l => !LANDS[l].ed), advQs(l => LANDS[l].ed)];
-  return all.filter(src => src.length);   // app : pas de lot Mondial + CAN (voir LANDS)
+  const clubs = Object.entries(CLUBS).flatMap(([id, c]) => c.q.map(q => clubQ(id, q)));
+  return [QUESTIONS.foot.map(q => ['foot', q]), clubs].filter(src => src.length);
 }
 
 // Défi de la semaine (semaine.json) : 10 questions sur une personnalité, les mêmes pour tous, une seule tentative.
@@ -709,7 +747,7 @@ function buildDeck(m) {
     const pool = HARD_PAYS.includes(HARD[m])
       ? Object.entries(CLUBS).filter(([, c]) => c.pays === HARD[m]).flatMap(([id, c]) => c.q.map(q => clubQ(id, q)))
           .filter(e => e[1][0] >= 4)
-      : HARD[m] === 'foot' ? footSources().flat().filter(e => e[1][0] >= 4)   // tout le foot : général, clubs, Mondial et CAN
+      : HARD[m] === 'foot' ? footSources().flat().filter(e => e[1][0] >= 4)   // tout le foot : général et clubs
       : Object.entries(QUESTIONS).filter(([s]) => !HARD[m] || s === HARD[m]).flatMap(([s, qs]) => qs.filter(q => q[0] >= 4).map(q => [s, q]));
     let fresh = pool.filter(x => !seen.has(x[1][1]));
     if (fresh.length < 20) { pool.forEach(x => seen.delete(x[1][1])); fresh = pool; }
@@ -721,11 +759,10 @@ function buildDeck(m) {
     pick(here.concat(near), PER_STAGE)
       .forEach(q => out.push(clubQ(advClub, q, stageLevel(stage))));
   } else {
-    // Spécial Foot : chaque niveau mêle à parts égales foot général, clubs et compétitions internationales (Mondial + CAN)
+    // Spécial Foot : chaque niveau mêle à parts égales foot général et clubs
     const sources = footSources();
     for (let lvl = 1; lvl <= 5; lvl++) {
-      const n = FOOT_PLAN[lvl], third = Math.round(n / 3);
-      const share = sources.length === 3 ? [third, n - 2 * third, third] : [n - Math.round(n / 2), Math.round(n / 2)]; // général, clubs (, Mondial + CAN)
+      const n = FOOT_PLAN[lvl], share = [n - Math.round(n / 2), Math.round(n / 2)]; // général, clubs
       out.push(...shuffle(sources.flatMap((src, i) => pick(src.filter(e => e[1][0] === lvl), share[i], e => e[1][1]))));
     }
   }
@@ -761,12 +798,12 @@ function ask() {
       : `Question ${idx + 1} / ${deck.length} · ${'❤️'.repeat(lives)}`;
     $('progress').style.width = (idx / deck.length * 100) + '%';
   }
-  $('level').textContent = mode === 'adv' ? `Étape ${stage} · ${eraOf(advClub, stage)}` : `Niveau ${lvl} · ${LEVELS[lvl]}`;
+  $('level').textContent = mode === 'adv' ? `Étape ${stage} · ${ERAS[stage]}` : `Niveau ${lvl} · ${LEVELS[lvl]}`;
   $('level').style.background = LEVEL_COLORS[lvl]; $('level').style.color = '#111';
-  $('sport').textContent = sport === 'supporters' ? `📣 ${CLUBS[curSup.club].nom}` : sport === 'derby' ? `${curDerby.icone} ${curDerby.clubs}` : sport === 'semaine' ? `📅 ${weekNow()?.titre || 'Défi'}` : SPORTS[sport] || (LANDS[landOf(sport)].ed ? '🌐 Sélections nationales' : `⚽ ${CLUBS[sport][mode === 'foot' ? 'nom' : 'court']}`);
+  $('sport').textContent = sport === 'supporters' ? `📣 ${CLUBS[curSup.club].nom}` : sport === 'derby' ? `${curDerby.icone} ${curDerby.clubs}` : sport === 'semaine' ? `📅 ${weekNow()?.titre || 'Défi'}` : SPORTS[sport] || `⚽ ${CLUBS[sport][mode === 'foot' ? 'nom' : 'court']}`;
   $('sport').classList.toggle('big', mode === 'foot');   // Spécial Foot : grand bandeau aux couleurs du club ou de la compétition
-  $('sport').style.setProperty('--cc', CLUBS[sport]?.couleur || '#2ecc71');
-  $('question').textContent = q.replace(/ ([?!:;»])/g, '\u00a0$1').replace(/« /g, '«\u00a0');
+  $('quiz').style.setProperty('--cc', CLUBS[sport]?.couleur || '#2ecc71');
+  $('question').textContent = q.replace(/ ([?!:;»])/g, '\u00a0$1').replace(/« /g, '«\u00a0').replace(/-t-/g, '\u2011t\u2011');   // « a-t-il » ne se coupe plus en fin de ligne
   $('feedback').textContent = ''; $('stake').textContent = '';
   $('answers').innerHTML = '';
   shuffle(choices).forEach(c => {
@@ -794,8 +831,8 @@ function ask() {
 function countScore(to) {
   const el = $('score'), from = +el.textContent || 0;
   if (matchMedia('(prefers-reduced-motion: reduce)').matches || from === to) { el.textContent = to; return; }
-  const t0 = performance.now(), d = 400;
-  const step = now => { const k = Math.min(1, (now - t0) / d); el.textContent = Math.round(from + (to - from) * (1 - (1 - k) ** 3)); if (k < 1) requestAnimationFrame(step); };
+  const t0 = performance.now(), d = 400;   // max(0) : la 1re image peut dater d'avant t0, le score afficherait « -3 »
+  const step = now => { const k = Math.min(1, Math.max(0, (now - t0) / d)); el.textContent = Math.round(from + (to - from) * (1 - (1 - k) ** 3)); if (k < 1) requestAnimationFrame(step); };
   requestAnimationFrame(step);
   if (to > from) { el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump'); }
 }
@@ -968,94 +1005,13 @@ const IT = [[7.5,43.78],[8.2,43.9],[8.8,44.4],[9.5,44.1],[10.2,43.9],[10.5,43.3]
   [7.9,45.9],[7.0,45.9],[7.1,45.3],[6.63,45.1],[6.95,44.85],[6.85,44.5],[7.0,44.25],[7.66,44.17]];
 const SICILE = [[12.4,37.8],[13.3,38.2],[14.5,38.05],[15.6,38.27],[15.1,37.3],[15.2,36.7],[14.4,36.8],[12.6,37.6]];
 const SARDAIGNE = [[8.4,39.0],[8.4,40.6],[8.2,40.9],[9.2,41.25],[9.8,40.6],[9.65,39.2],[9.0,39.0]];
-// Monde (onglet Mondial) : continents très simplifiés, l'Europe et l'Asie d'un seul tenant (sans la mer Noire ni la Caspienne)
-const AMERIQUES = [[-168,66],[-162,70],[-156,71.3],[-140,69.6],[-128,70],[-115,68.5],[-95,68],[-85,69.5],[-82,66],[-88,64],[-94,59],
-  [-92.5,57],[-85,55.3],[-80,52],[-79,54.5],[-76.5,56.5],[-78,62.5],[-72,61.5],[-65,60],[-61.5,56],[-56,52],[-60,50],[-66,49.2],
-  [-64.5,48],[-61,45.5],[-66,44.5],[-70,43.5],[-70.5,41.7],[-74,40.6],[-76,38],[-76,35],[-81,31.5],[-80,27],[-80.3,25.2],[-81.7,26],
-  [-83,29],[-85,29.7],[-89,30.2],[-94,29.5],[-97.3,27.5],[-97.5,24.5],[-97.5,21.5],[-95.5,18.8],[-94.5,18.2],[-91,18.8],[-90.4,21],
-  [-87,21.5],[-87.6,18],[-88.3,16],[-84,15.8],[-83.5,12],[-83.8,10.9],[-82,9],[-79.5,9.5],[-77.4,8.6],[-75.5,10.7],[-71.5,12.3],
-  [-68,10.5],[-62,10.7],[-60,8.5],[-57,6],[-52,4.8],[-50,1.8],[-48.5,-1],[-44,-2.5],[-39,-3.5],[-35,-5.5],[-35,-9],[-37.5,-12],
-  [-39,-17.5],[-40.5,-21],[-42,-23],[-48,-25.5],[-48.6,-28.5],[-51,-31],[-53.5,-34],[-54.9,-34.9],[-57,-34.5],[-58.4,-34.5],
-  [-57,-36.5],[-57.5,-38.2],[-62,-39],[-62.3,-40.8],[-65,-41],[-64,-42.5],[-65.5,-45],[-67.5,-46.5],[-66,-48],[-68.3,-50.2],
-  [-69,-52],[-68.5,-54.8],[-71,-54],[-74,-51],[-75.5,-47],[-73.7,-44],[-73.5,-39],[-73.2,-37],[-71.6,-33],[-71.4,-30],[-70.4,-23.5],
-  [-70.2,-18.3],[-75.2,-15.5],[-77.1,-12],[-79.5,-7.5],[-81.2,-5.5],[-80,-2.5],[-80.5,-0.5],[-79.5,1.5],[-77.8,4],[-77.4,7],
-  [-79.5,8.3],[-80.5,7.4],[-83,8.3],[-85.7,10.5],[-87.5,13],[-91.5,14],[-94,16],[-96.5,15.7],[-101,17.3],[-105.5,20.5],[-105.7,22.5],
-  [-109,26],[-112.5,29.8],[-114.8,31.6],[-114,30],[-112,27],[-109.5,23.2],[-111,24.5],[-112.2,25.8],[-114.2,28.5],[-115.8,30.3],
-  [-117.1,32.5],[-118.5,34],[-120.6,34.6],[-122.4,37.5],[-124,40.4],[-124.2,43],[-124,46.2],[-124.7,48.4],[-123,49],[-127,50.5],
-  [-130,54.5],[-133,57.5],[-137,58.5],[-140,59.8],[-145,60.4],[-150,59.5],[-152,58.5],[-158,57],[-162,55],[-158,58.8],[-162,59.8],
-  [-165,62.5],[-164.5,64.5]];
-const GROENLAND = [[-73,78],[-60,82],[-30,83.5],[-20,81],[-18,77],[-21,70],[-25,68.5],[-35,65.5],[-42,60],[-48,61],[-51,64],[-54,67],
-  [-55,70.5],[-58,75.5],[-66,77]];
-const EURASIE = [[-9.5,37],[-8.9,38.7],[-9.4,39.5],[-8.7,41.8],[-9.3,43],[-8,43.7],[-4.5,43.4],[-1.8,43.4],[-1.2,44.7],[-1.2,46.2],
-  [-2.5,47.3],[-4.7,48],[-4.6,48.6],[-1.6,48.7],[-1.9,49.7],[0.2,49.5],[1.6,50.4],[2.5,51.1],[4,51.4],[4.8,53],[7,53.5],[8.5,53.6],
-  [8.6,55],[8.1,56.6],[10.6,57.7],[10.5,56.2],[12.5,55.4],[11,54.4],[13.5,54.4],[14.3,53.8],[18.5,54.8],[21,55.2],[21,56.8],[24,57.3],
-  [24,58.5],[28,59.5],[30,60],[23,60],[21.3,62.5],[25.3,65],[22,65.8],[17.5,62.5],[19,60],[17.3,58.8],[16.5,56.5],[14.3,55.5],
-  [12.8,55.6],[11,58.8],[10,59],[6,58],[5,59],[5,62],[8,63.5],[12.5,66],[15,68.5],[18,70],[23,70.8],[28,71],[31,70],[33,69.3],
-  [41,67.5],[40,66],[34.5,66],[37,64],[44,66],[44,68.5],[54,68.5],[60,69],[66,70.5],[68,72.5],[73,72.5],[80,73],[87,74.5],[100,76],
-  [105,77.5],[113,73.5],[120,73],[129,72],[140,72.5],[150,71.5],[160,70],[170,70],[180,68.5],[180,65],[178,64.5],[179,62.3],[173,61],
-  [163,59.8],[163,56],[162,54],[156.5,51],[156,57],[161,61],[155,59.3],[150,59.5],[143,59.3],[137,54],[141,53.3],[140.5,48.5],
-  [135,43.5],[132,43],[129.5,41],[129.5,36],[126.5,34.5],[126.5,37.5],[125,39.5],[121.5,39],[121.8,40.8],[118,39],[118,38],
-  [121.5,37.5],[119.5,35],[121,32],[122,30],[120,26],[116.5,23],[113,22.3],[110.5,21],[109.5,21.5],[108,21.5],[106.5,20],[105.7,18.5],
-  [109.2,13],[109.2,11.6],[105,8.6],[104.7,10.5],[103,11.2],[100,13.5],[100,12],[99.2,9.5],[100.4,7.2],[103.4,4],[103.5,1.4],[101,2.8],
-  [98.5,7.8],[98.4,12],[97.6,16.5],[94.5,16.2],[94,19],[92,21.5],[90,21.8],[88,21.7],[86.8,20.5],[85,19.3],[82.3,16.6],[80.2,13.5],
-  [80.3,10.5],[77.5,8],[76.3,9.8],[74.5,14.5],[72.8,19],[72.6,21.5],[70.2,21],[68.7,23.5],[67,24.8],[61.5,25.2],[57.3,25.8],
-  [56.3,27.1],[54.5,26.5],[51.6,27.9],[50.1,30],[48,30],[48.5,28.5],[50,26.2],[51.2,26.1],[51.6,24.6],[54.5,24.2],[56.3,26.2],
-  [56.4,24.9],[58.8,23.5],[59.8,22.4],[58,20.5],[55,17],[52,15.6],[48,14],[45,12.8],[43.3,12.7],[42.7,15.5],[40.8,19.5],[38.5,23.5],
-  [37,25.8],[35,28.1],[34.6,28.1],[32.6,29.9],[32.3,31.3],[34.3,31.3],[35,32.8],[35.9,35.5],[36,36.8],[34,36.3],[32.5,36.1],
-  [30.5,36.4],[29,36.7],[27.4,37.5],[26.3,38.3],[26.7,39.5],[26.2,40.1],[24,40.8],[22.9,40.6],[23.5,39.5],[22.6,38.2],[24,37.7],
-  [23,36.5],[22.2,36.5],[21.6,37],[21.1,38.3],[20.2,39.6],[19.4,40.4],[19.4,41.8],[18.5,42.5],[17,43.3],[15.2,44.3],[14,45.2],
-  [13.6,45.7],[12.3,45.3],[12.5,44.2],[13.6,43.6],[14.4,42.4],[16.2,41.9],[15.9,41.55],[16.9,41.2],[17.9,40.7],[18.5,40.4],[18.4,40.1],
-  [17.5,40.3],[16.9,40.4],[16.5,39.7],[17.1,39.4],[17.15,39],[16.6,38.4],[15.9,37.95],[15.65,38.25],[16.1,38.9],[15.8,39.6],[15.7,40],
-  [15,40.3],[14.4,40.6],[14.1,40.8],[13.8,41.2],[13,41.25],[12.4,41.7],[11.8,42.1],[11,42.6],[10.5,43.3],[10.2,43.9],[9.5,44.1],
-  [8.8,44.4],[8.2,43.9],[7.5,43.78],[7.27,43.7],[6.4,43.15],[5.35,43.27],[4.2,43.47],[3.08,42.95],[3.2,41.9],[2.1,41.3],[0.9,40.7],
-  [0,39.9],[-0.3,39.3],[0.2,38.75],[-0.7,37.6],[-1.85,37.2],[-2.6,36.8],[-4.4,36.72],[-5.6,36],[-6.3,36.5],[-6.9,37.2],[-7.4,37.18],
-  [-8.9,37]];
-const AFRIQUE = [[-5.9,35.8],[-2,35.1],[1,36.5],[3.5,36.8],[8.6,36.9],[10.2,37.2],[11,36.8],[10.5,36],[11.1,35.2],[10.1,34.3],
-  [11.5,33.1],[13.2,32.9],[15.2,32.3],[19,30.3],[20.1,31],[20,32.2],[21.6,32.9],[25,31.6],[29,30.9],[32.3,31.3],[32.6,29.9],[33.5,28],
-  [35.3,24],[37.2,21],[38.5,18],[39.7,15.5],[41.5,13.9],[43.3,12.4],[44.5,10.4],[51.1,11.9],[51,10.5],[48,4.5],[44,1],[41.5,-2],
-  [40,-3.5],[39.2,-6.5],[39.6,-10],[40.5,-15],[37.3,-17.5],[35.3,-22],[35.5,-24],[32.9,-25.9],[32.7,-28.5],[31,-29.9],[28,-32.8],
-  [25.6,-34],[22.5,-34],[20,-34.8],[18.4,-34],[17.9,-31.5],[16.5,-28.6],[15.2,-27],[14.5,-22.5],[11.8,-17.2],[12.2,-13.5],[13.5,-11],
-  [12.2,-6],[11.8,-3.8],[9.3,-1],[9.6,3.5],[8.5,4.5],[6,4.3],[4.5,6.3],[2,6.3],[-1.5,5],[-4,5.2],[-7.5,4.4],[-9.3,5.5],[-11.5,6.9],
-  [-13.2,8.5],[-15,10.9],[-16.7,12.5],[-17.5,14.7],[-16.5,16.2],[-16.1,18.4],[-16.4,19.6],[-17,21],[-16,23.7],[-14.5,26.1],
-  [-13.2,27.7],[-10.3,29.3],[-9.6,31],[-8.5,33.3],[-6.8,34]];
-const AUSTRALIE = [[113.5,-22],[114,-26.5],[115,-30],[115,-34],[118,-35],[121.5,-33.8],[124,-33],[129,-31.6],[131.5,-31.5],[134,-32.8],
-  [135.8,-34.8],[137.8,-32.6],[138,-35.6],[140,-37.8],[143.5,-38.8],[146.3,-39.1],[148,-37.8],[150,-37.2],[151.3,-33.8],[153,-31],
-  [153.6,-28],[153,-25],[150.8,-22.6],[149,-20.5],[146.2,-18.8],[145.4,-15],[143.5,-14],[142.5,-10.7],[141.6,-13],[141.5,-16.5],
-  [140.8,-17.4],[139.3,-17.3],[136.8,-15.9],[135.9,-15],[137,-12.2],[135.5,-12],[132.6,-11.5],[131,-12.2],[130,-13],[129.3,-15],
-  [128,-15],[125.5,-14.2],[123.5,-16.5],[122.2,-18],[121,-19.5],[117,-20.6]];
-const ILES = [
-  [[-6,52],[-6.2,53.5],[-5.5,54.5],[-6.2,55.3],[-7.3,55.3],[-8.3,55.1],[-8.5,54.3],[-10,54],[-9.7,53.2],[-10.3,52],[-9.5,51.6],[-8,51.8]], // Irlande
-  [[-22,64],[-24,65.5],[-22,66.4],[-16,66.5],[-14,65.5],[-14.5,64.4],[-18,63.4]],                                                         // Islande
-  [[49.3,-12],[50.5,-15.5],[49.5,-17.5],[47,-25],[45,-25.5],[43.6,-23.5],[44.3,-19.5],[44,-17],[46.5,-15.7],[48,-13.5]],                   // Madagascar
-  [[130,31.3],[131.4,31.4],[132,33.8],[135,33.5],[136.9,34.3],[139.8,35],[140.9,36.9],[141,38.3],[142,39.6],[141.4,41.4],[140,40.5],
-   [140,39],[139,37.9],[137,37],[136.7,36.8],[135.8,35.5],[133,35.5],[131,34.4],[129.8,33.2]],                                            // Japon
-  [[140,41.5],[141.2,41.8],[143.2,42],[145.5,43.3],[144.3,44.1],[141.7,45.4],[141.4,43.3],[140.4,43.3]],                                  // Hokkaidō
-  [[95.3,5.6],[98,4],[103.8,-1],[106,-3],[105.8,-5.8],[104.5,-5.9],[102,-4],[100.3,-0.8],[98.6,1.8]],                                    // Sumatra
-  [[109,1.5],[110,-1.5],[111.5,-3],[114.5,-3.8],[116.5,-1],[118,1],[119,5],[117,7],[115,5],[113.5,3.7],[111,2]],                           // Bornéo
-  [[105.2,-6.8],[108,-6.4],[111,-6.6],[114.5,-7.8],[112,-8.4],[108,-7.8],[106,-7.4]],                                                     // Java
-  [[131,-1.4],[134,-0.9],[138,-1.6],[141,-2.6],[145.8,-5],[147.5,-6.2],[147.7,-8],[150,-10.6],[147,-10],[144,-7.8],[142.5,-9.3],
-   [141,-9.1],[138,-8.4],[137.8,-5.3],[134.5,-4],[132,-2.9]],                                                                             // Nouvelle-Guinée
-  [[120,18.5],[122.3,18.5],[122,16],[124,13.5],[126,9],[125.4,6],[122,7],[123.5,10],[121,13.5]],                                           // Philippines
-];
 const LANDS = {
   fr: { flag: 'fr', c: '#3b6fd8', nom: 'France', de: 'de France', shape: FR, p: [-5.2, 51.2, 22.22, 32.3], box: '-4 -4 308 298' },
   es: { flag: 'es', c: '#d9a400', nom: 'Espagne', de: 'd’Espagne', shape: ES, p: [-9.6, 44.0, 22.5, 29.5], box: '-4 -4 304 248' },
   uk: { flag: 'uk', c: '#c8102e', nom: 'Royaume-Uni', de: 'du Royaume-Uni', shape: UK, p: [-6.4, 58.9, 26, 44.8], box: '-4 -4 228 410' },
   de: { flag: 'de', c: '#e0a100', nom: 'Allemagne', de: 'd’Allemagne', shape: DE, p: [5.7, 55.2, 30, 47.7], box: '-32 -4 324 392' },
   it: { flag: 'it', c: '#0b8a3e', nom: 'Italie', de: 'd’Italie', shape: IT, isles: [SICILE, SARDAIGNE], p: [6.5, 47.2, 24, 32.3], box: '-4 -4 300 352' },
-  // Mondial : une Coupe du monde par « club », placée sur son pays organisateur ; 5 étapes, de la phase de groupes à la finale
-  wc: { flag: '🏆', c: '#ffd23f', nom: 'Coupe du monde', shape: EURASIE, isles: [AMERIQUES, GROENLAND, AFRIQUE, AUSTRALIE, UK, SICILE, SARDAIGNE, ...ILES], p: [-125, 70, 1.3, 1.5],
-        box: '-4 -4 366 200', r: 4.5, icon: '🌐', stages: 5, eras: ['', 'Phase de groupes', 'Huitièmes', 'Quarts', 'Demies', 'Finale'], ed: true },
-  // CAN : une Coupe d'Afrique des nations par « club » (2000-2025), placée sur son (ses) pays organisateur(s) ; 5 étapes comme le Mondial
-  can: { flag: '🌍', c: '#2fb36b', nom: 'Coupe d’Afrique', shape: AFRIQUE, p: [-19, 38, 4.2, 4.4], box: '-8 -8 316 340', r: 4.5, icon: '🌍', stages: 5,
-         eras: ['', 'Phase de groupes', 'Huitièmes', 'Quarts', 'Demies', 'Finale'], ed: true,
-         // étiquettes déportées dans le golfe de Guinée, très serré
-         labels: { "Côte d'Ivoire": [-10, 24, 'end'], Ghana: [2, 22, 'middle'], 'Ghana / Nigeria': [0, -10, 'middle'], Cameroun: 'right',
-                   'Guinée équatoriale': [-30, 30, 'end'], 'Gabon / Guinée équatoriale': [-24, 44, 'end'], Gabon: [14, 26, 'start'], Mali: 'right' } },
 };
-// App : ni Coupes du monde ni CAN (App Review 5.2.1, propriété intellectuelle FIFA / CAF). Leurs entrées de clubs.json sont retirées
-// au build (project.yml) et ignorées par validClubs à la mise à jour en ligne.
-if (GC) { delete LANDS.wc; delete LANDS.can; }
 // Dans les apps, que du foot de clubs : aucune question sur la Coupe du monde, la FIFA, la CAN ni les sélections nationales,
 // même en mauvaise réponse, ni sur des matchs de Coupe du monde qui ne la nomment pas (App Review 5.2.1, builds 6 et 7).
 // Le site garde tout. Défis de la semaine : version `app` (10 questions) et `introApp` préparées dans semaine.json.
@@ -1072,78 +1028,36 @@ function cleanApp() {
 }
 cleanApp();
 const landOf = id => CLUBS[id].pays || 'fr';
-const stagesOf = id => LANDS[landOf(id)].stages || STAGES;
-const eraOf = (id, k) => (LANDS[landOf(id)].eras || ERAS)[k];
 let advLand = 'fr';
 const proj = ([lon, lat]) => { const [x0, y0, kx, ky] = LANDS[advLand].p; return [((lon - x0) * kx).toFixed(1), ((y0 - lat) * ky).toFixed(1)]; };
 // évite chevauchements et débordements
 const LABEL_POS = { Nice: 'left', Strasbourg: 'left', Lens: 'left', Monaco: 'top', Barcelone: 'left', Bilbao: 'left', Londres: 'left', Liverpool: 'left',
-  Gelsenkirchen: 'top', Mönchengladbach: 'left', Milan: 'left', Turin: 'bottom',
-  // Mondial : [dx, dy, ancrage] = étiquette déportée avec un trait (Europe trop serrée), ou côté simple
-  Angleterre: [-14, -2, 'end'], France: [-18, 8, 'end'], Espagne: [-14, 10, 'end'], Suisse: [-6, 22, 'middle'], Italie: [10, 14, 'start'],
-  Allemagne: [-16, -18, 'end'], Suède: 'top', 'Corée / Japon': [-13, 3, 'end'], Argentine: 'top', Chili: 'left' };
-const LABEL_SHORT = { Mönchengladbach: 'Gladbach', 'Guinée équatoriale': 'Guinée éq.', 'Gabon / Guinée équatoriale': 'Gabon / Guinée éq.' }; // nom trop long pour la carte
+  Gelsenkirchen: 'top', Mönchengladbach: 'left', Milan: 'left', Turin: 'bottom' };
+
+const LABEL_SHORT = { Mönchengladbach: 'Gladbach' }; // nom trop long pour la carte
 // Drapeaux dessinés en SVG (30 × 20, simplifiés) : les drapeaux emoji ne s'affichent pas partout (Chrome sous Windows)
-const usStripes = Array.from({ length: 6 }, (_, i) => `<rect y="${(2 * i + 1) * 20 / 13}" width="30" height="${20 / 13}" fill="#fff"/>`).join('');
-const uyStripes = Array.from({ length: 4 }, (_, i) => `<rect y="${(2 * i + 1) * 20 / 9}" width="30" height="${20 / 9}" fill="#0038a8"/>`).join('');
 const FLAG_SVG = {
   fr: '<rect width="10" height="20" fill="#0055a4"/><rect x="10" width="10" height="20" fill="#fff"/><rect x="20" width="10" height="20" fill="#ef4135"/>',
   it: '<rect width="10" height="20" fill="#009246"/><rect x="10" width="10" height="20" fill="#fff"/><rect x="20" width="10" height="20" fill="#ce2b37"/>',
-  mx: '<rect width="10" height="20" fill="#006847"/><rect x="10" width="10" height="20" fill="#fff"/><rect x="20" width="10" height="20" fill="#ce1126"/><circle cx="15" cy="10" r="2.2" fill="#8c5a2b"/>',
   de: '<rect width="30" height="7" fill="#000"/><rect y="6.67" width="30" height="6.67" fill="#dd0000"/><rect y="13.33" width="30" height="6.67" fill="#ffce00"/>',
-  ru: '<rect width="30" height="7" fill="#fff"/><rect y="6.67" width="30" height="6.67" fill="#0039a6"/><rect y="13.33" width="30" height="6.67" fill="#d52b1e"/>',
   es: '<rect width="30" height="20" fill="#aa151b"/><rect y="5" width="30" height="10" fill="#f1bf00"/>',
   uk: '<rect width="30" height="20" fill="#012169"/><path d="M0 0L30 20M30 0L0 20" stroke="#fff" stroke-width="4"/><path d="M0 0L30 20M30 0L0 20" stroke="#c8102e" stroke-width="1.5"/>' +
       '<path d="M15 0V20M0 10H30" stroke="#fff" stroke-width="6"/><path d="M15 0V20M0 10H30" stroke="#c8102e" stroke-width="3.5"/>',
-  en: '<rect width="30" height="20" fill="#fff"/><path d="M15 0V20M0 10H30" stroke="#ce1124" stroke-width="4"/>',
-  se: '<rect width="30" height="20" fill="#006aa7"/><rect x="9" width="4" height="20" fill="#fecc00"/><rect y="8" width="30" height="4" fill="#fecc00"/>',
-  ch: '<rect width="30" height="20" fill="#d52b1e"/><rect x="13" y="4" width="4" height="12" fill="#fff"/><rect x="9" y="8" width="12" height="4" fill="#fff"/>',
-  jp: '<rect width="30" height="20" fill="#fff"/><circle cx="15" cy="10" r="6" fill="#bc002d"/>',
-  kr: '<rect width="30" height="20" fill="#fff"/><path d="M10 10a5 5 0 0 1 10 0z" fill="#cd2e3a"/><path d="M10 10a5 5 0 0 0 10 0z" fill="#0047a0"/>' +
-      '<path d="M4 4l3 3M23 13l3 3M4 16l3-3M23 7l3-3" stroke="#000" stroke-width="1.6"/>',
-  qa: '<rect width="30" height="20" fill="#8a1538"/><path d="M0 0H8L11 1.1 8 2.2 11 3.3 8 4.4 11 5.6 8 6.7 11 7.8 8 8.9 11 10 8 11.1 11 12.2 8 13.3 11 14.4 8 15.6 11 16.7 8 17.8 11 18.9 8 20H0Z" fill="#fff"/>',
-  br: '<rect width="30" height="20" fill="#009c3b"/><path d="M15 2L28 10 15 18 2 10Z" fill="#ffdf00"/><circle cx="15" cy="10" r="4.2" fill="#002776"/>',
-  us: `<rect width="30" height="20" fill="#b22234"/>${usStripes}<rect width="12" height="${140 / 13}" fill="#3c3b6e"/>`,
-  ar: '<rect width="30" height="20" fill="#74acdf"/><rect y="6.67" width="30" height="6.67" fill="#fff"/><circle cx="15" cy="10" r="2" fill="#f6b40e"/>',
-  uy: `<rect width="30" height="20" fill="#fff"/>${uyStripes}<rect width="11" height="${100 / 9}" fill="#fff"/><circle cx="5.5" cy="5.5" r="2.6" fill="#fcd116"/>`,
-  cl: '<rect width="30" height="10" fill="#fff"/><rect y="10" width="30" height="10" fill="#d52b1e"/><rect width="10" height="10" fill="#0039a6"/><circle cx="5" cy="5" r="1.8" fill="#fff"/>',
-  za: '<rect width="30" height="10" fill="#e03c31"/><rect y="10" width="30" height="10" fill="#001489"/><path d="M0 0L13 10 0 20M13 10H30" fill="none" stroke="#fff" stroke-width="7"/>' +
-      '<path d="M0 0L13 10 0 20M13 10H30" fill="none" stroke="#007a4d" stroke-width="4"/><path d="M0 4L8 10 0 16Z" fill="#000" stroke="#ffb612" stroke-width="1.2"/>',
-  // CAN
-  gh: '<rect width="30" height="20" fill="#006b3f"/><rect width="30" height="13.33" fill="#fcd116"/><rect width="30" height="6.67" fill="#ce1126"/><path d="M15.0 7.0L15.7 9.1L17.9 9.1L16.1 10.4L16.8 12.4L15.0 11.1L13.2 12.4L13.9 10.4L12.1 9.1L14.3 9.1Z" fill="#000"/>',
-  ng: '<rect width="30" height="20" fill="#fff"/><rect width="10" height="20" fill="#008751"/><rect x="20" width="10" height="20" fill="#008751"/>',
-  ml: '<rect width="10" height="20" fill="#14b53a"/><rect x="10" width="10" height="20" fill="#fcd116"/><rect x="20" width="10" height="20" fill="#ce1126"/>',
-  tn: '<rect width="30" height="20" fill="#e70013"/><circle cx="15" cy="10" r="5" fill="#fff"/><circle cx="15.6" cy="10" r="3.6" fill="#e70013"/><circle cx="16.6" cy="10" r="3" fill="#fff"/><path d="M16.4 8.1L16.8 9.4L18.2 9.4L17.1 10.2L17.5 11.5L16.4 10.7L15.3 11.5L15.7 10.2L14.6 9.4L16.0 9.4Z" fill="#e70013"/>',
-  eg: '<rect width="30" height="6.67" fill="#ce1126"/><rect y="6.67" width="30" height="6.67" fill="#fff"/><rect y="13.33" width="30" height="6.67" fill="#000"/><rect x="13.5" y="7.6" width="3" height="4.8" rx="1" fill="#c09300"/>',
-  ao: '<rect width="30" height="10" fill="#cc092f"/><rect y="10" width="30" height="10" fill="#000"/><path d="M15.0 7.4L15.6 9.2L17.5 9.2L15.9 10.3L16.5 12.1L15.0 11.0L13.5 12.1L14.1 10.3L12.5 9.2L14.4 9.2Z" fill="#ffcb00"/>',
-  ga: '<rect width="30" height="6.67" fill="#009e60"/><rect y="6.67" width="30" height="6.67" fill="#fcd116"/><rect y="13.33" width="30" height="6.67" fill="#3a75c4"/>',
-  gq: '<rect width="30" height="6.67" fill="#3e9a00"/><rect y="6.67" width="30" height="6.67" fill="#fff"/><rect y="13.33" width="30" height="6.67" fill="#e32118"/><path d="M0 0L8 10 0 20Z" fill="#0073ce"/>',
-  cm: '<rect width="10" height="20" fill="#007a5e"/><rect x="10" width="10" height="20" fill="#ce1126"/><rect x="20" width="10" height="20" fill="#fcd116"/><path d="M15.0 7.2L15.6 9.1L17.7 9.1L16.0 10.3L16.6 12.3L15.0 11.1L13.4 12.3L14.0 10.3L12.3 9.1L14.4 9.1Z" fill="#fcd116"/>',
-  ci: '<rect width="10" height="20" fill="#f77f00"/><rect x="10" width="10" height="20" fill="#fff"/><rect x="20" width="10" height="20" fill="#009e60"/>',
-  ma: '<rect width="30" height="20" fill="#c1272d"/><path d="M15.0 5.8L16.0 8.9L19.3 8.9L16.7 10.8L17.6 13.9L15.0 12.1L12.4 13.9L13.3 10.8L10.7 8.9L14.0 8.9Z" fill="none" stroke="#006233" stroke-width="1"/>'
 };
-// Mondial : drapeau(x) de chaque pays organisateur
-const HOST_FLAGS = { Qatar: ['qa'], Russie: ['ru'], Brésil: ['br'], 'Afrique du Sud': ['za'], Allemagne: ['de'], 'Corée / Japon': ['kr', 'jp'],
-  France: ['fr'], 'États-Unis': ['us'], Italie: ['it'], Mexique: ['mx'], Espagne: ['es'], Argentine: ['ar'], Angleterre: ['en'], Chili: ['cl'],
-  Suède: ['se'], Suisse: ['ch'], Uruguay: ['uy'],
-  // CAN
-  'Ghana / Nigeria': ['gh', 'ng'], Mali: ['ml'], Tunisie: ['tn'], Égypte: ['eg'], Ghana: ['gh'], Angola: ['ao'],
-  'Gabon / Guinée équatoriale': ['ga', 'gq'], 'Guinée équatoriale': ['gq'], Gabon: ['ga'], Cameroun: ['cm'], "Côte d'Ivoire": ['ci'], Maroc: ['ma'] };
-const flag = c => FLAG_SVG[c] ? `<svg class="flag" viewBox="0 0 30 20" aria-hidden="true">${FLAG_SVG[c]}</svg>` : esc(c); // c : code ou emoji (🏆)
-const place = (ville, l) => (LANDS[l].ed ? (HOST_FLAGS[ville] || []).map(flag).join('') : '📍 ') + ' ' + esc(ville);           // HTML
+const flag = c => FLAG_SVG[c] ? `<svg class="flag" viewBox="0 0 30 20" aria-hidden="true">${FLAG_SVG[c]}</svg>` : esc(c); // c : code pays ou emoji
+const place = ville => '📍 ' + esc(ville);           // HTML
 
-// Pays ouverts de l'Aventure : la France au départ ; chaque pays ouvert terminé (tous ses clubs ou éditions) permet
+// Pays ouverts de l'Aventure : la France au départ ; chaque pays ouvert terminé (tous ses clubs) permet
 // d'en choisir un nouveau. Un pays déjà commencé avant l'arrivée des cadenas reste ouvert.
 const landIds = l => Object.keys(CLUBS).filter(id => landOf(id) === l);
-const landDone = l => landIds(l).filter(id => (advDone[id] || 0) >= stagesOf(id)).length;
+const landDone = l => landIds(l).filter(id => (advDone[id] || 0) >= STAGES).length;
 const landFinished = l => landDone(l) === landIds(l).length;
-// Les éditions (Mondial, CAN) ne sont plus jouables dans l'Aventure (refus App Store 5.2.1) : leurs questions restent dans le Spécial Foot et le Hardcore Foot
-const ADV_LANDS = Object.keys(LANDS).filter(l => !LANDS[l].ed);
+const ADV_LANDS = Object.keys(LANDS);
 const advOpen = (load('quiz-adv-open', null) || ADV_LANDS.filter(l => l === 'fr' || landIds(l).some(id => advDone[id]))).filter(l => ADV_LANDS.includes(l));
 store('quiz-adv-open', advOpen);
 const unlocksLeft = () => advOpen.filter(landFinished).length - (advOpen.length - 1);
 
-// Menu de l'Aventure : un pays (ou le Mondial) par carte, avec la progression
+// Menu de l'Aventure : un pays par carte, avec la progression
 function openLands() {
   const n = ADV_LANDS.length, free = unlocksLeft() > 0, all = advOpen.length === n;
   $('landsInfo').textContent = free ? '🔓 Bravo ! Choisis le prochain pays à débloquer.'
@@ -1154,7 +1068,7 @@ function openLands() {
     const ids = landIds(l), done = landDone(l), open = advOpen.includes(l);
     const state = open ? '' : free ? ' unlockable' : ' locked';
     return `<button class="sport${i === n - 1 && n % 2 ? ' wide' : ''}${state}" data-land="${l}" style="--c:${L.c}"><strong>${open ? '' : '🔒 '}${flag(L.flag)} ${esc(L.nom)}</strong>` +
-           `<small>${ids.length} ${L.ed ? 'éditions' : 'clubs'}${open ? ` · ${done} terminé${done > 1 ? 's' : ''}` : free ? ' · à débloquer' : ''}</small>` +
+           `<small>${ids.length} clubs${open ? ` · ${done} terminé${done > 1 ? 's' : ''}` : free ? ' · à débloquer' : ''}</small>` +
            `<div class="meter"><i style="width:${done / ids.length * 100}%"></i></div></button>`;
   }).join('');
   $('landList').querySelectorAll('[data-land]').forEach(b => b.onclick = () => {
@@ -1176,27 +1090,18 @@ function openClubs() {
   const cities = {}; // ville → clubs
   ids.forEach(id => (cities[CLUBS[id].ville] ||= []).push(id));
   $('landTitle').innerHTML = `${flag(L.flag)} ${esc(L.nom)}`;
-  $('landInfo').textContent = advLand === 'can'
-    ? `Revis les ${ids.length} Coupes d’Afrique des nations, de 2000 à 2025 : 5 étapes par édition, de la phase de groupes à la finale. Toutes les éditions sont listées sous la carte ; touche un pays organisateur pour ne garder que les siennes.`
-    : advLand === 'wc'
-    ? `Revis les ${ids.length} Coupes du monde, de 1978 à 2022 : 5 étapes par édition, de la phase de groupes à la finale. Toutes les éditions sont listées sous la carte ; touche un pays organisateur pour ne garder que les siennes.`
-    : `Fais le tour des ${ids.length} clubs ${L.de} : 10 étapes par club, des dernières saisons jusqu'aux années 1990. Tous les clubs sont listés sous la carte ; touche une ville pour ne garder que les siens.`;
+  $('landInfo').textContent = `Fais le tour des ${ids.length} clubs ${L.de} : 10 étapes par club, des dernières saisons jusqu'aux années 1990. Tous les clubs sont listés sous la carte ; touche une ville pour ne garder que les siens.`;
   $('frMap').setAttribute('viewBox', L.box);
-  $('frMap').classList.toggle('world', advLand === 'wc');
-  $('frMap').setAttribute('aria-label', L.ed ? `Carte des pays organisateurs de la ${L.nom}` : `Carte des clubs ${L.de}`);
+  $('frMap').setAttribute('aria-label', `Carte des clubs ${L.de}`);
   $('frMap').innerHTML = [L.shape, ...(L.isles || [])].map(s => `<polygon class="fr" points="${s.map(p => proj(p).join(',')).join(' ')}"/>`).join('') +
     Object.entries(cities).map(([ville, cl]) => {
       const [x, y] = proj([CLUBS[cl[0]].lon, CLUBS[cl[0]].lat]);
-      const done = cl.every(id => (advDone[id] || 0) >= stagesOf(id));
-      const pos = (L.labels || {})[ville] || LABEL_POS[ville] || 'right', r = L.r || 5, o = r + 3;
+      const done = cl.every(id => (advDone[id] || 0) >= STAGES);
+      const pos = LABEL_POS[ville] || 'right', r = 5, o = r + 3;
       const [tx, ty, anchor] = Array.isArray(pos) ? [+x + pos[0], +y + pos[1], pos[2]] : pos === 'left' ? [x - o, +y + 3, 'end'] :
         pos === 'top' ? [x, y - o, 'middle'] : pos === 'bottom' ? [x, +y + o + 7, 'middle'] : [+x + o, +y + 3, 'start'];
       const label = (LABEL_SHORT[ville] || ville) + (cl.length > 1 ? ` (${cl.length})` : '');
-      // Mondial : le point est remplacé par le(s) drapeau(x) du pays organisateur
-      const fl = L.ed && HOST_FLAGS[ville], fw = 9, fh = 6;
-      const mark = fl ? fl.map((c, i) => `<svg class="fl" x="${x - fl.length * fw / 2 + i * fw}" y="${y - fh / 2}" width="${fw}" height="${fh}" viewBox="0 0 30 20">${FLAG_SVG[c]}</svg>`).join('') +
-                        `<rect class="frame" x="${x - fl.length * fw / 2}" y="${y - fh / 2}" width="${fl.length * fw}" height="${fh}"/>`
-                      : `<circle cx="${x}" cy="${y}" r="${r}"/>`;
+      const mark = `<circle cx="${x}" cy="${y}" r="${r}"/>`;
       return `<g class="city${done ? ' done' : ''}${cityFilter === ville ? ' on' : ''}" data-ville="${esc(ville)}" tabindex="0" role="button" aria-pressed="${cityFilter === ville}" aria-label="${esc(label)}">` +
         (Array.isArray(pos) ? `<line x1="${x}" y1="${y}" x2="${tx}" y2="${ty - 3}"/>` : '') +
         `${mark}<text x="${tx}" y="${ty}" text-anchor="${anchor}">${esc(label)}</text></g>`;
@@ -1211,10 +1116,10 @@ function openClubs() {
     if (cityFilter) $('clubList').scrollIntoView({ behavior: 'smooth', block: 'nearest' }); // sur téléphone, la liste est sous la carte
   });
   $('cityChip').classList.toggle('hidden', !cityFilter);
-  $('cityChip').innerHTML = cityFilter ? `${place(cityFilter, advLand)} ✕` : '';
+  $('cityChip').innerHTML = cityFilter ? `${place(cityFilter)} ✕` : '';
   $('clubList').innerHTML = ids.filter(id => !cityFilter || CLUBS[id].ville === cityFilter).map(id => {   // tous les clubs, ou ceux de la ville touchée
-    const c = CLUBS[id], d = advDone[id] || 0, n = stagesOf(id);
-    return `<button class="sport" data-id="${id}" style="--c:${c.couleur}"><strong>${esc(c.nom)}</strong><small>${place(c.ville, advLand)} · ` +
+    const c = CLUBS[id], d = advDone[id] || 0, n = STAGES;
+    return `<button class="sport" data-id="${id}" style="--c:${c.couleur}"><strong>${esc(c.nom)}</strong><small>${place(c.ville)} · ` +
            `${d >= n ? '🏆 Terminé !' : `Étape ${d + 1} / ${n}`}</small><div class="meter"><i style="width:${d / n * 100}%"></i></div></button>`;
   }).join('');
   $('clubList').querySelectorAll('.sport').forEach(b => b.onclick = () => openAdv(b.dataset.id));
@@ -1225,9 +1130,9 @@ $('landsBack').onclick = openLands;
 
 function openAdv(id) {
   advClub = id;
-  const c = CLUBS[id], d = advDone[id] || 0, n = stagesOf(id);
+  const c = CLUBS[id], d = advDone[id] || 0, n = STAGES;
   $('advTitle').textContent = c.nom;
-  $('advBack').textContent = LANDS[landOf(id)].ed ? '← Éditions' : '← Clubs';
+  $('advBack').textContent = '← Clubs';
   $('advInfo').textContent = d >= n ? '🏆 Tu as terminé cette aventure ! Rejoue les étapes pour t\'entraîner.'
                                     : `${d} / ${n} étapes réussies. ${NEED} bonnes réponses sur ${PER_STAGE} pour passer.`;
   $('advPath').innerHTML = Array.from({ length: n }, (_, i) => {
@@ -1235,7 +1140,7 @@ function openAdv(id) {
     const state = k <= d ? 'done' : k === d + 1 ? 'cur' : 'lock';
     const label = state === 'done' ? '✅ Réussie' : state === 'cur' ? '▶ À jouer' : '🔒 Verrouillée';
     return `<li><button class="stage ${state}" data-k="${k}" ${state === 'lock' ? 'disabled' : ''}>` +
-           `<span class="dot">${state === 'done' ? '✓' : k}</span><span><strong>Étape ${k} · ${eraOf(id, k)}</strong><small>${label}</small></span></button></li>`;
+           `<span class="dot">${state === 'done' ? '✓' : k}</span><span><strong>Étape ${k} · ${ERAS[k]}</strong><small>${label}</small></span></button></li>`;
   }).join('');
   $('advPath').querySelectorAll('.stage:not(:disabled)').forEach(b => b.onclick = () => { stage = +b.dataset.k; start('adv'); });
   show('adv');
@@ -1246,16 +1151,15 @@ function advFinish() {
   const d = advDone[advClub] || 0;
   if (passed && stage > d) { advDone[advClub] = stage; store('quiz-adv', advDone); }
   checkAdvBadges();
-  const champion = passed && stage === stagesOf(advClub);
+  const champion = passed && stage === STAGES;
   $('advEndTitle').textContent = champion ? '🏆 Champion !' : passed ? '✅ Étape réussie !' : '❌ Étape ratée';
   $('advEndScore').textContent = `${good} / ${PER_STAGE}`;
-  $('advEndText').textContent = champion ? (LANDS[landOf(advClub)].ed ? `Tu connais la ${CLUBS[advClub].nom} sur le bout des doigts ! Respect.`
-                                                                     : `Tu connais l'histoire de ${CLUBS[advClub].nom} sur 30 ans ! Respect.`)
-    : passed ? `L'étape ${stage + 1} (${eraOf(advClub, stage + 1)}) est débloquée.`
+  $('advEndText').textContent = champion ? `Tu connais l'histoire de ${CLUBS[advClub].nom} sur 30 ans ! Respect.`
+    : passed ? `L'étape ${stage + 1} (${ERAS[stage + 1]}) est débloquée.`
     : `Il faut ${NEED} bonnes réponses sur ${PER_STAGE}. Réessaie, tu connais maintenant certaines réponses !`;
   const unlock = champion && unlocksLeft() > 0 && advOpen.length < ADV_LANDS.length;   // pays terminé : un nouveau pays à choisir
-  if (unlock) $('advEndText').textContent += (LANDS[landOf(advClub)].ed ? ' Toutes les éditions sont terminées' : ' Tous les clubs du pays sont terminés') + ' : choisis le prochain pays à débloquer !';
-  $('advNext').textContent = unlock ? '🔓 Choisir le prochain pays' : champion ? (LANDS[landOf(advClub)].ed ? 'Autre édition' : 'Autre club') : passed ? 'Étape suivante ▶' : 'Réessayer';
+  if (unlock) $('advEndText').textContent += ' Tous les clubs du pays sont terminés' + ' : choisis le prochain pays à débloquer !';
+  $('advNext').textContent = unlock ? '🔓 Choisir le prochain pays' : champion ? 'Autre club' : passed ? 'Étape suivante ▶' : 'Réessayer';
   $('advNext').onclick = () => {
     if (unlock) return openLands();
     if (champion) return openClubs();
@@ -1282,10 +1186,6 @@ const BADGES = [
   ['bundes', 'de', 'Tour d’Allemagne', 'Finir les 10 clubs allemands de l’Aventure'],
   ['calcio', 'it', 'Giro des clubs', 'Finir les 10 clubs italiens de l’Aventure'],
   ['globe', '🌍', 'Globe-trotter', 'Finir un club dans chacun des cinq pays de l’Aventure'],
-  ['mondial', '🏆', 'Champion du monde', 'Finir les 5 étapes d’une Coupe du monde de l’Aventure'],
-  ['memoire', '📚', 'Mémoire du Mondial', 'Finir les 12 Coupes du monde de l’Aventure'],
-  ['can', '🦁', 'Lion d’Afrique', 'Finir les 5 étapes d’une CAN de l’Aventure'],
-  ['canall', '📜', 'Mémoire de la CAN', 'Finir les 14 CAN de l’Aventure'],
   ['marathon', '🏃', 'Marathon', 'Aller au bout des 100 questions du Spécial Foot'],
   ['beast', '💀', 'Increvable', '25 bonnes réponses d’affilée en Hardcore'],
   ['footscore', '🥇', 'Légende du foot', 'Marquer 20 000 points au Spécial Foot'],
@@ -1295,12 +1195,8 @@ const BADGES = [
   ['harduk', 'uk', 'Roi d’Albion', '15 bonnes réponses d’affilée en Hardcore Royaume-Uni'],
   ['hardde', 'de', 'Kaiser', '15 bonnes réponses d’affilée en Hardcore Allemagne'],
   ['hardit', 'it', 'Capitano', '15 bonnes réponses d’affilée en Hardcore Italie'],
-  ['hardwc', '🏆', 'Roi du Mondial', '15 bonnes réponses d’affilée en Hardcore Coupe du monde'],
-  ['hardcan', '⭐', 'Étoile d’Afrique', '15 bonnes réponses d’affilée en Hardcore CAN'],
 ];
-// Badges des éditions Mondial/CAN (refus App Store 5.2.1) : gardés pour unlock() mais plus affichés ni comptés
-const HIDDEN = new Set(['mondial', 'memoire', 'can', 'canall', 'hardwc', 'hardcan']);
-const SHOWN = BADGES.filter(b => !HIDDEN.has(b[0]));
+const SHOWN = BADGES;
 const earned = load('quiz-badges', {});
 // Encart autour de la lettre du profil, selon le nombre de badges : [minimum, id, nom]
 const TIERS = [[1, 'bronze', 'Bronze'], [3, 'argent', 'Argent'], [5, 'or', 'Or'], [12, 'platine', 'Platine'], [SHOWN.length, 'legende', 'Légende']];
@@ -1327,9 +1223,9 @@ function reportBadges(ids) {
     body: JSON.stringify({ ids }) }).catch(() => {});
 }
 function checkAdvBadges() {
-  const done = Object.keys(CLUBS).filter(id => (advDone[id] || 0) >= stagesOf(id));
+  const done = Object.keys(CLUBS).filter(id => (advDone[id] || 0) >= STAGES);
   const land = l => Object.keys(CLUBS).filter(id => landOf(id) === l);
-  if (done.some(id => !LANDS[landOf(id)].ed)) unlock('supporter');
+  if (done.length) unlock('supporter');
   if (land('fr').every(id => done.includes(id))) unlock('tour');
   if (land('es').every(id => done.includes(id))) unlock('liga');
   if (land('uk').every(id => done.includes(id))) unlock('albion');
@@ -1666,7 +1562,7 @@ function validClubs(c) {
   const known = Object.fromEntries(Object.entries(c).filter(([, x]) => x && LANDS[x.pays || 'fr']));
   const str = v => typeof v === 'string' && v;
   const ok = Object.keys(CLUBS).every(id => known[id]) && Object.values(known).every(x => {
-    const n = LANDS[x.pays || 'fr'].stages || STAGES;
+    const n = STAGES;
     return str(x.nom) && str(x.court) && str(x.ville) && str(x.couleur) && Number.isFinite(x.lat) && Number.isFinite(x.lon) && Array.isArray(x.q) &&
       x.q.every(q => Array.isArray(q) && (q.length === 6 || q.length === 7 && Number.isInteger(q[6]) && q[6] >= 1 && q[6] <= 5) &&
         Number.isInteger(q[0]) && q[0] >= 1 && q[0] <= n && q.slice(1, 6).every(str)) &&
