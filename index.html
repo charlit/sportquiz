@@ -368,9 +368,40 @@
     #quiz #question { flex:1; font-size:1.6rem; margin:0; }
     #quiz .answers button { padding:14px; font-size:1.1rem; }
   }
+
+  /* Ouverture de l'app : le ballon arrive en roulant, le nom apparaît, puis tout s'efface (2,2 s, touche pour passer) */
+  #splash { position:fixed; inset:0; z-index:100; display:grid; place-content:center; justify-items:center; gap:18px; overflow:hidden;
+            background:radial-gradient(ellipse at 50% 35%, #1f3d6b 0, var(--bg) 65%), var(--bg); animation:spOut .35s ease-in 1.85s forwards; }
+  #splash .ball { position:relative; font-size:76px; line-height:1; animation:spRoll .95s cubic-bezier(.22,.9,.3,1) both; }
+  #splash .ball::after { content:''; position:absolute; left:10%; right:10%; bottom:-14px; height:10px; border-radius:50%; background:#0009; filter:blur(4px);
+                         animation:spShadow .8s .95s both; }
+  #splash .ball b { display:block; font-weight:normal; transform-origin:50% 100%; animation:spBounce .8s .95s both; }   /* rebond et rotation sur 2 éléments : une transform chacun */
+  #splash .ball span { display:block; animation:spSpin .95s cubic-bezier(.22,.9,.3,1) both; }
+  #splash .logo { margin:0; animation:spLogo .5s cubic-bezier(.3,1.5,.5,1) .7s both; }
+  #splash i { width:0; height:4px; border-radius:2px; background:var(--acc); box-shadow:0 0 14px var(--acc); animation:spLine .45s ease-out 1s forwards; }
+  @keyframes spRoll { from { transform:translateX(-70vw); } }
+  @keyframes spSpin { from { transform:rotate(-900deg); } }
+  /* une fois arrêté, le ballon rebondit 3 fois de moins en moins haut ; il s'écrase un peu à chaque contact */
+  @keyframes spBounce { 0% { transform:none; animation-timing-function:cubic-bezier(.33,.66,.66,1); } 22% { transform:translateY(-34px); animation-timing-function:cubic-bezier(.33,0,.66,.33); }
+                        42% { transform:scale(1.12, .86); animation-timing-function:cubic-bezier(.33,.66,.66,1); } 58% { transform:translateY(-12px); animation-timing-function:cubic-bezier(.33,0,.66,.33); }
+                        72% { transform:scale(1.06, .94); animation-timing-function:cubic-bezier(.33,.66,.66,1); } 84% { transform:translateY(-4px); animation-timing-function:cubic-bezier(.33,0,.66,.33); } 94%, 100% { transform:none; } }
+  @keyframes spShadow { 22% { transform:scale(.55); opacity:.4; } 42% { transform:none; opacity:1; } 58% { transform:scale(.8); opacity:.7; } 72%, 100% { transform:none; opacity:1; } }
+  @keyframes spLogo { from { opacity:0; transform:translateY(16px) scale(.85); } }   /* pas de letter-spacing : le titre passait sur 2 lignes et le ballon sautait */
+  @keyframes spLine { to { width:140px; } }
+  @keyframes spOut { to { opacity:0; transform:scale(1.06); visibility:hidden; } }
 </style>
 </head>
 <body>
+<script>
+  // Apps seulement (le site s'ouvre direct) et pas avec « Réduire les animations »
+  if (window.__quizGC && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    document.write('<div id="splash" aria-hidden="true"><div class="ball"><b><span>⚽</span></b></div><div class="logo">Football <span>Quiz</span></div><i></i></div>');
+    const sp = document.getElementById('splash');
+    sp.onanimationend = e => { if (e.animationName === 'spOut') sp.remove(); };
+    sp.onclick = () => sp.remove();
+    setTimeout(() => sp.remove(), 2800);   // au cas où animationend ne vient pas (onglet en arrière-plan)
+  }
+</script>
 <main>
   <section id="home">
     <div class="topbar"><button class="profbtn" id="goProfile" aria-label="Mon profil et mes badges"><span class="avatar" id="profAvatar">👤</span><small id="profCount"></small></button></div>
