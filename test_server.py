@@ -63,7 +63,7 @@ print('ok questions.js')
 with urllib.request.urlopen(URL + '/clubs.js') as r:  # clubs.js fabriqué depuis clubs.json (Aventure : France, Espagne, Royaume-Uni, Allemagne, Italie)
     js = r.read().decode()
 clubs = json.loads(js.removeprefix('const CLUBS = ').rstrip().rstrip(';'))
-assert sorted(sum(c['pays'] == p for c in clubs.values()) for p in ('fr', 'es', 'uk', 'de', 'it')) == [10, 10, 10, 10, 18] and {c['pays'] for c in clubs.values()} == {'fr', 'es', 'uk', 'de', 'it'} and all(sum(q[0] == k for q in c['q']) >= 5 for c in clubs.values() for k in range(1, 11))
+assert sorted(sum(c['pays'] == p for c in clubs.values()) for p in ('fr', 'es', 'uk', 'de', 'it')) == [10, 10, 10, 10, 18] and {c['pays'] for c in clubs.values()} == {'fr', 'es', 'uk', 'de', 'it'} and all(sum(q[0] == k for q in c['q']) >= 3 and sum(abs(q[0] - k) <= 1 for q in c['q']) >= 5 for c in clubs.values() for k in range(1, 11))   # 3 nov. 2026 : questions Coupe du monde retirées ; une étape courte est complétée par sa voisine
 assert all(len(q) == 7 and len(set(q[2:6])) == 4 and q[6] in range(1, 6) for c in clubs.values() for q in c['q'])  # 4 réponses distinctes, difficulté 1-5
 alltexts = [q[1] for c in clubs.values() for q in c['q']]
 assert len(alltexts) == len(set(alltexts))  # aucune question en double dans l'Aventure
