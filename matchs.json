@@ -1,9 +1,4 @@
 [
-  {"id": 558535, "date": "2026-11-07T17:00:00Z", "comp": "Serie A", "dom": "parma", "ext": "bologna"},
-  {"id": 565849, "date": "2026-11-07T17:30:00Z", "comp": "Bundesliga", "dom": "vfb", "ext": "werder"},
-  {"id": 559637, "date": "2026-11-07T18:00:00Z", "comp": "Ligue 1", "dom": "aja", "ext": "pfc"},
-  {"id": 564741, "date": "2026-11-07T20:00:00Z", "comp": "Liga", "dom": "valencia", "ext": "real"},
-  {"id": 559635, "date": "2026-11-07T20:05:00Z", "comp": "Ligue 1", "dom": "psg", "ext": "estac"},
   {"id": 558533, "date": "2026-11-08T11:30:00Z", "comp": "Serie A", "dom": "napoli", "ext": "lazio"},
   {"id": 559636, "date": "2026-11-08T14:00:00Z", "comp": "Ligue 1", "dom": "rennes", "ext": "losc"},
   {"id": 559632, "date": "2026-11-08T16:15:00Z", "comp": "Ligue 1", "dom": "brest", "ext": "ol"},
