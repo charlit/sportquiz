@@ -1465,7 +1465,7 @@ window.__quizShortcut = a => ({ foot: () => start('foot'), hard: openPick, adv: 
 if (location.hash === '#supporters') openSupporters();   // accès de test au mode Supporters (pas encore à l'accueil)
 $('again').onclick = () => start(mode);
 // Partage du score : feuille de partage iOS dans l'app, partage du navigateur (ou copie) sur le web
-const APP_URL = 'https://charlit.github.io/sportquiz/';
+const APP_URL = GC ? 'https://apps.apple.com/app/id6821283232' : 'https://charlit.github.io/sportquiz/';   // dans l'app : lien App Store
 $('share').onclick = () => {
   const text = mode in HARD ? `💀 ${good} bonne${good > 1 ? 's' : ''} réponse${good > 1 ? 's' : ''} d'affilée en ${NAMES[mode]} (${score} points) sur Football Quiz ! Tu fais mieux ?`
                             : `⚽ ${score} points au ${NAMES[mode]} sur Football Quiz (${good} bonnes réponses) ! Tu fais mieux ?`;
