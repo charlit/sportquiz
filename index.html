@@ -44,7 +44,7 @@
   dialog li { margin:6px 0; }
   dialog .btn { width:100%; }
   .tile .tag { position:absolute; top:46px; right:10px; font-size:.75rem; font-weight:800; padding:2px 8px; border-radius:999px; background:var(--c); color:#111; }
-  .c-foot { --c:#2ecc71; } .c-hc { --c:#ff5a4f; } .c-adv { --c:#ffb02e; } .c-week { --c:#4fa3ff; } .c-derby { --c:#b06bff; }
+  .c-foot { --c:#2ecc71; } .c-hc { --c:#ff5a4f; } .c-adv { --c:#ffb02e; } .c-week { --c:#4fa3ff; } .c-derby { --c:#b06bff; } .c-sup { --c:#ff7a3d; }
   .tile.wide { min-height:0; display:flex; align-items:center; justify-content:flex-start; gap:14px; padding-top:16px; width:100%; }
   .tile.wide strong { margin:0 0 2px; }
   .derby { display:flex; align-items:center; gap:12px; width:100%; padding:12px 14px; border-radius:14px; cursor:pointer; text-align:left; color:var(--txt);
@@ -420,6 +420,9 @@
       <div class="tw" style="grid-column:1/-1"><button class="tile c-derby wide" id="goDerbies"><b>⚔️</b>
         <span><strong>Derbies</strong><small id="derbyText">France, Espagne, Allemagne, Italie, Royaume-Uni…</small></span></button>
         <button class="info" data-info="derby" aria-label="Règles des derbies">i</button></div>
+      <div class="tw" style="grid-column:1/-1"><button class="tile c-sup wide" id="goSupporters"><b>📣</b>
+        <span><strong>Supporters</strong><small id="supText">Tribunes, chants, ultras et traditions de 20 clubs</small></span></button>
+        <button class="info" data-info="sup" aria-label="Règles du mode Supporters">i</button></div>
     </div>
     <button class="mbanner hidden" id="matchBanner"><span id="matchBannerText"></span><i>›</i></button>
     <button class="rankbtn" id="goRanks">🏅 Classement</button>
@@ -475,7 +478,7 @@
 
   <section id="supporters" class="hidden">
     <div class="head"><button class="back" data-back="home">← Accueil</button><h2>📣 Supporters</h2></div>
-    <p class="advinfo">Tribunes, chants, groupes et traditions : une dizaine de questions sur les supporters de chaque club.</p>
+    <p class="advinfo">Tribunes, chants, groupes et traditions : 10 questions sur les supporters de chaque club.</p>
     <div class="matches" id="supList"></div>
   </section>
 
@@ -761,16 +764,20 @@ function renderDerbies() {
 $('goDerbies').onclick = () => { renderDerbies(); show('derbies'); };
 renderDerbies();
 
-// Supporters (supporters.json) : mode pas encore affiché à l'accueil. Accès de test : adresse terminée par #supporters,
-// ou raccourci 'supporters' de l'app. 10 questions par club, des plus faciles aux plus dures, rejouables, sans classement.
+// Supporters (supporters.json) : tuile de l'accueil, adresse terminée par #supporters ou raccourci 'supporters' de l'app.
+// 10 questions par club, des plus faciles aux plus dures, rejouables, sans classement. Clubs rangés par pays.
 let curSup = null;
-const supClubs = () => (typeof SUPPORTERS === 'undefined' ? [] : SUPPORTERS).filter(x => CLUBS[x.club]);
+const SUP_PAYS = ['fr', 'es', 'uk', 'de', 'it'];
+const supClubs = () => (typeof SUPPORTERS === 'undefined' ? [] : SUPPORTERS).filter(x => CLUBS[x.club])
+  .sort((a, b) => SUP_PAYS.indexOf(CLUBS[a.club].pays) - SUP_PAYS.indexOf(CLUBS[b.club].pays));
 function openSupporters() {
   $('supList').innerHTML = supClubs().map(x => `<button class="derby" data-sup="${esc(x.club)}"><b>${flag(landOf(x.club))}</b>` +
     `<span><strong>${esc(CLUBS[x.club].nom)}</strong><small>${x.q.length} questions</small></span></button>`).join('');
   $('supList').querySelectorAll('[data-sup]').forEach(b => b.onclick = () => { curSup = supClubs().find(x => x.club === b.dataset.sup); start('supporters'); });
   show('supporters');
 }
+$('goSupporters').onclick = openSupporters;
+$('supText').textContent = `Tribunes, chants, ultras et traditions de ${supClubs().length} clubs`;
 
 function buildDeck(m) {
   const out = [];
@@ -1479,6 +1486,9 @@ const RULES = {
     '15 questions par derby, de la plus facile à la plus dure. Pas de vies : toutes les questions sont posées.',
     '20 secondes par question, et plus tu réponds vite, plus tu marques.', 'Ton meilleur score est gardé pour chaque derby ; rejoue autant que tu veux.',
     'Badge « Roi des derbies » pour qui les réussit tous sans faute, dans les cinq pays.']],
+  sup: ['📣 Supporters', ['Choisis un club parmi les cinq pays : ses tribunes, ses chants, ses groupes de supporters et ses traditions.',
+    '10 questions par club, de la plus facile à la plus dure. Pas de vies : toutes les questions sont posées.',
+    '20 secondes par question.', 'Rejoue autant que tu veux, il n’y a pas de classement.']],
   week: ['📅 Défi de la semaine', ['Chaque lundi, un nouveau défi : 10 questions sur une personnalité du foot, les mêmes pour tout le monde.',
     'Un seul essai par semaine : quitter la partie compte comme ton essai.', 'Pas de vies : les 10 questions sont posées, de plus en plus dures.',
     '20 secondes par question, et plus tu réponds vite, plus tu marques.', 'Classement de la semaine, remis à zéro chaque lundi.']],
@@ -1542,7 +1552,7 @@ $('gcBoard').onclick = () => nativeApp('gameCenter', { mode: boardMode });
 // Raccourcis de l'icône de l'app (appui long sur l'écran d'accueil de l'iPhone)
 window.__quizShortcut = a => ({ foot: () => start('foot'), hard: openPick, adv: openLands, ranks: () => $('goRanks').click(),
   week: () => { show('home'); $('goWeek').click(); }, supporters: openSupporters, matchs: () => { show('home'); if (matchesSoon().length) $('matchBanner').click(); } })[a]?.();   // raccourcis et notifications
-if (location.hash === '#supporters') openSupporters();   // accès de test au mode Supporters (pas encore à l'accueil)
+if (location.hash === '#supporters') openSupporters();   // lien direct vers le mode Supporters
 $('again').onclick = () => start(mode);
 // Partage du score : feuille de partage iOS dans l'app, partage du navigateur (ou copie) sur le web
 const APP_URL = GC ? 'https://apps.apple.com/app/id6821283232' : 'https://charlit.github.io/sportquiz/';   // dans l'app : lien App Store
