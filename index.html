@@ -996,6 +996,7 @@ function cleanApp() {
 }
 cleanApp();
 const landOf = id => CLUBS[id].pays || 'fr';
+const stagesOf = () => STAGES;   // tous les clubs ont 10 étapes depuis le retrait de l'Aventure Coupe du monde
 let advLand = 'fr';
 const proj = ([lon, lat]) => { const [x0, y0, kx, ky] = LANDS[advLand].p; return [((lon - x0) * kx).toFixed(1), ((y0 - lat) * ky).toFixed(1)]; };
 // évite chevauchements et débordements
