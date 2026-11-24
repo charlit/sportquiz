@@ -1,9 +1,7 @@
 [
-  {"id": 575399, "date": "2026-11-24T20:00:00Z", "comp": "Ligue des champions", "dom": "arsenal", "ext": "bvb"},
-  {"id": 575398, "date": "2026-11-24T20:00:00Z", "comp": "Ligue des champions", "dom": "mancity", "ext": "napoli"},
+  {"id": 575408, "date": "2026-11-25T20:00:00Z", "comp": "Ligue des champions", "dom": "psg", "ext": "roma"},
   {"id": 575410, "date": "2026-11-25T20:00:00Z", "comp": "Ligue des champions", "dom": "losc", "ext": "bayern"},
   {"id": 575406, "date": "2026-11-25T20:00:00Z", "comp": "Ligue des champions", "dom": "inter", "ext": "vfb"},
-  {"id": 575408, "date": "2026-11-25T20:00:00Z", "comp": "Ligue des champions", "dom": "psg", "ext": "roma"},
   {"id": 565869, "date": "2026-11-27T19:30:00Z", "comp": "Bundesliga", "dom": "werder", "ext": "bmg"},
   {"id": 559616, "date": "2026-11-27T19:45:00Z", "comp": "Ligue 1", "dom": "brest", "ext": "pfc"},
   {"id": 565874, "date": "2026-11-28T14:30:00Z", "comp": "Bundesliga", "dom": "hsv", "ext": "bayern"},
