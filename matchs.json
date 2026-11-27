@@ -18,5 +18,7 @@
   {"id": 564764, "date": "2026-11-29T20:00:00Z", "comp": "Liga", "dom": "realsoc", "ext": "sevilla"},
   {"id": 564855, "date": "2026-12-02T18:00:00Z", "comp": "Liga", "dom": "realsoc", "ext": "real"},
   {"id": 560670, "date": "2026-12-02T20:15:00Z", "comp": "Premier League", "dom": "newcastle", "ext": "manutd"},
-  {"id": 564857, "date": "2026-12-02T20:30:00Z", "comp": "Liga", "dom": "barca", "ext": "atleti"}
+  {"id": 564857, "date": "2026-12-02T20:30:00Z", "comp": "Liga", "dom": "barca", "ext": "atleti"},
+  {"id": 558502, "date": "2026-12-04T19:45:00Z", "comp": "Serie A", "dom": "bologna", "ext": "roma"},
+  {"id": 559609, "date": "2026-12-04T19:45:00Z", "comp": "Ligue 1", "dom": "tfc", "ext": "psg"}
 ]
